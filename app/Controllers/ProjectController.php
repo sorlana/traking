@@ -160,7 +160,13 @@ class ProjectController extends Controller
 
         // Данные для формы добавления участника
         $db = Database::getInstance();
-        $allUsers = $db->fetchAll("SELECT id, name, login, role_id FROM users WHERE status = 'active' AND role_id != 1 ORDER BY name");
+        $allUsers = $db->fetchAll(
+            "SELECT id, name, login, role_id FROM users 
+             WHERE status = 'active' AND role_id != 1 
+               AND id NOT IN (SELECT user_id FROM project_users WHERE project_id = ?)
+             ORDER BY name",
+            [(int) $id]
+        );
         $statuses = $db->fetchAll("SELECT * FROM project_statuses ORDER BY sort_order");
 
         // Получаем создателя проекта
