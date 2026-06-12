@@ -26,7 +26,11 @@ $router->registerMiddleware('csrf', \Middleware\CsrfMiddleware::class);
 // Главная страница — редирект на /dashboard или /login
 $router->get('/', function () {
     if (Auth::check()) {
-        \Helpers\Response::redirect('/dashboard');
+        if (\Helpers\Auth::isAdmin()) {
+            \Helpers\Response::redirect('/admin/users');
+        } else {
+            \Helpers\Response::redirect('/dashboard');
+        }
     } else {
         // Проверяем cookie (может быть валидный токен)
         $plainToken = $_COOKIE['auth_token'] ?? null;
@@ -34,7 +38,11 @@ $router->get('/', function () {
             $authService = new \Services\AuthService();
             $user = $authService->verifyToken($plainToken);
             if ($user !== null) {
-                \Helpers\Response::redirect('/dashboard');
+                if (\Helpers\Auth::isAdmin()) {
+                    \Helpers\Response::redirect('/admin/users');
+                } else {
+                    \Helpers\Response::redirect('/dashboard');
+                }
             }
         }
         \Helpers\Response::redirect('/login');

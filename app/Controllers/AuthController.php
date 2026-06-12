@@ -44,9 +44,9 @@ class AuthController extends Controller
      */
     public function showLogin(): void
     {
-        // Если уже авторизован — на дашборд
+        // Если уже авторизован — перенаправляем
         if (Auth::check()) {
-            $this->redirect('/dashboard');
+            $this->redirect(Auth::isAdmin() ? '/admin/users' : '/dashboard');
             return;
         }
 
@@ -59,15 +59,15 @@ class AuthController extends Controller
      * 1. Валидация входных данных
      * 2. Проверка rate limiting
      * 3. Авторизация через AuthService
-     * 4. Редирект на /dashboard или назад с ошибкой
+     * 4. Редирект на нужную страницу
      *
      * @return void
      */
     public function login(): void
     {
-        // Если уже авторизован — на дашборд
+        // Если уже авторизован — перенаправляем
         if (Auth::check()) {
-            $this->redirect('/dashboard');
+            $this->redirect(Auth::isAdmin() ? '/admin/users' : '/dashboard');
             return;
         }
 
@@ -116,8 +116,12 @@ class AuthController extends Controller
         // Успешный вход — очищаем счётчик попыток
         $this->rateLimiter->clear($rateLimitKey);
 
-        // Редирект на дашборд
-        $this->redirect('/dashboard');
+        // Редирект: admin → пользователи, остальные → дашборд
+        if (Auth::isAdmin()) {
+            $this->redirect('/admin/users');
+        } else {
+            $this->redirect('/dashboard');
+        }
     }
 
     /**

@@ -34,32 +34,32 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 
                     <!-- Навигационные ссылки (десктоп) -->
                     <div class="hidden md:flex items-center gap-4">
-                        <a href="<?= url('/dashboard') ?>"
-                           class="text-sm font-medium <?= str_starts_with($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
-                            Дашборд
-                        </a>
-
-                        <a href="<?= url('/projects') ?>"
-                           class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
-                            Проекты
-                        </a>
-
-                        <a href="<?= url('/tasks') ?>"
-                           class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
-                            Задачи
-                        </a>
-
                         <?php if (\Helpers\Auth::isAdmin()): ?>
                             <a href="<?= url('/admin/users') ?>"
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/admin/users') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Пользователи
                             </a>
-                        <?php endif; ?>
+                        <?php else: ?>
+                            <a href="<?= url('/dashboard') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Дашборд
+                            </a>
 
-                        <a href="<?= url('/notifications') ?>"
-                           class="text-sm font-medium <?= str_starts_with($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
-                            Уведомления
-                        </a>
+                            <a href="<?= url('/projects') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Проекты
+                            </a>
+
+                            <a href="<?= url('/tasks') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Задачи
+                            </a>
+
+                            <a href="<?= url('/notifications') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Уведомления
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -98,26 +98,27 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
             <!-- Мобильное меню -->
             <div x-show="mobileOpen" x-transition class="md:hidden pb-4 border-t">
                 <div class="pt-3 space-y-2">
-                    <a href="<?= url('/dashboard') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Дашборд
-                    </a>
-
-                    <a href="<?= url('/projects') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Проекты
-                    </a>
-
-                    <a href="<?= url('/tasks') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Задачи
-                    </a>
-
                     <?php if (\Helpers\Auth::isAdmin()): ?>
                         <a href="<?= url('/admin/users') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Пользователи
                         </a>
-                    <?php endif; ?>
+                    <?php else: ?>
+                        <a href="<?= url('/dashboard') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Дашборд
+                        </a>
 
-                    <a href="<?= url('/notifications') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Уведомления
+                        <a href="<?= url('/projects') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Проекты
+                        </a>
+
+                        <a href="<?= url('/tasks') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Задачи
+                        </a>
+
+                        <a href="<?= url('/notifications') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Уведомления
+                        </a>
+                    <?php endif; ?>
                     </a>
 
                     <div class="border-t pt-3 mt-3">
