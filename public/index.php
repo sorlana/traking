@@ -17,6 +17,15 @@ require_once BASE_PATH . '/app/Helpers/functions.php';
 $config = require BASE_PATH . '/config/app.php';
 $GLOBALS['config'] = $config;
 
+// Быстрая проверка (удалить после отладки)
+if (isset($_GET['check'])) {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "base_path из config: [" . ($config['base_path'] ?? 'ПУСТО') . "]\n";
+    echo "GLOBALS: [" . ($GLOBALS['config']['base_path'] ?? 'ПУСТО') . "]\n";
+    echo "url('/login') = [" . url('/login') . "]\n";
+    exit;
+}
+
 // Запуск сессии
 session_start();
 
