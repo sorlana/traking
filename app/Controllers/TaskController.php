@@ -141,7 +141,7 @@ class TaskController extends Controller
         }
 
         // Исполнители для фильтра
-        $executors = $db->fetchAll("SELECT id, name FROM users WHERE status = 'active' ORDER BY name");
+        $executors = $db->fetchAll("SELECT id, name FROM users WHERE status = 'active' AND role_id != 1 ORDER BY name");
 
         $this->view('tasks/index', [
             'title' => 'Задачи — Traking',

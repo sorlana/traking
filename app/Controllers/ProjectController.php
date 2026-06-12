@@ -114,7 +114,7 @@ class ProjectController extends Controller
 
         // Данные для фильтров
         $statuses = $db->fetchAll("SELECT * FROM project_statuses ORDER BY sort_order");
-        $managers = $db->fetchAll("SELECT u.id, u.name FROM users u WHERE u.role_id IN (1, 2) AND u.status = 'active' ORDER BY u.name");
+        $managers = $db->fetchAll("SELECT u.id, u.name FROM users u WHERE u.role_id = 2 AND u.status = 'active' ORDER BY u.name");
         $executors = $db->fetchAll("SELECT u.id, u.name FROM users u WHERE u.role_id = 3 AND u.status = 'active' ORDER BY u.name");
 
         $this->view('projects/index', [
@@ -160,7 +160,7 @@ class ProjectController extends Controller
 
         // Данные для формы добавления участника
         $db = Database::getInstance();
-        $allUsers = $db->fetchAll("SELECT id, name, login, role_id FROM users WHERE status = 'active' ORDER BY name");
+        $allUsers = $db->fetchAll("SELECT id, name, login, role_id FROM users WHERE status = 'active' AND role_id != 1 ORDER BY name");
         $statuses = $db->fetchAll("SELECT * FROM project_statuses ORDER BY sort_order");
 
         // Получаем создателя проекта
