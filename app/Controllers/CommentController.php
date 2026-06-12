@@ -127,16 +127,6 @@ class CommentController extends Controller
             $uploadedFile = $this->handleFileUpload($taskId, (int) $commentId, $task);
         }
 
-        // Логируем добавление комментария
-        $this->activityLogService->log(
-            Auth::id(),
-            (int) $task['project_id'],
-            $taskId,
-            'comment_added',
-            null,
-            mb_substr($commentText, 0, 100)
-        );
-
         // Уведомляем участников задачи
         $this->notificationService->notifyCommentAdded($taskId, Auth::id());
 

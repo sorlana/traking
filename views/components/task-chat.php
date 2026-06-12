@@ -123,31 +123,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     <div x-show="modalFile" x-transition.opacity
          @click.self="modalFile = null; modalZoom = 1;"
          @keydown.escape.window="modalFile = null; modalZoom = 1;"
-         class="fixed inset-0 z-[100] bg-black bg-opacity-80 flex items-center justify-center p-4"
+         class="fixed inset-0 z-[100] bg-black bg-opacity-90 flex flex-col"
          style="display: none;">
-        <div class="relative max-w-5xl max-h-[90vh] flex flex-col items-center">
-            <!-- Панель кнопок (правый верхний угол) -->
-            <div class="absolute top-2 right-2 flex items-center gap-2 z-10">
-                <!-- Уменьшить -->
-                <button @click="modalZoom = Math.max(0.25, modalZoom - 0.25)"
-                        class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition"
-                        title="Уменьшить">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                    </svg>
-                </button>
-                <!-- Увеличить -->
-                <button @click="modalZoom = Math.min(3, modalZoom + 0.25)"
-                        class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition"
-                        title="Увеличить">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                </button>
+        <!-- Верхняя панель -->
+        <div class="flex items-center justify-between px-4 py-2 bg-black bg-opacity-50">
+            <span class="text-white text-sm truncate" x-text="modalFile ? modalFile.file_name : ''"></span>
+            <div class="flex items-center gap-2">
                 <!-- Скачать -->
                 <a :href="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' + '?force=1' : '#'"
-                   class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition"
-                   title="Скачать" download>
+                   class="text-white hover:text-blue-300 p-2 rounded transition" title="Скачать" download>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -155,22 +139,37 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 </a>
                 <!-- Закрыть -->
                 <button @click="modalFile = null; modalZoom = 1;"
-                        class="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition"
-                        title="Закрыть">
+                        class="text-white hover:text-red-300 p-2 rounded transition" title="Закрыть">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <!-- Изображение с зумом -->
-            <div class="overflow-auto max-h-[85vh] max-w-full">
-                <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
-                     :style="'transform: scale(' + modalZoom + '); transform-origin: center center; transition: transform 0.2s;'"
-                     class="max-w-full rounded-lg shadow-2xl"
-                     :alt="modalFile ? modalFile.file_name : ''">
-            </div>
-            <!-- Масштаб -->
-            <div class="mt-2 text-white text-xs opacity-70" x-text="Math.round(modalZoom * 100) + '%'"></div>
+        </div>
+        <!-- Область изображения (на всё окно) -->
+        <div class="flex-1 overflow-auto flex items-center justify-center" @click.self="modalFile = null; modalZoom = 1;">
+            <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
+                 :style="'transform: scale(' + modalZoom + '); transition: transform 0.2s;'"
+                 class="max-w-full max-h-full object-contain"
+                 :alt="modalFile ? modalFile.file_name : ''">
+        </div>
+        <!-- Ползунок зума внизу -->
+        <div class="px-4 py-3 bg-black bg-opacity-50 flex items-center gap-3">
+            <button @click="modalZoom = Math.max(0.25, modalZoom - 0.25)" class="text-white hover:text-blue-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                </svg>
+            </button>
+            <input type="range" min="25" max="300" step="25"
+                   :value="modalZoom * 100"
+                   @input="modalZoom = $event.target.value / 100"
+                   class="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+            <button @click="modalZoom = Math.min(3, modalZoom + 0.25)" class="text-white hover:text-blue-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </button>
+            <span class="text-white text-xs w-12 text-center" x-text="Math.round(modalZoom * 100) + '%'"></span>
         </div>
     </div>
 

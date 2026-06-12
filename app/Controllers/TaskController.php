@@ -360,27 +360,9 @@ class TaskController extends Controller
         // Создаём задачу
         $taskId = $this->taskModel->create($data);
 
-        // Логируем создание задачи
-        $this->activityLogService->log(
-            Auth::id(),
-            $data['project_id'],
-            (int) $taskId,
-            'task_created',
-            null,
-            $data['title']
-        );
-
         // Уведомляем назначенного исполнителя
         if ($data['assigned_to']) {
             $this->notificationService->notifyTaskAssigned((int) $taskId, $data['assigned_to']);
-            $this->activityLogService->log(
-                Auth::id(),
-                $data['project_id'],
-                (int) $taskId,
-                'task_assigned',
-                null,
-                null
-            );
         }
 
         Session::flash('success', 'Задача успешно создана');
@@ -630,15 +612,6 @@ class TaskController extends Controller
         ]);
 
         // Логируем закрытие задачи
-        $this->activityLogService->log(
-            Auth::id(),
-            (int) $task['project_id'],
-            $taskId,
-            'task_closed',
-            null,
-            'Закрыта'
-        );
-
         // Уведомляем участников
         $this->notificationService->notifyStatusChanged($taskId, 'Закрыта', Auth::id());
 
@@ -680,16 +653,6 @@ class TaskController extends Controller
         }
 
         $this->taskModel->update($taskId, ['assigned_to' => $assignedTo]);
-
-        // Логируем переназначение
-        $this->activityLogService->log(
-            Auth::id(),
-            (int) $task['project_id'],
-            $taskId,
-            'task_reassigned',
-            null,
-            null
-        );
 
         // Уведомляем нового исполнителя
         if ($assignedTo !== null && $assignedTo !== (int) ($task['assigned_to'] ?? 0)) {

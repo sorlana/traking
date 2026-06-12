@@ -160,16 +160,6 @@ class FileController extends Controller
             'file_size' => $file['size'],
         ]);
 
-        // Логируем загрузку файла
-        $this->activityLogService->log(
-            Auth::id(),
-            (int) $task['project_id'],
-            $taskId,
-            'file_uploaded',
-            null,
-            $originalName
-        );
-
         // Уведомляем участников задачи
         $this->notificationService->notifyFileUploaded($taskId, Auth::id());
 
