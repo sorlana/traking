@@ -3,6 +3,7 @@
  * CommentController — Контроллер комментариев к задачам (AJAX)
  *
  * Функции: добавление, редактирование, удаление комментариев.
+ * При добавлении поддерживает прикрепление файла (чат-интерфейс).
  * Все методы поддерживают как AJAX (JSON-ответ), так и обычные запросы (redirect).
  * Доступ проверяется через TaskAccessMiddleware.
  */
@@ -10,10 +11,12 @@
 namespace Controllers;
 
 use Helpers\Auth;
+use Helpers\Database;
 use Helpers\Response;
 use Helpers\Session;
 use Middleware\TaskAccessMiddleware;
 use Models\TaskComment;
+use Models\TaskFile;
 use Models\Task;
 use Services\NotificationService;
 use Services\ActivityLogService;
@@ -21,20 +24,33 @@ use Services\ActivityLogService;
 class CommentController extends Controller
 {
     private TaskComment $commentModel;
+    private TaskFile $fileModel;
     private Task $taskModel;
     private NotificationService $notificationService;
     private ActivityLogService $activityLogService;
 
+    /** @var array Допустимые расширения файлов */
+    private const ALLOWED_EXTENSIONS = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp',
+        'pdf', 'doc', 'docx', 'xls', 'xlsx',
+        'zip', 'rar',
+        'mp4', 'mov',
+    ];
+
+    /** @var int Максимальный размер файла (50 МБ) */
+    private const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
     public function __construct()
     {
         $this->commentModel = new TaskComment();
+        $this->fileModel = new TaskFile();
         $this->taskModel = new Task();
         $this->notificationService = new NotificationService();
         $this->activityLogService = new ActivityLogService();
     }
 
     /**
-     * Добавить комментарий к задаче
+     * Добавить комментарий к задаче (с опциональным файлом)
      * POST /tasks/{id}/comments
      *
      * @param string $taskId ID задачи
@@ -67,9 +83,10 @@ class CommentController extends Controller
 
         // Получаем текст комментария
         $commentText = trim($_POST['comment_text'] ?? '');
+        $hasFile = isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK;
 
-        // Валидация: обязательное поле, макс. 5000 символов
-        if ($commentText === '') {
+        // Валидация: текст обязателен, если нет файла
+        if ($commentText === '' && !$hasFile) {
             if ($this->isAjax()) {
                 $this->json(['error' => 'Текст комментария обязателен'], 422);
             } else {
@@ -89,6 +106,11 @@ class CommentController extends Controller
             return;
         }
 
+        // Если текст пустой но есть файл — ставим заглушку
+        if ($commentText === '' && $hasFile) {
+            $commentText = '📎 Файл';
+        }
+
         // Создаём комментарий
         $data = [
             'task_id' => $taskId,
@@ -98,6 +120,12 @@ class CommentController extends Controller
         ];
 
         $commentId = $this->commentModel->create($data);
+
+        // Обрабатываем прикреплённый файл (если есть)
+        $uploadedFile = null;
+        if ($hasFile) {
+            $uploadedFile = $this->handleFileUpload($taskId, (int) $commentId, $task);
+        }
 
         // Логируем добавление комментария
         $this->activityLogService->log(
@@ -121,6 +149,8 @@ class CommentController extends Controller
             'comment_text' => $commentText,
             'user_name' => $user['name'] ?? $user['login'] ?? '',
             'created_at' => date('Y-m-d H:i:s'),
+            'files' => $uploadedFile ? [$uploadedFile] : [],
+            'links' => [],
         ];
 
         if ($this->isAjax()) {
@@ -129,6 +159,70 @@ class CommentController extends Controller
             Session::flash('success', 'Комментарий добавлен');
             $this->redirect("/tasks/{$taskId}");
         }
+    }
+
+    /**
+     * Загрузка файла, привязанного к комментарию
+     *
+     * @param int $taskId ID задачи
+     * @param int $commentId ID комментария
+     * @param array $task Данные задачи
+     * @return array|null Данные загруженного файла или null при ошибке
+     */
+    private function handleFileUpload(int $taskId, int $commentId, array $task): ?array
+    {
+        $file = $_FILES['file'];
+
+        // Валидация расширения
+        $originalName = $file['name'];
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+        if (!in_array($extension, self::ALLOWED_EXTENSIONS)) {
+            return null;
+        }
+
+        // Валидация размера
+        if ($file['size'] > self::MAX_FILE_SIZE) {
+            return null;
+        }
+
+        // Формируем путь хранения
+        $projectId = (int) $task['project_id'];
+        $uploadDir = BASE_PATH . "/storage/uploads/projects/{$projectId}/tasks/{$taskId}";
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Генерируем уникальное имя файла
+        $uniqueName = bin2hex(random_bytes(16)) . '.' . $extension;
+        $filePath = $uploadDir . '/' . $uniqueName;
+
+        // Перемещаем загруженный файл
+        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+            return null;
+        }
+
+        // Относительный путь для БД
+        $relativePath = "projects/{$projectId}/tasks/{$taskId}/{$uniqueName}";
+
+        // Сохраняем запись в БД с привязкой к комментарию
+        $fileId = $this->fileModel->create([
+            'task_id' => $taskId,
+            'comment_id' => $commentId,
+            'uploaded_by' => Auth::id(),
+            'file_name' => $originalName,
+            'file_path' => $relativePath,
+            'file_type' => $extension,
+            'file_size' => $file['size'],
+        ]);
+
+        return [
+            'id' => $fileId,
+            'file_name' => $originalName,
+            'file_size' => (int) $file['size'],
+            'file_type' => $extension,
+        ];
     }
 
     /**

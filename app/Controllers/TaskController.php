@@ -193,6 +193,19 @@ class TaskController extends Controller
         $comments = $this->taskModel->getComments($taskId);
         $files = $this->taskModel->getFiles($taskId);
         $links = $this->taskModel->getLinks($taskId);
+
+        // Подтягиваем файлы и ссылки к каждому комментарию (для чат-интерфейса)
+        foreach ($comments as &$comment) {
+            $comment['files'] = $db->fetchAll(
+                "SELECT id, file_name, file_size, file_type FROM task_files WHERE comment_id = ?",
+                [(int) $comment['id']]
+            );
+            $comment['links'] = $db->fetchAll(
+                "SELECT id, url, title FROM task_links WHERE comment_id = ?",
+                [(int) $comment['id']]
+            );
+        }
+        unset($comment);
         $parent = $this->taskModel->getParent($taskId);
 
         // История действий

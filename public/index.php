@@ -29,7 +29,7 @@ if ($config['debug']) {
     ini_set('display_errors', '0');
 }
 
-// Глобальный обработчик исключений — для AJAX возвращает JSON
+// Глобальный обработчик исключений — для AJAX возвращает JSON с деталями
 set_exception_handler(function (Throwable $e) use ($config) {
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -37,10 +37,7 @@ set_exception_handler(function (Throwable $e) use ($config) {
     if ($isAjax) {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
-        $response = ['error' => 'Внутренняя ошибка сервера'];
-        if ($config['debug']) {
-            $response['debug'] = $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
-        }
+        $response = ['error' => $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()];
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
     } else {
         if ($config['debug']) {
