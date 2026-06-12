@@ -227,10 +227,14 @@ class FileController extends Controller
         $mimeType = $this->getMimeType($file['file_type']);
         $fileName = $file['file_name'];
 
+        // Изображения отдаём inline (для отображения в чате), остальные — attachment
+        $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $disposition = in_array($mimeType, $imageTypes) ? 'inline' : 'attachment';
+
         header('Content-Type: ' . $mimeType);
-        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        header('Content-Disposition: ' . $disposition . '; filename="' . $fileName . '"');
         header('Content-Length: ' . filesize($fullPath));
-        header('Cache-Control: no-cache, must-revalidate');
+        header('Cache-Control: public, max-age=86400');
         header('Pragma: no-cache');
 
         readfile($fullPath);

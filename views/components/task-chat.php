@@ -36,14 +36,26 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <div x-show="msg.user_id == currentUserId" class="flex justify-end">
                     <div class="max-w-[80%]">
                         <div class="bg-blue-500 text-white rounded-lg px-3 py-2">
-                            <div class="text-sm whitespace-pre-wrap" x-text="msg.comment_text"></div>
+                            <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="text-sm whitespace-pre-wrap" x-text="msg.comment_text"></div>
                             <!-- Прикреплённые файлы -->
                             <template x-for="file in msg.files" :key="file.id">
-                                <a :href="BASE_URL + '/files/' + file.id + '/download'"
-                                   class="flex items-center gap-2 mt-2 p-2 bg-blue-400 bg-opacity-50 rounded text-xs text-white hover:bg-blue-300 hover:bg-opacity-50 transition">
-                                    <span>📄</span>
-                                    <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
-                                </a>
+                                <div class="mt-2">
+                                    <!-- Изображение — превью -->
+                                    <template x-if="isImage(file.file_type)">
+                                        <img :src="BASE_URL + '/files/' + file.id + '/download'"
+                                             @click="openModal(file)"
+                                             class="max-w-full max-h-48 rounded cursor-pointer hover:opacity-90 transition"
+                                             :alt="file.file_name">
+                                    </template>
+                                    <!-- Не изображение — иконка + имя -->
+                                    <template x-if="!isImage(file.file_type)">
+                                        <a :href="BASE_URL + '/files/' + file.id + '/download'"
+                                           class="flex items-center gap-2 p-2 bg-blue-400 bg-opacity-50 rounded text-xs text-white hover:bg-blue-300 hover:bg-opacity-50 transition">
+                                            <span>📄</span>
+                                            <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
+                                        </a>
+                                    </template>
+                                </div>
                             </template>
                             <!-- Прикреплённые ссылки -->
                             <template x-for="link in msg.links" :key="link.id">
@@ -63,14 +75,26 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                     <div class="max-w-[80%]">
                         <div class="bg-gray-100 rounded-lg px-3 py-2">
                             <div class="text-xs font-medium text-gray-600 mb-1" x-text="msg.user_name"></div>
-                            <div class="text-sm text-gray-800 whitespace-pre-wrap" x-text="msg.comment_text"></div>
+                            <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="text-sm text-gray-800 whitespace-pre-wrap" x-text="msg.comment_text"></div>
                             <!-- Прикреплённые файлы -->
                             <template x-for="file in msg.files" :key="file.id">
-                                <a :href="BASE_URL + '/files/' + file.id + '/download'"
-                                   class="flex items-center gap-2 mt-2 p-2 bg-white rounded border text-xs text-blue-600 hover:bg-blue-50 transition">
-                                    <span>📄</span>
-                                    <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
-                                </a>
+                                <div class="mt-2">
+                                    <!-- Изображение — превью -->
+                                    <template x-if="isImage(file.file_type)">
+                                        <img :src="BASE_URL + '/files/' + file.id + '/download'"
+                                             @click="openModal(file)"
+                                             class="max-w-full max-h-48 rounded cursor-pointer hover:opacity-90 transition"
+                                             :alt="file.file_name">
+                                    </template>
+                                    <!-- Не изображение — иконка + имя -->
+                                    <template x-if="!isImage(file.file_type)">
+                                        <a :href="BASE_URL + '/files/' + file.id + '/download'"
+                                           class="flex items-center gap-2 p-2 bg-white rounded border text-xs text-blue-600 hover:bg-blue-50 transition">
+                                            <span>📄</span>
+                                            <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
+                                        </a>
+                                    </template>
+                                </div>
                             </template>
                             <!-- Прикреплённые ссылки -->
                             <template x-for="link in msg.links" :key="link.id">
@@ -86,6 +110,35 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 </div>
             </div>
         </template>
+    </div>
+
+    <!-- Модальное окно для просмотра изображения -->
+    <div x-show="modalFile" x-transition.opacity
+         @click.self="modalFile = null"
+         class="fixed inset-0 z-[100] bg-black bg-opacity-80 flex items-center justify-center p-4"
+         style="display: none;">
+        <div class="relative max-w-4xl max-h-[90vh]">
+            <!-- Кнопка скачать (правый верхний угол) -->
+            <a :href="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' : '#'"
+               class="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition z-10"
+               title="Скачать">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </a>
+            <!-- Кнопка закрыть -->
+            <button @click="modalFile = null"
+                    class="absolute top-2 left-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 p-2 rounded-full shadow transition z-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <!-- Изображение -->
+            <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
+                 class="max-w-full max-h-[85vh] rounded-lg shadow-2xl"
+                 :alt="modalFile ? modalFile.file_name : ''">
+        </div>
     </div>
 
     <!-- Превью прикреплённого файла -->
@@ -164,6 +217,7 @@ function taskChat() {
         }, $comments), JSON_UNESCAPED_UNICODE) ?>,
         newMessage: '',
         attachedFile: null,
+        modalFile: null,
         sending: false,
         errorMessage: '',
         currentUserId: <?= (int) $currentUserId ?>,
@@ -318,6 +372,20 @@ function taskChat() {
             if (bytes < 1024) return bytes + ' Б';
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' КБ';
             return (bytes / (1024 * 1024)).toFixed(1) + ' МБ';
+        },
+
+        /**
+         * Проверка: является ли файл изображением
+         */
+        isImage(fileType) {
+            return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((fileType || '').toLowerCase());
+        },
+
+        /**
+         * Открыть модальное окно для просмотра изображения
+         */
+        openModal(file) {
+            this.modalFile = file;
         },
     };
 }

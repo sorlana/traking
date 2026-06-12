@@ -82,10 +82,6 @@ $canEdit = can('create_task', (int) $task['project_id']);
                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                 Редактировать
             </a>
-            <a href="<?= url('/tasks/create') ?>?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
-               class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200 transition">
-                + Подзадача
-            </a>
             <?php if ($task['status_code'] !== 'closed' && $task['status_code'] !== 'cancelled'): ?>
                 <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
                       onsubmit="return confirm('Закрыть задачу?')" class="inline">
