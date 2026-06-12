@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     name: FTP Deploy
@@ -26,10 +29,7 @@ jobs:
             **/.git*/**
             .gitignore
             .github/**
-            vendor/**
-            tests/**
-            phpunit.xml
-            composer.json
-            composer.lock
-            src/config.example.php
-            logs/*.log
+            .kiro/**
+            storage/logs/*
+            storage/uploads/**
+            config/database.php
