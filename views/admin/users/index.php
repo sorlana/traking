@@ -11,7 +11,7 @@ $title = 'Пользователи — Traking';
     <!-- Заголовок и кнопка создания -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Пользователи</h1>
-        <a href="/admin/users/create"
+        <a href="<?= url('/admin/users/create') ?>"
            class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -21,7 +21,7 @@ $title = 'Пользователи — Traking';
     </div>
 
     <!-- Фильтры -->
-    <form method="GET" action="/admin/users" class="bg-white rounded-lg shadow-sm border p-4">
+    <form method="GET" action="<?= url('/admin/users') ?>" class="bg-white rounded-lg shadow-sm border p-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Фильтр по роли -->
             <div>
@@ -64,7 +64,7 @@ $title = 'Пользователи — Traking';
                         class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition">
                     Фильтровать
                 </button>
-                <a href="/admin/users"
+                <a href="<?= url('/admin/users') ?>"
                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
                     Сбросить
                 </a>
@@ -139,7 +139,7 @@ $title = 'Пользователи — Traking';
                                 <td class="px-4 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         <!-- Редактировать -->
-                                        <a href="/admin/users/<?= (int)$u['id'] ?>/edit"
+                                        <a href="<?= url('/admin/users/' . (int)$u['id'] . '/edit') ?>"
                                            class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                                            title="Редактировать">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@ $title = 'Пользователи — Traking';
                                         </a>
 
                                         <!-- Активировать/Деактивировать -->
-                                        <form method="POST" action="/admin/users/<?= (int)$u['id'] ?>/toggle-status" class="inline">
+                                        <form method="POST" action="<?= url('/admin/users/' . (int)$u['id'] . '/toggle-status') ?>" class="inline">
                                             <?= csrf_field() ?>
                                             <button type="submit"
                                                     class="p-1.5 rounded <?= $u['status'] === 'active' ? 'text-gray-500 hover:text-orange-600 hover:bg-orange-50' : 'text-gray-500 hover:text-green-600 hover:bg-green-50' ?>"
@@ -170,7 +170,7 @@ $title = 'Пользователи — Traking';
                                         </form>
 
                                         <!-- Сбросить пароль -->
-                                        <form method="POST" action="/admin/users/<?= (int)$u['id'] ?>/reset-password" class="inline">
+                                        <form method="POST" action="<?= url('/admin/users/' . (int)$u['id'] . '/reset-password') ?>" class="inline">
                                             <?= csrf_field() ?>
                                             <button type="submit"
                                                     class="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded"
@@ -223,10 +223,10 @@ $title = 'Пользователи — Traking';
                             </span>
                         </div>
                         <div class="flex items-center gap-2 pt-2">
-                            <a href="/admin/users/<?= (int)$u['id'] ?>/edit"
+                            <a href="<?= url('/admin/users/' . (int)$u['id'] . '/edit') ?>"
                                class="text-xs text-blue-600 hover:text-blue-700 font-medium">Изменить</a>
                             <span class="text-gray-300">|</span>
-                            <form method="POST" action="/admin/users/<?= (int)$u['id'] ?>/toggle-status" class="inline">
+                            <form method="POST" action="<?= url('/admin/users/' . (int)$u['id'] . '/toggle-status') ?>" class="inline">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="text-xs font-medium <?= $u['status'] === 'active' ? 'text-orange-600 hover:text-orange-700' : 'text-green-600 hover:text-green-700' ?>"
                                         onclick="return confirm('<?= $u['status'] === 'active' ? 'Деактивировать?' : 'Активировать?' ?>')">
@@ -234,7 +234,7 @@ $title = 'Пользователи — Traking';
                                 </button>
                             </form>
                             <span class="text-gray-300">|</span>
-                            <form method="POST" action="/admin/users/<?= (int)$u['id'] ?>/reset-password" class="inline">
+                            <form method="POST" action="<?= url('/admin/users/' . (int)$u['id'] . '/reset-password') ?>" class="inline">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="text-xs text-yellow-600 hover:text-yellow-700 font-medium"
                                         onclick="return confirm('Сбросить пароль?')">

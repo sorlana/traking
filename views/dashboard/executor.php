@@ -59,7 +59,7 @@ $statusLabels = [
                                 ?>
                                 <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 <?= $isOverdue ? 'bg-red-50' : '' ?>">
                                     <div class="flex-1 min-w-0">
-                                        <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                        <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                             <?= e($task['title']) ?>
                                         </a>
                                         <p class="text-xs text-gray-500"><?= e($task['project_title'] ?? '') ?></p>
@@ -97,7 +97,7 @@ $statusLabels = [
                         <?php foreach ($reviewTasks as $task): ?>
                             <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50">
                                 <div class="flex-1 min-w-0">
-                                    <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                         <?= e($task['title']) ?>
                                     </a>
                                     <p class="text-xs text-gray-500"><?= e($task['project_title'] ?? '') ?></p>
@@ -126,7 +126,7 @@ $statusLabels = [
                         <?php foreach ($newAssigned as $task): ?>
                             <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 bg-blue-50">
                                 <div class="flex-1 min-w-0">
-                                    <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                         <?= e($task['title']) ?>
                                     </a>
                                     <p class="text-xs text-gray-500">

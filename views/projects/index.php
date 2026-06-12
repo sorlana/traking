@@ -11,7 +11,7 @@ $layout = 'layouts/app';
     <h1 class="text-2xl font-bold text-gray-800">Проекты</h1>
 
     <?php if (can('create_project')): ?>
-        <a href="/projects/create"
+        <a href="<?= url('/projects/create') ?>"
            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -22,7 +22,7 @@ $layout = 'layouts/app';
 </div>
 
 <!-- Фильтры -->
-<form method="GET" action="/projects" class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+<form method="GET" action="<?= url('/projects') ?>" class="bg-white rounded-lg shadow-sm border p-4 mb-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Статус -->
         <div>
@@ -78,7 +78,7 @@ $layout = 'layouts/app';
         <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium transition">
             Применить
         </button>
-        <a href="/projects" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition">
+        <a href="<?= url('/projects') ?>" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition">
             Сбросить
         </a>
     </div>
@@ -96,7 +96,7 @@ $layout = 'layouts/app';
 <?php else: ?>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <?php foreach ($projects as $project): ?>
-            <a href="/projects/<?= e($project['id']) ?>"
+            <a href="<?= url('/projects/' . (int) $project['id']) ?>"
                class="bg-white rounded-lg shadow-sm border hover:shadow-md transition p-5 block">
                 <!-- Заголовок и статус -->
                 <div class="flex items-start justify-between gap-2 mb-3">

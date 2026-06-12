@@ -17,10 +17,10 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <title><?= e($title ?? 'Traking') ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#1e40af">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>">
 </head>
 <body class="min-h-screen bg-gray-100 flex flex-col">
 
@@ -30,33 +30,33 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
             <div class="flex justify-between items-center h-16">
                 <!-- Логотип -->
                 <div class="flex items-center gap-6">
-                    <a href="/dashboard" class="text-xl font-bold text-blue-700">Traking</a>
+                    <a href="<?= url('/dashboard') ?>" class="text-xl font-bold text-blue-700">Traking</a>
 
                     <!-- Навигационные ссылки (десктоп) -->
                     <div class="hidden md:flex items-center gap-4">
-                        <a href="/dashboard"
+                        <a href="<?= url('/dashboard') ?>"
                            class="text-sm font-medium <?= str_starts_with($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                             Дашборд
                         </a>
 
-                        <a href="/projects"
+                        <a href="<?= url('/projects') ?>"
                            class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                             Проекты
                         </a>
 
-                        <a href="/tasks"
+                        <a href="<?= url('/tasks') ?>"
                            class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                             Задачи
                         </a>
 
                         <?php if (\Helpers\Auth::isAdmin()): ?>
-                            <a href="/admin/users"
+                            <a href="<?= url('/admin/users') ?>"
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/admin/users') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Пользователи
                             </a>
                         <?php endif; ?>
 
-                        <a href="/notifications"
+                        <a href="<?= url('/notifications') ?>"
                            class="text-sm font-medium <?= str_starts_with($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                             Уведомления
                         </a>
@@ -77,7 +77,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                         echo $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '';
                         ?>
                     </span>
-                    <a href="/logout"
+                    <a href="<?= url('/logout') ?>"
                        class="text-sm text-red-600 hover:text-red-700 font-medium">
                         Выйти
                     </a>
@@ -98,25 +98,25 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
             <!-- Мобильное меню -->
             <div x-show="mobileOpen" x-transition class="md:hidden pb-4 border-t">
                 <div class="pt-3 space-y-2">
-                    <a href="/dashboard" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="<?= url('/dashboard') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Дашборд
                     </a>
 
-                    <a href="/projects" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="<?= url('/projects') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Проекты
                     </a>
 
-                    <a href="/tasks" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="<?= url('/tasks') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Задачи
                     </a>
 
                     <?php if (\Helpers\Auth::isAdmin()): ?>
-                        <a href="/admin/users" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <a href="<?= url('/admin/users') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Пользователи
                         </a>
                     <?php endif; ?>
 
-                    <a href="/notifications" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="<?= url('/notifications') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Уведомления
                     </a>
 
@@ -127,7 +127,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                                 <?= $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '' ?>
                             </span>
                         </div>
-                        <a href="/logout" class="block px-3 py-2 rounded text-sm font-medium text-red-600 hover:bg-red-50">
+                        <a href="<?= url('/logout') ?>" class="block px-3 py-2 rounded text-sm font-medium text-red-600 hover:bg-red-50">
                             Выйти
                         </a>
                     </div>
@@ -191,7 +191,10 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <!-- Toast-уведомления (контейнер) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+    <!-- Base URL для JS-компонентов -->
+    <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
+
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= url('/assets/js/app.js') ?>"></script>
 </body>
 </html>

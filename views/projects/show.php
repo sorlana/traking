@@ -11,12 +11,12 @@ $layout = 'layouts/app';
 <div class="mb-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <a href="/projects" class="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block">&larr; К списку проектов</a>
+            <a href="<?= url('/projects') ?>" class="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block">&larr; К списку проектов</a>
             <h1 class="text-2xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
         </div>
 
         <?php if (can('edit_project', (int) $project['id'])): ?>
-            <a href="/projects/<?= e($project['id']) ?>/edit"
+            <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>"
                class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -83,7 +83,7 @@ $layout = 'layouts/app';
 
                             <?php if (can('edit_project', (int) $project['id'])): ?>
                                 <!-- Форма смены статуса -->
-                                <form method="POST" action="/projects/<?= e($project['id']) ?>/status" class="flex items-center gap-2">
+                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/status') ?>" class="flex items-center gap-2">
                                     <?= csrf_field() ?>
                                     <select name="status_id" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                         <?php foreach ($statuses as $s): ?>
@@ -187,7 +187,7 @@ $layout = 'layouts/app';
             <!-- Форма добавления участника -->
             <?php if (can('edit_project', (int) $project['id'])): ?>
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg">
-                    <form method="POST" action="/projects/<?= e($project['id']) ?>/add-user" class="flex flex-col sm:flex-row gap-3">
+                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
                         <select name="user_id" required class="flex-1 border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Выберите пользователя...</option>
@@ -239,7 +239,7 @@ $layout = 'layouts/app';
                                     <?php if (can('edit_project', (int) $project['id'])): ?>
                                         <td class="px-4 py-3 text-right">
                                             <?php if ((int) $u['id'] !== (int) $project['created_by']): ?>
-                                                <form method="POST" action="/projects/<?= e($project['id']) ?>/remove-user" class="inline"
+                                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/remove-user') ?>" class="inline"
                                                       onsubmit="return confirm('Удалить участника из проекта?')">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="user_id" value="<?= e($u['id']) ?>">
@@ -268,7 +268,7 @@ $layout = 'layouts/app';
         <div class="bg-white rounded-lg shadow-sm border">
             <!-- Форма загрузки документа -->
             <div class="p-4 border-b bg-gray-50 rounded-t-lg">
-                <form method="POST" action="/projects/<?= e($project['id']) ?>/add-document" enctype="multipart/form-data"
+                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-document') ?>" enctype="multipart/form-data"
                       class="space-y-3">
                     <?= csrf_field() ?>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -377,7 +377,7 @@ $layout = 'layouts/app';
                                     $dotColor = $taskStatusColors[$task['status_code'] ?? ''] ?? 'bg-gray-400';
                                     ?>
                                     <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>
-                                    <a href="/tasks/<?= e($task['id']) ?>" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate">
+                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate">
                                         <?= e($task['title']) ?>
                                     </a>
                                 </div>

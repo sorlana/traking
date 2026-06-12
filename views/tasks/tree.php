@@ -45,7 +45,7 @@ function renderTreeNode(array $node, array $statusDots, array $statusColors, int
     $html .= '<span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ' . $dotColor . '"></span>';
 
     // Название (ссылка)
-    $html .= '<a href="/tasks/' . (int) $node['id'] . '" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate">';
+    $html .= '<a href="' . url('/tasks/' . (int) $node['id']) . '" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate">';
     $html .= htmlspecialchars($node['title'] ?? '', ENT_QUOTES, 'UTF-8');
     $html .= '</a>';
 
@@ -92,12 +92,12 @@ function renderTreeNode(array $node, array $statusDots, array $statusColors, int
                 <?php endif; ?>
             </h1>
             <?php if (!empty($project)): ?>
-                <a href="/projects/<?= (int) $project['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800">← К проекту</a>
+                <a href="<?= url('/projects/' . (int) $project['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800">← К проекту</a>
             <?php endif; ?>
         </div>
 
         <div class="flex gap-2">
-            <a href="/tasks<?= !empty($project) ? '?project_id=' . (int) $project['id'] : '' ?>"
+            <a href="<?= url('/tasks') ?><?= !empty($project) ? '?project_id=' . (int) $project['id'] : '' ?>"
                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                 Список
             </a>

@@ -38,7 +38,7 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="/login" autocomplete="on">
+            <form method="POST" action="<?= url('/login') ?>" autocomplete="on">
                 <?= csrf_field() ?>
 
                 <!-- Поле логин -->

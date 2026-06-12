@@ -46,11 +46,11 @@ $typeIcons = [
         <div class="flex items-center gap-3">
             <!-- Фильтр -->
             <div class="flex rounded-md border border-gray-300 overflow-hidden">
-                <a href="/notifications"
+                <a href="<?= url('/notifications') ?>"
                    class="px-3 py-1.5 text-sm <?= $filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' ?>">
                     Все
                 </a>
-                <a href="/notifications?filter=unread"
+                <a href="<?= url('/notifications') ?>?filter=unread"
                    class="px-3 py-1.5 text-sm border-l <?= $filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50' ?>">
                     Непрочитанные
                 </a>
@@ -58,7 +58,7 @@ $typeIcons = [
 
             <!-- Отметить все прочитанными -->
             <?php if ($unreadCount > 0): ?>
-                <form method="POST" action="/notifications/read-all">
+                <form method="POST" action="<?= url('/notifications/read-all') ?>">
                     <?= csrf_field() ?>
                     <button type="submit"
                             class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
@@ -86,7 +86,7 @@ $typeIcons = [
                 <?php
                 $isRead = (bool) $notification['is_read'];
                 $icon = $typeIcons[$notification['type']] ?? $typeIcons['task_assigned'];
-                $link = $notification['task_id'] ? '/tasks/' . (int) $notification['task_id'] : '#';
+                $link = $notification['task_id'] ? url('/tasks/' . (int) $notification['task_id']) : '#';
                 $timeAgo = formatTimeAgo($notification['created_at'] ?? '');
                 ?>
                 <div class="flex items-start gap-4 p-4 <?= $isRead ? 'bg-white' : 'bg-blue-50' ?> hover:bg-gray-50 transition">
@@ -112,7 +112,7 @@ $typeIcons = [
 
                     <!-- Кнопка прочитать -->
                     <?php if (!$isRead): ?>
-                        <form method="POST" action="/notifications/<?= (int) $notification['id'] ?>/read" class="flex-shrink-0">
+                        <form method="POST" action="<?= url('/notifications/' . (int) $notification['id'] . '/read') ?>" class="flex-shrink-0">
                             <?= csrf_field() ?>
                             <button type="submit" title="Отметить прочитанным"
                                     class="p-1 text-gray-400 hover:text-blue-600 transition">
@@ -127,5 +127,3 @@ $typeIcons = [
         </div>
     <?php endif; ?>
 </div>
-
-

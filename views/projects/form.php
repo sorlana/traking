@@ -5,12 +5,12 @@
  */
 $layout = 'layouts/app';
 $isEdit = $project !== null;
-$action = $isEdit ? '/projects/' . e($project['id']) . '/edit' : '/projects/create';
+$action = $isEdit ? url('/projects/' . (int) $project['id'] . '/edit') : url('/projects/create');
 ?>
 
 <!-- Заголовок -->
 <div class="mb-6">
-    <a href="<?= $isEdit ? '/projects/' . e($project['id']) : '/projects' ?>"
+    <a href="<?= $isEdit ? url('/projects/' . (int) $project['id']) : url('/projects') ?>"
        class="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block">&larr; Назад</a>
     <h1 class="text-2xl font-bold text-gray-800">
         <?= $isEdit ? 'Редактирование проекта' : 'Создание проекта' ?>
@@ -92,7 +92,7 @@ $action = $isEdit ? '/projects/' . e($project['id']) . '/edit' : '/projects/crea
                     class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md text-sm font-medium transition">
                 <?= $isEdit ? 'Сохранить изменения' : 'Создать проект' ?>
             </button>
-            <a href="<?= $isEdit ? '/projects/' . e($project['id']) : '/projects' ?>"
+            <a href="<?= $isEdit ? url('/projects/' . (int) $project['id']) : url('/projects') ?>"
                class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-md text-sm font-medium transition">
                 Отмена
             </a>

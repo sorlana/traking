@@ -30,7 +30,7 @@
         <!-- Заголовок dropdown -->
         <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
             <h3 class="text-sm font-medium text-gray-800">Уведомления</h3>
-            <a href="/notifications" class="text-xs text-blue-600 hover:text-blue-800">Все</a>
+            <a href="<?= url('/notifications') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все</a>
         </div>
 
         <!-- Список уведомлений -->
@@ -42,7 +42,7 @@
             </template>
 
             <template x-for="item in items" :key="item.id">
-                <a :href="item.task_id ? '/tasks/' + item.task_id : '/notifications'"
+                <a :href="item.task_id ? BASE_URL + '/tasks/' + item.task_id : BASE_URL + '/notifications'"
                    @click="markAsRead(item)"
                    class="block px-4 py-3 hover:bg-gray-50 transition"
                    :class="{ 'bg-blue-50': !item.is_read }">
@@ -106,7 +106,7 @@ function notificationBell() {
 
         async fetchCount() {
             try {
-                const res = await fetch('/ajax/notifications/count', {
+                const res = await fetch(BASE_URL + '/ajax/notifications/count', {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const data = await res.json();
@@ -116,7 +116,7 @@ function notificationBell() {
 
         async fetchList() {
             try {
-                const res = await fetch('/ajax/notifications/list', {
+                const res = await fetch(BASE_URL + '/ajax/notifications/list', {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const data = await res.json();
@@ -127,7 +127,7 @@ function notificationBell() {
         async markAsRead(item) {
             if (item.is_read) return;
             try {
-                await fetch(`/notifications/${item.id}/read`, {
+                await fetch(BASE_URL + `/notifications/${item.id}/read`, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -142,7 +142,7 @@ function notificationBell() {
 
         async markAllRead() {
             try {
-                await fetch('/notifications/read-all', {
+                await fetch(BASE_URL + '/notifications/read-all', {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',

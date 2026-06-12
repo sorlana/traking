@@ -24,14 +24,14 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
 <div class="max-w-3xl mx-auto">
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6 flex-wrap">
-        <a href="/tasks" class="hover:text-blue-600">Задачи</a>
+        <a href="<?= url('/tasks') ?>" class="hover:text-blue-600">Задачи</a>
         <?php if ($project ?? null): ?>
             <span>→</span>
-            <a href="/projects/<?= (int) $project['id'] ?>" class="hover:text-blue-600"><?= e($project['title']) ?></a>
+            <a href="<?= url('/projects/' . (int) $project['id']) ?>" class="hover:text-blue-600"><?= e($project['title']) ?></a>
         <?php endif; ?>
         <?php if ($parentTask ?? null): ?>
             <span>→</span>
-            <a href="/tasks/<?= (int) $parentTask['id'] ?>" class="hover:text-blue-600"><?= e($parentTask['title']) ?></a>
+            <a href="<?= url('/tasks/' . (int) $parentTask['id']) ?>" class="hover:text-blue-600"><?= e($parentTask['title']) ?></a>
         <?php endif; ?>
         <span>→</span>
         <span class="text-gray-800"><?= $isEdit ? 'Редактирование' : 'Создание задачи' ?></span>
@@ -55,7 +55,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="<?= $isEdit ? '/tasks/' . (int) $task['id'] . '/edit' : '/tasks/create' ?>">
+        <form method="POST" action="<?= $isEdit ? url('/tasks/' . (int) $task['id'] . '/edit') : url('/tasks/create') ?>">
             <?= csrf_field() ?>
 
             <!-- Проект (select если не указан, hidden если указан) -->
@@ -89,7 +89,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Родительская задача</label>
                         <p class="text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2">
-                            <a href="/tasks/<?= (int) $parentTask['id'] ?>" class="text-blue-600 hover:text-blue-800">
+                            <a href="<?= url('/tasks/' . (int) $parentTask['id']) ?>" class="text-blue-600 hover:text-blue-800">
                                 <?= e($parentTask['title']) ?>
                             </a>
                         </p>
@@ -175,7 +175,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                         class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                     <?= $isEdit ? 'Сохранить изменения' : 'Создать задачу' ?>
                 </button>
-                <a href="<?= $isEdit ? '/tasks/' . (int) $task['id'] : '/tasks' ?>"
+                <a href="<?= $isEdit ? url('/tasks/' . (int) $task['id']) : url('/tasks') ?>"
                    class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
                     Отмена
                 </a>

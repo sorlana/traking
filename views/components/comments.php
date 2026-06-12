@@ -129,7 +129,7 @@ function commentsComponent() {
                 const formData = new FormData();
                 formData.append('comment_text', this.newComment.trim());
 
-                const response = await fetch(`/tasks/${this.taskId}/comments`, {
+                const response = await fetch(BASE_URL + `/tasks/${this.taskId}/comments`, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -187,7 +187,7 @@ function commentsComponent() {
                 const formData = new FormData();
                 formData.append('comment_text', comment.editText.trim());
 
-                const response = await fetch(`/comments/${comment.id}/edit`, {
+                const response = await fetch(BASE_URL + `/comments/${comment.id}/edit`, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -218,7 +218,7 @@ function commentsComponent() {
             try {
                 const formData = new FormData();
 
-                const response = await fetch(`/comments/${commentId}/delete`, {
+                const response = await fetch(BASE_URL + `/comments/${commentId}/delete`, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',

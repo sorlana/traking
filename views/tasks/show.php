@@ -52,12 +52,12 @@ $canEdit = can('create_task', (int) $task['project_id']);
 
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-        <a href="/projects/<?= (int) $task['project_id'] ?>" class="hover:text-blue-600">
+        <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-600">
             <?= e($task['project_title'] ?? 'Проект') ?>
         </a>
         <?php if ($parent ?? null): ?>
             <span>→</span>
-            <a href="/tasks/<?= (int) $parent['id'] ?>" class="hover:text-blue-600">
+            <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-600">
                 <?= e($parent['title']) ?>
             </a>
         <?php endif; ?>
@@ -78,16 +78,16 @@ $canEdit = can('create_task', (int) $task['project_id']);
 
         <?php if ($canEdit): ?>
         <div class="flex flex-wrap gap-2">
-            <a href="/tasks/<?= (int) $task['id'] ?>/edit"
+            <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>"
                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                 Редактировать
             </a>
-            <a href="/tasks/create?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
+            <a href="<?= url('/tasks/create') ?>?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
                class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200 transition">
                 + Подзадача
             </a>
             <?php if ($task['status_code'] !== 'closed' && $task['status_code'] !== 'cancelled'): ?>
-                <form method="POST" action="/tasks/<?= (int) $task['id'] ?>/close"
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
                       onsubmit="return confirm('Закрыть задачу?')" class="inline">
                     <?= csrf_field() ?>
                     <button type="submit"
@@ -118,7 +118,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-medium text-gray-500">Подзадачи (<?= count($children) ?>)</h3>
                     <?php if ($canEdit): ?>
-                        <a href="/tasks/create?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
+                        <a href="<?= url('/tasks/create') ?>?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
                            class="text-sm text-blue-600 hover:text-blue-800">+ Добавить</a>
                     <?php endif; ?>
                 </div>
@@ -136,7 +136,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                             ?>
                             <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>">
                                 <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>
-                                <a href="/tasks/<?= (int) $child['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex-1">
+                                <a href="<?= url('/tasks/' . (int) $child['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex-1">
                                     <?= e($child['title']) ?>
                                 </a>
                                 <span class="text-xs text-gray-500 hidden sm:inline">
@@ -174,7 +174,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                                       d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
                             <div class="flex-1 min-w-0">
-                                <a :href="`/files/${file.id}/download`" class="text-sm text-blue-600 hover:text-blue-800 truncate block" x-text="file.file_name"></a>
+                                <a :href="BASE_URL + '/files/' + file.id + '/download'" class="text-sm text-blue-600 hover:text-blue-800 truncate block" x-text="file.file_name"></a>
                                 <p class="text-xs text-gray-400">
                                     <span x-text="file.uploader_name"></span> •
                                     <span x-text="formatDate(file.created_at)"></span> •
@@ -296,7 +296,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                             const formData = new FormData();
                             formData.append('file', this.selectedFile);
 
-                            const response = await fetch(`/tasks/${this.taskId}/files`, {
+                            const response = await fetch(BASE_URL + `/tasks/${this.taskId}/files`, {
                                 method: 'POST',
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                                 body: formData,
@@ -330,7 +330,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                         if (!confirm('Удалить файл?')) return;
 
                         try {
-                            const response = await fetch(`/files/${fileId}/delete`, {
+                            const response = await fetch(BASE_URL + `/files/${fileId}/delete`, {
                                 method: 'POST',
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                             });
@@ -392,7 +392,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                             formData.append('url', this.newUrl.trim());
                             formData.append('title', this.newTitle.trim());
 
-                            const response = await fetch(`/tasks/${this.taskId}/links`, {
+                            const response = await fetch(BASE_URL + `/tasks/${this.taskId}/links`, {
                                 method: 'POST',
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                                 body: formData,
@@ -425,7 +425,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                         if (!confirm('Удалить ссылку?')) return;
 
                         try {
-                            const response = await fetch(`/links/${linkId}/delete`, {
+                            const response = await fetch(BASE_URL + `/links/${linkId}/delete`, {
                                 method: 'POST',
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                             });
@@ -457,7 +457,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
                     <?php if ($canEdit && $task['status_code'] !== 'closed'): ?>
-                        <form method="POST" action="/tasks/<?= (int) $task['id'] ?>/status" class="mt-1" x-data>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="mt-1" x-data>
                             <?= csrf_field() ?>
                             <select name="status_id" onchange="this.form.submit()"
                                     class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -525,7 +525,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
             <?php if ($canEdit && $task['status_code'] !== 'closed'): ?>
             <div class="bg-white rounded-lg shadow-sm border p-5">
                 <h3 class="text-sm font-medium text-gray-500 border-b pb-2 mb-3">Переназначить</h3>
-                <form method="POST" action="/tasks/<?= (int) $task['id'] ?>/reassign">
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
                     <?= csrf_field() ?>
                     <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
                         <option value="">Не назначен</option>

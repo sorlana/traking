@@ -42,12 +42,12 @@ $statusColors = [
                 <?php endif; ?>
             </h1>
             <?php if ($project ?? null): ?>
-                <a href="/projects/<?= (int) $project['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800">← К проекту</a>
+                <a href="<?= url('/projects/' . (int) $project['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800">← К проекту</a>
             <?php endif; ?>
         </div>
 
         <?php if (can('create_task', $project['id'] ?? null)): ?>
-            <a href="/tasks/create<?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
+            <a href="<?= url('/tasks/create') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -58,7 +58,7 @@ $statusColors = [
     </div>
 
     <!-- Фильтры -->
-    <form method="GET" action="/tasks" class="bg-white rounded-lg shadow-sm border p-4">
+    <form method="GET" action="<?= url('/tasks') ?>" class="bg-white rounded-lg shadow-sm border p-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             <!-- Статус -->
             <div>
@@ -131,7 +131,7 @@ $statusColors = [
                 <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">
                     Фильтр
                 </button>
-                <a href="/tasks<?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
+                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">
                     Сбросить
                 </a>
@@ -179,7 +179,7 @@ $statusColors = [
                             ?>
                             <tr class="hover:bg-gray-50 transition <?= $isOverdue ? 'bg-red-50' : '' ?>">
                                 <td class="px-4 py-3">
-                                    <a href="/tasks/<?= (int) $task['id'] ?>" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-blue-600 hover:text-blue-800 font-medium">
                                         <?= e($task['title']) ?>
                                     </a>
                                     <?php if ($isOverdue): ?>
@@ -204,7 +204,7 @@ $statusColors = [
                                 </td>
                                 <?php if (!($project ?? null)): ?>
                                 <td class="px-4 py-3 hidden xl:table-cell">
-                                    <a href="/projects/<?= (int) $task['project_id'] ?>" class="text-gray-600 hover:text-blue-600 text-xs">
+                                    <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="text-gray-600 hover:text-blue-600 text-xs">
                                         <?= e($task['project_title'] ?? '') ?>
                                     </a>
                                 </td>

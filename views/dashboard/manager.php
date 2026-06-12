@@ -15,7 +15,7 @@ $layout = 'layouts/app';
         <div class="bg-white rounded-lg shadow-sm border p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-medium text-gray-500">Мои проекты</h3>
-                <a href="/projects" class="text-xs text-blue-600 hover:text-blue-800">Все проекты →</a>
+                <a href="<?= url('/projects') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все проекты →</a>
             </div>
 
             <?php if (empty($myProjects)): ?>
@@ -25,7 +25,7 @@ $layout = 'layouts/app';
                     <?php foreach ($myProjects as $project): ?>
                         <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50">
                             <div class="min-w-0">
-                                <a href="/projects/<?= (int) $project['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                <a href="<?= url('/projects/' . (int) $project['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                     <?= e($project['title']) ?>
                                 </a>
                                 <p class="text-xs text-gray-500">
@@ -59,7 +59,7 @@ $layout = 'layouts/app';
                     <?php foreach ($reviewTasks as $task): ?>
                         <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50">
                             <div class="flex-1 min-w-0">
-                                <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                     <?= e($task['title']) ?>
                                 </a>
                                 <p class="text-xs text-gray-500">
@@ -88,7 +88,7 @@ $layout = 'layouts/app';
                     <?php foreach ($overdueTasks as $task): ?>
                         <div class="flex items-center gap-3 p-2 bg-red-50 rounded">
                             <div class="flex-1 min-w-0">
-                                <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                     <?= e($task['title']) ?>
                                 </a>
                                 <p class="text-xs text-gray-500">
@@ -118,7 +118,7 @@ $layout = 'layouts/app';
                                 <span class="text-xs font-medium text-gray-700"><?= e($comment['user_name'] ?? '') ?></span>
                                 <span class="text-xs text-gray-400"><?= date('d.m H:i', strtotime($comment['created_at'])) ?></span>
                             </div>
-                            <a href="/tasks/<?= (int) $comment['task_id'] ?>" class="text-sm text-blue-600 hover:text-blue-800">
+                            <a href="<?= url('/tasks/' . (int) $comment['task_id']) ?>" class="text-sm text-blue-600 hover:text-blue-800">
                                 <?= e($comment['task_title'] ?? '') ?>
                             </a>
                             <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">

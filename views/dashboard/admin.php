@@ -107,7 +107,7 @@ $layout = 'layouts/app';
                                     <span class="font-medium"><?= e($entry['user_name'] ?? 'Система') ?></span>
                                     <?= e($actionText) ?>
                                     <?php if (!empty($entry['task_title'])): ?>
-                                        <a href="/tasks/<?= (int) $entry['task_id'] ?>" class="text-blue-600 hover:text-blue-800">
+                                        <a href="<?= url('/tasks/' . (int) $entry['task_id']) ?>" class="text-blue-600 hover:text-blue-800">
                                             <?= e($entry['task_title']) ?>
                                         </a>
                                     <?php endif; ?>
@@ -136,7 +136,7 @@ $layout = 'layouts/app';
                     <?php foreach ($overdueTasks as $task): ?>
                         <div class="flex items-center gap-3 p-2 bg-red-50 rounded">
                             <div class="flex-1 min-w-0">
-                                <a href="/tasks/<?= (int) $task['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
+                                <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium truncate block">
                                     <?= e($task['title']) ?>
                                 </a>
                                 <p class="text-xs text-gray-500">

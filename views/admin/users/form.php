@@ -16,7 +16,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Заголовок -->
     <div class="flex items-center gap-4">
-        <a href="/admin/users" class="text-gray-400 hover:text-gray-600 transition">
+        <a href="<?= url('/admin/users') ?>" class="text-gray-400 hover:text-gray-600 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -28,7 +28,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
 
     <!-- Форма -->
     <form method="POST"
-          action="<?= $isEdit ? '/admin/users/' . (int)$user['id'] . '/edit' : '/admin/users/create' ?>"
+          action="<?= $isEdit ? url('/admin/users/' . (int)$user['id'] . '/edit') : url('/admin/users/create') ?>"
           class="bg-white rounded-lg shadow-sm border p-6 space-y-5">
         <?= csrf_field() ?>
 
@@ -132,7 +132,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                         class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     Сохранить
                 </button>
-                <a href="/admin/users"
+                <a href="<?= url('/admin/users') ?>"
                    class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
                     Отмена
                 </a>
@@ -140,7 +140,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
 
             <?php if ($isEdit): ?>
                 <!-- Кнопка сброса пароля при редактировании -->
-                <form method="POST" action="/admin/users/<?= (int)$user['id'] ?>/reset-password" class="inline">
+                <form method="POST" action="<?= url('/admin/users/' . (int)$user['id'] . '/reset-password') ?>" class="inline">
                     <?= csrf_field() ?>
                     <button type="submit"
                             class="px-4 py-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-sm font-medium rounded-lg border border-yellow-200 transition"
