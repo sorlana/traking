@@ -1,15 +1,16 @@
 # Traking — маршрутизация через index.php
 # Приложение работает в подпапке: /traking/
 
+# Указываем index-файл
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /traking/public/
 
     # Если запрос к реальному файлу — отдать его напрямую
     RewriteCond %{REQUEST_FILENAME} !-f
-    # Если запрос к реальной директории — отдать её
-    RewriteCond %{REQUEST_FILENAME} !-d
-    # Всё остальное — на index.php
+    # Всё остальное (включая директории) — на index.php
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
