@@ -1,0 +1,35 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: FTP Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTIMAN_FTP_HOST }}
+          username: ${{ secrets.HOSTIMAN_FTP_USERNAME }}
+          password: ${{ secrets.HOSTIMAN_FTP_PASSWORD }}
+          server-dir: /var/www/s265300/data/www/unique-style.ru/traking/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .gitignore
+            .github/**
+            vendor/**
+            tests/**
+            phpunit.xml
+            composer.json
+            composer.lock
+            src/config.example.php
+            logs/*.log

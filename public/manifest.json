@@ -1,0 +1,25 @@
+{
+    "name": "Traking — Управление проектами",
+    "short_name": "Traking",
+    "description": "Система управления проектами, задачами и правками",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "theme_color": "#1e40af",
+    "background_color": "#ffffff",
+    "lang": "ru",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

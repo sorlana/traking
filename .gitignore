@@ -1,0 +1,20 @@
+# Конфигурация с секретами
+config/database.php
+
+# Загруженные файлы пользователей
+storage/uploads/*
+!storage/uploads/.gitkeep
+!storage/uploads/projects/.gitkeep
+
+# Логи
+storage/logs/*
+!storage/logs/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

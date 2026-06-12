@@ -1,0 +1,17 @@
+# Traking — перенаправление всех запросов в public/
+# Для shared-хостинга: если document root нельзя настроить на public/
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Перенаправляем все запросы в public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Запрет прямого доступа к директориям приложения
+<FilesMatch "\.(php|sql|log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
