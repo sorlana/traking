@@ -312,7 +312,7 @@ class Router
     {
         if (is_callable($action) && !is_array($action)) {
             // Если action — это замыкание (callable)
-            call_user_func_array($action, $params);
+            call_user_func_array($action, array_values($params));
             return;
         }
 
@@ -333,8 +333,8 @@ class Router
             return;
         }
 
-        // Вызываем метод контроллера с параметрами из URL
-        call_user_func_array([$controller, $method], $params);
+        // Вызываем метод контроллера с параметрами из URL (только значения, без ключей)
+        call_user_func_array([$controller, $method], array_values($params));
     }
 
     /**
