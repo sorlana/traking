@@ -29,6 +29,33 @@ if ($config['debug']) {
     ini_set('display_errors', '0');
 }
 
+// Глобальный обработчик исключений — для AJAX возвращает JSON
+set_exception_handler(function (Throwable $e) use ($config) {
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+        && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+    if ($isAjax) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        $response = ['error' => 'Внутренняя ошибка сервера'];
+        if ($config['debug']) {
+            $response['debug'] = $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+        }
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    } else {
+        if ($config['debug']) {
+            echo '<h1>Ошибка</h1>';
+            echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
+            echo '<p>' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>';
+            echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        } else {
+            http_response_code(500);
+            echo 'Внутренняя ошибка сервера';
+        }
+    }
+    exit;
+});
+
 // Установка часового пояса
 date_default_timezone_set($config['timezone'] ?? 'Europe/Moscow');
 

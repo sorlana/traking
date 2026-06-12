@@ -137,7 +137,12 @@ function commentsComponent() {
                     body: formData,
                 });
 
-                const data = await response.json();
+                const text = await response.text();
+                let data;
+                try { data = JSON.parse(text); } catch(parseErr) {
+                    this.errorMessage = 'Ошибка сервера: ' + text.substring(0, 200);
+                    return;
+                }
 
                 if (data.success && data.comment) {
                     this.comments.push({
