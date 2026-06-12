@@ -2,15 +2,13 @@
     RewriteEngine On
     RewriteBase /traking/
 
-    # Если запрос к реальному файлу в public/ — отдаём напрямую
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Запрет прямого доступа к служебным папкам
+    RewriteRule ^(app|config|database|storage|views)(/|$) - [F,L]
 
-    # Всё остальное — на public/index.php
+    # Если запрос к реальному файлу (CSS, JS, картинки в public/) — отдаём
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Всё остальное — на public/index.php (включая корень и все маршруты)
     RewriteRule ^(.*)$ public/index.php [QSA,L]
-</IfModule>
-
-# Запрет прямого доступа к app/, config/, database/, storage/
-<IfModule mod_rewrite.c>
-    RewriteRule ^(app|config|database|storage|views)/ - [F,L]
 </IfModule>
