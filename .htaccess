@@ -1,39 +1,16 @@
-# Traking — перенаправление всех запросов в public/index.php
-# Приложение работает в подпапке: /traking/
-
-DirectoryIndex public/index.php
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /traking/
 
-    # Если файл реально существует в public/ — отдаём его
-    RewriteCond %{REQUEST_URI} !^/traking/public/
-    RewriteCond %{DOCUMENT_ROOT}/traking/public/$1 -f
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Если запрос к реальному файлу в public/ — отдаём напрямую
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
 
     # Всё остальное — на public/index.php
-    RewriteCond %{REQUEST_URI} !^/traking/public/
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 </IfModule>
 
-# Запрет доступа к PHP-файлам вне public/
-<FilesMatch "\.php$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order deny,allow
-        Deny from all
-    </IfModule>
-</FilesMatch>
-
-# Разрешаем только public/index.php
-<Files "index.php">
-    <IfModule mod_authz_core.c>
-        Require all granted
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Allow from all
-    </IfModule>
-</Files>
+# Запрет прямого доступа к app/, config/, database/, storage/
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|config|database|storage|views)/ - [F,L]
+</IfModule>
