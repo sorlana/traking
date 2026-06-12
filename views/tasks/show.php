@@ -97,6 +97,16 @@ $canEdit = can('create_task', (int) $task['project_id']);
                     </button>
                 </form>
             <?php endif; ?>
+            <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
+                      onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
+                    <?= csrf_field() ?>
+                    <button type="submit"
+                            class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition">
+                        Удалить
+                    </button>
+                </form>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

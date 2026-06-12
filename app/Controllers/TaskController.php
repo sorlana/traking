@@ -720,6 +720,37 @@ class TaskController extends Controller
     }
 
     /**
+     * Удаление задачи (только создатель или admin)
+     * POST /tasks/{id}/delete
+     */
+    public function delete(string $id): void
+    {
+        $taskId = (int) $id;
+        $task = $this->taskModel->find($taskId);
+
+        if (!$task) {
+            Response::notFound('Задача не найдена');
+            return;
+        }
+
+        // Удалять может только создатель задачи или admin
+        $canDelete = Auth::isAdmin() || (int) $task['created_by'] === Auth::id();
+
+        if (!$canDelete) {
+            Response::forbidden('Удалить задачу может только её создатель или администратор');
+            return;
+        }
+
+        $projectId = (int) $task['project_id'];
+
+        // Удаляем задачу (CASCADE удалит подзадачи, комментарии, файлы)
+        $this->taskModel->delete($taskId);
+
+        Session::flash('success', 'Задача «' . $task['title'] . '» удалена');
+        $this->redirect('/projects/' . $projectId);
+    }
+
+    /**
      * Валидация данных задачи
      *
      * @param array $data Данные формы

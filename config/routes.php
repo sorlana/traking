@@ -76,6 +76,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/projects/{id}/remove-user', [\Controllers\ProjectController::class, 'removeUser']);
     $router->post('/projects/{id}/add-document', [\Controllers\ProjectController::class, 'addDocument']);
     $router->post('/projects/{id}/status', [\Controllers\ProjectController::class, 'changeStatus']);
+    $router->post('/projects/{id}/delete', [\Controllers\ProjectController::class, 'delete']);
 
     // Задачи
     $router->get('/tasks', [\Controllers\TaskController::class, 'index']);
@@ -87,6 +88,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/tasks/{id}/status', [\Controllers\TaskController::class, 'changeStatus']);
     $router->post('/tasks/{id}/close', [\Controllers\TaskController::class, 'close']);
     $router->post('/tasks/{id}/reassign', [\Controllers\TaskController::class, 'reassign']);
+    $router->post('/tasks/{id}/delete', [\Controllers\TaskController::class, 'delete']);
 
     // AJAX-эндпоинты для задач
     $router->get('/ajax/tasks/{id}/tree', [\Controllers\TaskController::class, 'ajaxTree']);

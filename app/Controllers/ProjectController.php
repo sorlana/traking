@@ -574,6 +574,34 @@ class ProjectController extends Controller
     // ========================================================================
 
     /**
+     * Удаление проекта (только создатель или admin)
+     * POST /projects/{id}/delete
+     */
+    public function delete(string $id): void
+    {
+        $project = $this->projectModel->find((int) $id);
+
+        if (!$project) {
+            Response::notFound('Проект не найден');
+            return;
+        }
+
+        // Удалять может только создатель или admin
+        $canDelete = Auth::isAdmin() || (int) $project['created_by'] === Auth::id();
+
+        if (!$canDelete) {
+            Response::forbidden('Удалить проект может только его создатель или администратор');
+            return;
+        }
+
+        // Удаляем проект (CASCADE удалит связанные записи)
+        $this->projectModel->delete((int) $id);
+
+        Session::flash('success', 'Проект «' . $project['title'] . '» удалён');
+        $this->redirect('/projects');
+    }
+
+    /**
      * Валидация данных проекта
      *
      * @param array $data Данные формы
