@@ -37,6 +37,14 @@ class Response
      */
     public static function redirect(string $url, int $code = 302): void
     {
+        // Если URL начинается с / — добавляем base_path (подпапку)
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            $basePath = $GLOBALS['config']['base_path'] ?? '';
+            if ($basePath !== '' && !str_starts_with($url, $basePath)) {
+                $url = rtrim($basePath, '/') . '/' . ltrim($url, '/');
+            }
+        }
+
         http_response_code($code);
         header("Location: {$url}");
         exit;

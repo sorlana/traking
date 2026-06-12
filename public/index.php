@@ -15,6 +15,7 @@ require_once BASE_PATH . '/app/Helpers/functions.php';
 
 // Загрузка конфигурации
 $config = require BASE_PATH . '/config/app.php';
+$GLOBALS['config'] = $config;
 
 // Запуск сессии
 session_start();

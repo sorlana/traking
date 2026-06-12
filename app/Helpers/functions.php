@@ -3,8 +3,47 @@
  * Глобальные хелпер-функции приложения Traking
  *
  * Подключается в public/index.php для доступа из любого шаблона и контроллера.
- * Содержит: экранирование вывода, CSRF-защита.
+ * Содержит: экранирование вывода, CSRF-защита, URL-хелперы.
  */
+
+// ============================================================================
+// URL-хелпер для подпапки
+// ============================================================================
+
+if (!function_exists('url')) {
+    /**
+     * Генерирует полный URL с учётом base_path (подпапки)
+     *
+     * Пример:
+     *   url('/login') → '/traking/login'
+     *   url('/tasks/5') → '/traking/tasks/5'
+     *
+     * @param string $path Относительный путь (начинается с /)
+     * @return string Полный путь с base_path
+     */
+    function url(string $path = '/'): string
+    {
+        $basePath = $GLOBALS['config']['base_path'] ?? '';
+        return rtrim($basePath, '/') . '/' . ltrim($path, '/');
+    }
+}
+
+if (!function_exists('asset')) {
+    /**
+     * Генерирует URL для статического файла (из public/assets/)
+     *
+     * Пример:
+     *   asset('/assets/css/app.css') → '/traking/assets/css/app.css'
+     *
+     * @param string $path Путь к файлу (начинается с /)
+     * @return string Полный путь
+     */
+    function asset(string $path): string
+    {
+        $basePath = $GLOBALS['config']['base_path'] ?? '';
+        return rtrim($basePath, '/') . '/' . ltrim($path, '/');
+    }
+}
 
 if (!function_exists('e')) {
     /**

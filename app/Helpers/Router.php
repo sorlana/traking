@@ -233,7 +233,7 @@ class Router
 
     /**
      * Определяет текущий URI из REQUEST_URI
-     * Убирает query string и нормализует путь
+     * Убирает query string, base_path (подпапку) и нормализует путь
      */
     private function getCurrentUri(): string
     {
@@ -242,6 +242,18 @@ class Router
         // Убираем query string (?key=value)
         if (($pos = strpos($uri, '?')) !== false) {
             $uri = substr($uri, 0, $pos);
+        }
+
+        // Убираем base_path (подпапку) из URI
+        // Например: /traking/login → /login
+        $basePath = defined('BASE_PATH') ? ($GLOBALS['config']['base_path'] ?? '') : '';
+        if ($basePath !== '' && str_starts_with($uri, $basePath)) {
+            $uri = substr($uri, strlen($basePath));
+        }
+
+        // Убираем /public из URI (если запрос прошёл через public/)
+        if (str_starts_with($uri, '/public')) {
+            $uri = substr($uri, 7); // убираем "/public"
         }
 
         // Убираем trailing slash (кроме корня)

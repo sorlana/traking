@@ -9,7 +9,10 @@ return [
     'name' => 'Traking',
 
     // URL приложения (без trailing slash)
-    'url' => 'http://localhost',
+    'url' => 'https://unique-style.ru/traking',
+
+    // Базовый путь (подпапка) — используется роутером для обрезки URI
+    'base_path' => '/traking',
 
     // Режим отладки (true — показывать ошибки, false — скрывать)
     'debug' => true,
