@@ -20,6 +20,9 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#1e40af">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/icons/icon-192x192.svg') ?>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>">
 </head>
