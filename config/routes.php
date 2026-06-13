@@ -123,6 +123,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // Комментарии (AJAX)
     $router->get('/ajax/tasks/{id}/messages', [\Controllers\CommentController::class, 'pollMessages']);
     $router->post('/tasks/{id}/comments', [\Controllers\CommentController::class, 'store']);
+    $router->post('/tasks/{id}/messages/read', [\Controllers\CommentController::class, 'markRead']);
     $router->post('/comments/{id}/edit', [\Controllers\CommentController::class, 'update']);
     $router->post('/comments/{id}/delete', [\Controllers\CommentController::class, 'delete']);
     $router->post('/comments/{id}/pin', [\Controllers\CommentController::class, 'togglePin']);

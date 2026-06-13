@@ -76,7 +76,12 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 </div>
                             </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
-                            <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
+                            <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right flex items-center justify-end gap-1">
+                                <span x-text="formatTime(msg.created_at)"></span>
+                                <!-- Галочки прочтения -->
+                                <span x-show="msg.read_by_others" class="text-blue-200 font-bold">✓✓</span>
+                                <span x-show="!msg.read_by_others" class="text-blue-300 opacity-70">✓</span>
+                            </div>
                         </div>
                         <!-- Прикреплённые файлы (без фона для изображений) -->
                         <template x-for="file in msg.files" :key="file.id">
@@ -106,8 +111,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <span x-text="link.title || link.url"></span>
                             </a>
                         </template>
-                        <!-- Время (если есть файлы/ссылки — показываем отдельно) -->
-                        <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
+                        <!-- Время (если есть файлы/ссылки — показываем отдельно) + галочки -->
+                        <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right flex items-center justify-end gap-1">
+                            <span x-text="formatTime(msg.created_at)"></span>
+                            <!-- Галочки прочтения -->
+                            <span x-show="msg.read_by_others" class="text-blue-400 font-bold">✓✓</span>
+                            <span x-show="!msg.read_by_others" class="text-gray-300">✓</span>
+                        </div>
                     </div>
                 </div>
 
@@ -353,6 +363,7 @@ function taskChat() {
                 'created_at' => $c['created_at'],
                 'parent_comment_id' => $c['parent_comment_id'] ? (int) $c['parent_comment_id'] : null,
                 'is_pinned' => (int) ($c['is_pinned'] ?? 0),
+                'read_by_others' => (bool) ($c['read_by_others'] ?? false),
                 'files' => array_map(function($f) {
                     return [
                         'id' => (int) $f['id'],
@@ -391,12 +402,13 @@ function taskChat() {
         emojis: ['😊','😂','❤️','👍','🔥','✅','👏','🙏','💪','⭐','✨','🎉','💯','👀','🤔','😎','🙌','💡','📌','🚀','⚡','🎯','📎','✏️','🗂️','📋','⏰','🔔','💬','📷'],
 
         /**
-         * Инициализация: скролл вниз при загрузке + polling
+         * Инициализация: скролл вниз при загрузке + polling + отметка прочтения
          */
         init() {
             this.$nextTick(() => {
                 this.scrollToBottom();
                 this.updateLastMessageId();
+                this.markMessagesAsRead();
             });
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
@@ -499,6 +511,27 @@ function taskChat() {
         },
 
         /**
+         * Отметить чужие сообщения как прочитанные (AJAX)
+         */
+        markMessagesAsRead() {
+            // Собираем ID чужих сообщений
+            const unreadIds = this.messages
+                .filter(m => m.user_id != this.currentUserId)
+                .map(m => m.id);
+
+            if (unreadIds.length === 0) return;
+
+            const formData = new FormData();
+            unreadIds.forEach(id => formData.append('message_ids[]', id));
+
+            fetch(BASE_URL + `/tasks/${this.taskId}/messages/read`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData,
+            }).catch(() => {});
+        },
+
+        /**
          * Обновить lastMessageId из текущих сообщений
          */
         updateLastMessageId() {
@@ -530,6 +563,8 @@ function taskChat() {
                     });
                     this.updateLastMessageId();
                     this.$nextTick(() => this.scrollToBottom());
+                    // Отмечаем новые чужие сообщения как прочитанные
+                    this.markMessagesAsRead();
                 }
 
                 // Удалённые сообщения
@@ -544,6 +579,14 @@ function taskChat() {
                         if (idx !== -1) {
                             this.messages[idx].comment_text = upd.comment_text;
                         }
+                    });
+                }
+
+                // Обновляем статус прочтения (галочки становятся синими)
+                if (data.newly_read && data.newly_read.length > 0) {
+                    data.newly_read.forEach(id => {
+                        const idx = this.messages.findIndex(m => m.id === id);
+                        if (idx !== -1) this.messages[idx].read_by_others = true;
                     });
                 }
             } catch(e) {}
@@ -635,6 +678,7 @@ function taskChat() {
                         created_at: data.comment.created_at,
                         parent_comment_id: this.replyTo ? this.replyTo.id : null,
                         is_pinned: 0,
+                        read_by_others: false,
                         files: data.comment.files || [],
                         links: data.comment.links || [],
                     });

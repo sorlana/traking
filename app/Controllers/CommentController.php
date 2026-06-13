@@ -280,6 +280,26 @@ class CommentController extends Controller
         }
         unset($msg);
 
+        // Добавляем read_by_others к новым сообщениям (для галочек прочтения)
+        $currentUserId = Auth::id();
+        if (!empty($messages)) {
+            $msgIds = array_column($messages, 'id');
+            $readByOthers = [];
+            try {
+                $placeholders = implode(',', array_fill(0, count($msgIds), '?'));
+                $readRows = $db->fetchAll(
+                    "SELECT DISTINCT comment_id FROM message_reads WHERE comment_id IN ({$placeholders}) AND user_id != ?",
+                    array_merge($msgIds, [$currentUserId])
+                );
+                $readByOthers = array_map(fn($r) => (int) $r['comment_id'], $readRows);
+            } catch (\Throwable $e) {}
+
+            foreach ($messages as &$msg) {
+                $msg['read_by_others'] = in_array((int) $msg['id'], $readByOthers);
+            }
+            unset($msg);
+        }
+
         // Определяем удалённые сообщения (если клиент передал список своих ID)
         $deleted = [];
         $clientIds = trim($_GET['ids'] ?? '');
@@ -311,10 +331,24 @@ class CommentController extends Controller
             }
         }
 
+        // Определяем сообщения текущего пользователя, прочитанные другими (newly_read)
+        $newlyRead = [];
+        try {
+            $newlyReadRows = $db->fetchAll(
+                "SELECT DISTINCT comment_id FROM message_reads 
+                 WHERE comment_id IN (SELECT id FROM task_comments WHERE task_id = ? AND user_id = ?)
+                   AND user_id != ?
+                   AND read_at >= DATE_SUB(NOW(), INTERVAL 10 SECOND)",
+                [$taskId, $currentUserId, $currentUserId]
+            );
+            $newlyRead = array_map(fn($r) => (int) $r['comment_id'], $newlyReadRows);
+        } catch (\Throwable $e) {}
+
         $this->json([
             'messages' => $messages,
             'deleted' => $deleted,
             'updated' => $updated,
+            'newly_read' => $newlyRead,
         ]);
     }
 
@@ -434,6 +468,40 @@ class CommentController extends Controller
             Session::flash('success', 'Комментарий удалён');
             $this->redirect("/tasks/{$taskId}");
         }
+    }
+
+    /**
+     * Пометить сообщения как прочитанные (AJAX)
+     * POST /tasks/{id}/messages/read
+     * Принимает: message_ids[] — массив ID сообщений
+     */
+    public function markRead(string $taskId): void
+    {
+        $taskId = (int) $taskId;
+        $userId = Auth::id();
+
+        $messageIds = $_POST['message_ids'] ?? [];
+        if (empty($messageIds)) {
+            $this->json(['success' => true]);
+            return;
+        }
+
+        $db = Database::getInstance();
+
+        foreach ($messageIds as $msgId) {
+            $msgId = (int) $msgId;
+            // INSERT IGNORE — не дублируем если уже отмечено
+            try {
+                $db->query(
+                    "INSERT IGNORE INTO message_reads (comment_id, user_id) VALUES (?, ?)",
+                    [$msgId, $userId]
+                );
+            } catch (\Throwable $e) {
+                // Пропускаем ошибки (таблица может не существовать)
+            }
+        }
+
+        $this->json(['success' => true]);
     }
 
     /**

@@ -209,6 +209,23 @@ class TaskController extends Controller
             );
         }
         unset($comment);
+
+        // Получаем список прочитанных сообщений другими пользователями (для галочек)
+        $readByOthers = [];
+        try {
+            $readRows = $db->fetchAll(
+                "SELECT DISTINCT comment_id FROM message_reads 
+                 WHERE comment_id IN (SELECT id FROM task_comments WHERE task_id = ?) AND user_id != ?",
+                [$taskId, Auth::id()]
+            );
+            $readByOthers = array_map(fn($r) => (int) $r['comment_id'], $readRows);
+        } catch (\Throwable $e) {}
+
+        // Добавляем read_by_others к каждому комментарию
+        foreach ($comments as &$comment) {
+            $comment['read_by_others'] = in_array((int) $comment['id'], $readByOthers);
+        }
+        unset($comment);
         $parent = $this->taskModel->getParent($taskId);
 
         // История действий
