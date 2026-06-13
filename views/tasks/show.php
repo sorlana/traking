@@ -93,97 +93,70 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php endif; ?>
             </div>
 
-            <!-- Switch статуса + Кнопки действий -->
-            <div class="flex items-center gap-4 flex-shrink-0 flex-wrap">
+            <!-- Статус + Кнопки действий -->
+            <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
 
-                <!-- Switch: Доработки / Готово -->
-                <?php if ($isClosed): ?>
-                    <!-- Задача закрыта — бейдж «Сделано» -->
-                    <span class="inline-block px-3 py-1.5 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
-                        Сделано
-                    </span>
-                <?php elseif ($canChangeStatus): ?>
-                    <!-- Бейдж текущего статуса -->
-                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
-                        <?= e($task['status_name'] ?? '') ?>
-                    </span>
-                    <!-- Switch -->
-                    <div class="inline-flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
-                        <?php if ($isExecutor): ?>
-                            <!-- Исполнитель: левая серая, правая — зелёная -->
-                            <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400">
-                                Доработки
-                            </span>
-                            <?php if (!$isDone): ?>
-                                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
-                                    <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-green-500 hover:bg-green-600 text-white transition cursor-pointer">
-                                        Готово
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <span class="px-3 py-1.5 text-xs font-medium bg-green-500 text-white">
-                                    Готово
-                                </span>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <!-- Руководитель: левая — оранжевая, правая серая -->
-                            <?php if (!$isRevision): ?>
-                                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
-                                    <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white transition cursor-pointer">
-                                        Доработки
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <span class="px-3 py-1.5 text-xs font-medium bg-orange-500 text-white">
-                                    Доработки ✓
-                                </span>
-                            <?php endif; ?>
-                            <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400">
-                                Готово
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                <?php else: ?>
-                    <!-- Нет прав — просто бейдж -->
-                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
-                        <?= e($task['status_name'] ?? '') ?>
-                    </span>
-                <?php endif; ?>
+                <!-- Бейдж текущего статуса -->
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                    <?= e($task['status_name'] ?? '') ?>
+                </span>
 
-                <!-- Кнопки действий -->
-                <?php if ($canEdit): ?>
-                    <div class="flex items-center gap-2">
+                <!-- Кнопки действий (в стиле «Редактировать») -->
+                <div class="flex items-center gap-2">
+                    <?php if ($canEdit): ?>
                         <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>"
                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                             Редактировать
                         </a>
-                        <?php if ($task['status_code'] === 'done' && !$isExecutor): ?>
-                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
-                                  onsubmit="return confirm('Закрыть задачу и перевести в архив?')" class="inline">
+                    <?php endif; ?>
+
+                    <?php if (!$isClosed): ?>
+                        <?php if ($isExecutor && $canChangeStatus && !$isDone): ?>
+                            <!-- Исполнитель: кнопка «Готово» -->
+                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                 <?= csrf_field() ?>
+                                <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
                                 <button type="submit"
-                                        class="px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200 transition"
-                                        <?= !$canClose['can'] ? 'disabled title="Есть незавершённые подзадачи"' : '' ?>>
-                                    Закрыть задачу
+                                        class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                                    Готово
+                                </button>
+                            </form>
+                        <?php elseif (!$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
+                            <!-- Руководитель: кнопка «Доработать» -->
+                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
+                                <button type="submit"
+                                        class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                                    Доработать
                                 </button>
                             </form>
                         <?php endif; ?>
-                        <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
-                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
-                                  onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
-                                <?= csrf_field() ?>
-                                <button type="submit"
-                                        class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition">
-                                    Удалить
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
+                              onsubmit="return confirm('Закрыть задачу и перевести в архив?')" class="inline">
+                            <?= csrf_field() ?>
+                            <button type="submit"
+                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition"
+                                    <?= !$canClose['can'] ? 'disabled title="Есть незавершённые подзадачи"' : '' ?>>
+                                Закрыть задачу
+                            </button>
+                        </form>
+                    <?php endif; ?>
+
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
+                              onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
+                            <?= csrf_field() ?>
+                            <button type="submit"
+                                    class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition">
+                                Удалить
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
