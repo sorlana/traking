@@ -165,11 +165,28 @@ $canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Au
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
                     <?php if ($canChangeStatus && $task['status_code'] !== 'done'): ?>
+                        <?php
+                        // Исполнитель может только поставить «Готово»
+                        // Руководитель может поставить «Доработки» или «В работе»
+                        $isExecutor = \Helpers\Auth::isExecutor();
+                        $availableStatuses = [];
+                        foreach ($statuses as $s) {
+                            if ($isExecutor) {
+                                // Исполнитель видит: текущий статус + Готово
+                                if ((int) $s['id'] === (int) $task['status_id'] || $s['code'] === 'done') {
+                                    $availableStatuses[] = $s;
+                                }
+                            } else {
+                                // Руководитель видит все статусы
+                                $availableStatuses[] = $s;
+                            }
+                        }
+                        ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="mt-1" x-data>
                             <?= csrf_field() ?>
                             <select name="status_id" onchange="this.form.submit()"
                                     class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <?php foreach ($statuses as $s): ?>
+                                <?php foreach ($availableStatuses as $s): ?>
                                     <option value="<?= (int) $s['id'] ?>" <?= (int) $task['status_id'] === (int) $s['id'] ? 'selected' : '' ?>>
                                         <?= e($s['name']) ?>
                                     </option>
