@@ -211,6 +211,7 @@ function imageEditor() {
                 const canvas = this.$refs.editorCanvas;
                 this.ctx = canvas.getContext('2d');
                 this.img = new Image();
+                this.img.crossOrigin = 'anonymous';
                 this.img.onload = () => {
                     // Масштабируем canvas под размер экрана
                     const maxW = Math.min(this.img.width, window.innerWidth - 100);
@@ -255,8 +256,12 @@ function imageEditor() {
          * Сохранить текущее состояние canvas в историю (для undo)
          */
         saveState() {
-            const canvas = this.$refs.editorCanvas;
-            this.history.push(canvas.toDataURL());
+            try {
+                const canvas = this.$refs.editorCanvas;
+                this.history.push(canvas.toDataURL());
+            } catch(e) {
+                console.error('saveState error (tainted canvas?):', e);
+            }
         },
 
         /**

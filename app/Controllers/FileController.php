@@ -225,6 +225,7 @@ class FileController extends Controller
         header('Content-Disposition: ' . $disposition . '; filename="' . $fileName . '"');
         header('Content-Length: ' . filesize($fullPath));
         header('Cache-Control: public, max-age=86400');
+        header('Access-Control-Allow-Origin: *');
         header('Pragma: no-cache');
 
         readfile($fullPath);
