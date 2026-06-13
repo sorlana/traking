@@ -65,22 +65,21 @@ $isClosed = ($task['status_code'] === 'closed');
 <div class="space-y-6">
 
     <!-- ===== Breadcrumb ===== -->
-    <nav class="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-        <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-600">
-            <?= e($task['project_title'] ?? 'Проект') ?>
-        </a>
-        <?php if ($parent ?? null): ?>
-            <span>→</span>
-            <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-600">
-                <?= e($parent['title']) ?>
-            </a>
-        <?php endif; ?>
-        <span>→</span>
-        <span class="text-gray-800 font-medium"><?= e($task['title']) ?></span>
-    </nav>
-
-    <!-- ===== Шапка: Заголовок + Switch + Кнопки действий ===== -->
+    <!-- ===== Шапка: Breadcrumb + Заголовок + Кнопки действий ===== -->
     <div class="bg-white rounded-lg shadow-sm border p-4">
+        <!-- Breadcrumb (мелкий, внутри блока) -->
+        <nav class="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+            <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500">
+                <?= e($task['project_title'] ?? 'Проект') ?>
+            </a>
+            <?php if ($parent ?? null): ?>
+                <span>›</span>
+                <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-500">
+                    <?= e($parent['title']) ?>
+                </a>
+            <?php endif; ?>
+        </nav>
+
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
             <!-- Заголовок + бейдж просрочки -->
@@ -263,24 +262,6 @@ $isClosed = ($task['status_code'] === 'closed');
                             </div>
                         <?php endforeach; ?>
                     </div>
-                <?php endif; ?>
-
-                <!-- Блокирующие подзадачи (показываем только руководителю) -->
-                <?php if (!$isExecutor && !$canClose['can'] && !empty($canClose['blocking'])): ?>
-                <div class="mt-4 bg-orange-50 rounded-lg border border-orange-200 p-3">
-                    <h4 class="text-xs font-medium text-orange-800 mb-1">Незавершённые подзадачи</h4>
-                    <p class="text-xs text-orange-600 mb-2">Для закрытия задачи все подзадачи должны быть завершены:</p>
-                    <ul class="space-y-1">
-                        <?php foreach (array_slice($canClose['blocking'], 0, 10) as $blocking): ?>
-                            <li class="text-xs text-orange-700">
-                                • <?= e($blocking['title']) ?> <span class="text-orange-500">(<?= e($blocking['status_name']) ?>)</span>
-                            </li>
-                        <?php endforeach; ?>
-                        <?php if (count($canClose['blocking']) > 10): ?>
-                            <li class="text-xs text-orange-500">...и ещё <?= count($canClose['blocking']) - 10 ?></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
                 <?php endif; ?>
             </div>
 
