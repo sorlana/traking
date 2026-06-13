@@ -253,16 +253,53 @@ function taskChat() {
         modalZoom: 1,
         sending: false,
         errorMessage: '',
+        lastMessageId: 0,
         currentUserId: <?= (int) $currentUserId ?>,
         taskId: <?= (int) $task['id'] ?>,
 
         /**
-         * Инициализация: скролл вниз при загрузке
+         * Инициализация: скролл вниз при загрузке + polling
          */
         init() {
             this.$nextTick(() => {
                 this.scrollToBottom();
+                this.updateLastMessageId();
             });
+            // Polling каждые 5 секунд
+            setInterval(() => this.pollNewMessages(), 5000);
+        },
+
+        /**
+         * Обновить lastMessageId из текущих сообщений
+         */
+        updateLastMessageId() {
+            if (this.messages.length > 0) {
+                this.lastMessageId = this.messages[this.messages.length - 1].id;
+            }
+        },
+
+        /**
+         * Polling: запрос новых сообщений с сервера
+         */
+        async pollNewMessages() {
+            if (!this.taskId) return;
+            try {
+                const response = await fetch(BASE_URL + `/ajax/tasks/${this.taskId}/messages?after=${this.lastMessageId}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        // Не добавляем дубликаты
+                        if (!this.messages.find(m => m.id === msg.id)) {
+                            this.messages.push(msg);
+                        }
+                    });
+                    this.updateLastMessageId();
+                    this.$nextTick(() => this.scrollToBottom());
+                }
+            } catch(e) {}
         },
 
         /**

@@ -19,6 +19,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#1e40af">
+    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>">
 </head>

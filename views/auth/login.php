@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход — Traking</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
 </head>
 <body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
 

@@ -127,8 +127,8 @@ class CommentController extends Controller
             $uploadedFile = $this->handleFileUpload($taskId, (int) $commentId, $task);
         }
 
-        // Уведомляем участников задачи
-        $this->notificationService->notifyCommentAdded($taskId, Auth::id());
+        // Уведомления о комментариях отключены — сообщения приходят через polling в чате
+        // $this->notificationService->notifyCommentAdded($taskId, Auth::id());
 
         // Получаем созданный комментарий с именем автора
         $user = Auth::user();
@@ -213,6 +213,54 @@ class CommentController extends Controller
             'file_size' => (int) $file['size'],
             'file_type' => $extension,
         ];
+    }
+
+    /**
+     * AJAX: получить новые сообщения (polling)
+     * GET /ajax/tasks/{id}/messages?after=LAST_ID
+     *
+     * @param string $taskId ID задачи
+     * @return void
+     */
+    public function pollMessages(string $taskId): void
+    {
+        $taskId = (int) $taskId;
+
+        if (!TaskAccessMiddleware::check($taskId)) {
+            $this->json(['messages' => []], 403);
+            return;
+        }
+
+        $afterId = (int) ($_GET['after'] ?? 0);
+        $db = Database::getInstance();
+
+        $messages = $db->fetchAll(
+            "SELECT tc.*, u.name as user_name, u.login as user_login
+             FROM task_comments tc
+             JOIN users u ON tc.user_id = u.id
+             WHERE tc.task_id = ? AND tc.id > ?
+             ORDER BY tc.created_at ASC",
+            [$taskId, $afterId]
+        );
+
+        // Подтягиваем файлы и ссылки к каждому сообщению
+        foreach ($messages as &$msg) {
+            $msg['files'] = $db->fetchAll(
+                "SELECT id, file_name, file_size, file_type FROM task_files WHERE comment_id = ?",
+                [(int) $msg['id']]
+            );
+            $msg['links'] = $db->fetchAll(
+                "SELECT id, url, title FROM task_links WHERE comment_id = ?",
+                [(int) $msg['id']]
+            );
+            // Приводим к нужному формату
+            $msg['id'] = (int) $msg['id'];
+            $msg['user_id'] = (int) $msg['user_id'];
+            $msg['task_id'] = (int) $msg['task_id'];
+        }
+        unset($msg);
+
+        $this->json(['messages' => $messages]);
     }
 
     /**

@@ -102,6 +102,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->get('/ajax/tasks/{id}/tree', [\Controllers\TaskController::class, 'ajaxTree']);
 
     // Комментарии (AJAX)
+    $router->get('/ajax/tasks/{id}/messages', [\Controllers\CommentController::class, 'pollMessages']);
     $router->post('/tasks/{id}/comments', [\Controllers\CommentController::class, 'store']);
     $router->post('/comments/{id}/edit', [\Controllers\CommentController::class, 'update']);
     $router->post('/comments/{id}/delete', [\Controllers\CommentController::class, 'delete']);
