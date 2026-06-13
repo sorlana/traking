@@ -276,6 +276,7 @@ class CommentController extends Controller
             $msg['user_id'] = (int) $msg['user_id'];
             $msg['task_id'] = (int) $msg['task_id'];
             $msg['parent_comment_id'] = $msg['parent_comment_id'] ? (int) $msg['parent_comment_id'] : null;
+            $msg['is_pinned'] = (int) ($msg['is_pinned'] ?? 0);
         }
         unset($msg);
 
@@ -433,6 +434,32 @@ class CommentController extends Controller
             Session::flash('success', 'Комментарий удалён');
             $this->redirect("/tasks/{$taskId}");
         }
+    }
+
+    /**
+     * Закрепить/открепить сообщение
+     * POST /comments/{id}/pin
+     *
+     * @param string $id ID комментария
+     * @return void
+     */
+    public function togglePin(string $id): void
+    {
+        $commentId = (int) $id;
+        $comment = $this->commentModel->find($commentId);
+
+        if (!$comment) {
+            $this->json(['error' => 'Сообщение не найдено'], 404);
+            return;
+        }
+
+        // Переключаем is_pinned
+        $newValue = ((int)($comment['is_pinned'] ?? 0)) === 1 ? 0 : 1;
+
+        $db = Database::getInstance();
+        $db->update('task_comments', ['is_pinned' => $newValue], 'id = ?', [$commentId]);
+
+        $this->json(['success' => true, 'is_pinned' => $newValue]);
     }
 
     /**

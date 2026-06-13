@@ -111,6 +111,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/tasks/{id}/comments', [\Controllers\CommentController::class, 'store']);
     $router->post('/comments/{id}/edit', [\Controllers\CommentController::class, 'update']);
     $router->post('/comments/{id}/delete', [\Controllers\CommentController::class, 'delete']);
+    $router->post('/comments/{id}/pin', [\Controllers\CommentController::class, 'togglePin']);
 
     // Файлы и ссылки
     $router->post('/tasks/{id}/files', [\Controllers\FileController::class, 'upload']);

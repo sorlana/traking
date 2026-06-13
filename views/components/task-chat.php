@@ -18,6 +18,19 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
 <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0" x-data="taskChat()">
 
+    <!-- Закреплённые сообщения -->
+    <template x-if="messages.filter(m => m.is_pinned).length > 0">
+        <div class="border-b bg-blue-50 px-4 py-2 space-y-1 max-h-32 overflow-y-auto flex-shrink-0">
+            <template x-for="pin in messages.filter(m => m.is_pinned)" :key="'pin-' + pin.id">
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-blue-500">📌</span>
+                    <span class="font-medium text-blue-700" x-text="pin.user_name"></span>
+                    <span class="text-blue-600 truncate flex-1" x-text="pin.comment_text"></span>
+                </div>
+            </template>
+        </div>
+    </template>
+
     <!-- Область сообщений (скролл) -->
     <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages">
         <!-- Пустое состояние -->
@@ -151,6 +164,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </svg>
             Ответить
         </button>
+        <!-- Закрепить/Открепить -->
+        <button @click="togglePin(contextMenu.msg); contextMenu.show = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+            <span x-text="contextMenu.msg && contextMenu.msg.is_pinned ? 'Открепить' : 'Закрепить'"></span>
+        </button>
         <!-- Редактировать (только свои) -->
         <button x-show="contextMenu.msg && contextMenu.msg.user_id == currentUserId"
                 @click="editMessage(contextMenu.msg); contextMenu.show = false"
@@ -254,6 +276,25 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.mp4,.mov">
             </label>
 
+            <!-- Кнопка эмодзи -->
+            <div class="relative flex-shrink-0">
+                <button @click="emojiOpen = !emojiOpen" type="button"
+                        class="text-gray-400 hover:text-gray-600 p-1">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </button>
+                <div x-show="emojiOpen" @click.outside="emojiOpen = false" x-transition
+                     class="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border p-2 grid grid-cols-6 gap-1 w-56 z-50"
+                     style="display: none;">
+                    <template x-for="emoji in emojis" :key="emoji">
+                        <button type="button" @click="insertEmoji(emoji); emojiOpen = false"
+                                class="text-xl hover:bg-gray-100 rounded p-1 text-center" x-text="emoji"></button>
+                    </template>
+                </div>
+            </div>
+
             <!-- Textarea с авто-увеличением -->
             <textarea x-model="newMessage"
                       x-ref="messageInput"
@@ -292,6 +333,7 @@ function taskChat() {
                 'user_name' => $c['user_name'] ?? $c['user_login'] ?? '',
                 'created_at' => $c['created_at'],
                 'parent_comment_id' => $c['parent_comment_id'] ? (int) $c['parent_comment_id'] : null,
+                'is_pinned' => (int) ($c['is_pinned'] ?? 0),
                 'files' => array_map(function($f) {
                     return [
                         'id' => (int) $f['id'],
@@ -324,6 +366,10 @@ function taskChat() {
         longPressTimer: null,
         replyTo: null,
         editingMsg: null,
+
+        // Эмодзи-пикер
+        emojiOpen: false,
+        emojis: ['😊','😂','❤️','👍','🔥','✅','👏','🙏','💪','⭐','✨','🎉','💯','👀','🤔','😎','🙌','💡','📌','🚀','⚡','🎯','📎','✏️','🗂️','📋','⏰','🔔','💬','📷'],
 
         /**
          * Инициализация: скролл вниз при загрузке + polling
@@ -569,6 +615,7 @@ function taskChat() {
                         user_name: data.comment.user_name,
                         created_at: data.comment.created_at,
                         parent_comment_id: this.replyTo ? this.replyTo.id : null,
+                        is_pinned: 0,
                         files: data.comment.files || [],
                         links: data.comment.links || [],
                     });
@@ -589,6 +636,39 @@ function taskChat() {
             } finally {
                 this.sending = false;
             }
+        },
+
+        /**
+         * Вставить эмодзи в textarea в позицию курсора
+         */
+        insertEmoji(emoji) {
+            const input = this.$refs.messageInput;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            this.newMessage = this.newMessage.substring(0, start) + emoji + this.newMessage.substring(end);
+            this.$nextTick(() => {
+                input.focus();
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+            });
+        },
+
+        /**
+         * Закрепить/открепить сообщение
+         */
+        async togglePin(msg) {
+            try {
+                const response = await fetch(BASE_URL + `/comments/${msg.id}/pin`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const idx = this.messages.findIndex(m => m.id === msg.id);
+                    if (idx !== -1) {
+                        this.messages[idx].is_pinned = data.is_pinned;
+                    }
+                }
+            } catch(e) {}
         },
 
         /**
