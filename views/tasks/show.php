@@ -229,12 +229,32 @@ $isClosed = ($task['status_code'] === 'closed');
             <!-- ============================================================ -->
             <!-- Вкладка: Подзадачи -->
             <!-- ============================================================ -->
-            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4">
-                <!-- Кнопка добавления -->
+            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4" x-data="{ showAddForm: false }">
+                <!-- Кнопка/форма добавления подзадачи -->
                 <?php if ($canEdit): ?>
                     <div class="mb-3">
-                        <a href="<?= url('/tasks/create') ?>?project_id=<?= (int) $task['project_id'] ?>&parent_id=<?= (int) $task['id'] ?>"
-                           class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ Добавить</a>
+                        <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())"
+                                class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ Добавить</button>
+
+                        <!-- Inline-форма создания подзадачи -->
+                        <form x-show="showAddForm" x-transition
+                              method="POST" action="<?= url('/tasks/create') ?>"
+                              class="flex gap-2" style="display: none;">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
+                            <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
+                            <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
+                            <input type="hidden" name="priority" value="medium">
+                            <input type="text" name="title" x-ref="subtaskInput" required
+                                   placeholder="Название подзадачи..."
+                                   class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
+                            <button type="submit"
+                                    class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">
+                                Создать
+                            </button>
+                            <button type="button" @click="showAddForm = false"
+                                    class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm">✕</button>
+                        </form>
                     </div>
                 <?php endif; ?>
 

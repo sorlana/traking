@@ -349,6 +349,13 @@ class TaskController extends Controller
         // Устанавливаем создателя
         $data['created_by'] = Auth::id();
 
+        // Если status_id не указан — ставим «В работе» автоматически
+        if (empty($data['status_id'])) {
+            $db = Database::getInstance();
+            $inProgressStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'in_progress' LIMIT 1");
+            $data['status_id'] = $inProgressStatus ? (int) $inProgressStatus['id'] : 1;
+        }
+
         // Пустые значения → null
         if (empty($data['deadline'])) {
             $data['deadline'] = null;
@@ -360,13 +367,29 @@ class TaskController extends Controller
         // Создаём задачу
         $taskId = $this->taskModel->create($data);
 
+        // Логируем создание задачи в историю
+        $this->activityLogService->log(
+            Auth::id(),
+            $data['project_id'],
+            (int) $taskId,
+            'task_created',
+            null,
+            $data['title']
+        );
+
         // Уведомляем назначенного исполнителя
         if ($data['assigned_to']) {
             $this->notificationService->notifyTaskAssigned((int) $taskId, $data['assigned_to']);
         }
 
         Session::flash('success', 'Задача успешно создана');
-        $this->redirect('/tasks/' . $taskId);
+
+        // Если создали подзадачу — вернуть на родительскую задачу
+        if ($data['parent_id']) {
+            $this->redirect('/tasks/' . $data['parent_id']);
+        } else {
+            $this->redirect('/tasks/' . $taskId);
+        }
     }
 
     /**
@@ -739,10 +762,6 @@ class TaskController extends Controller
             $errors['title'][] = 'Поле «Название» обязательно для заполнения';
         } elseif (mb_strlen($data['title']) > 255) {
             $errors['title'][] = 'Название не должно превышать 255 символов';
-        }
-
-        if (empty($data['status_id'])) {
-            $errors['status_id'][] = 'Выберите статус задачи';
         }
 
         if (!empty($data['priority']) && !in_array($data['priority'], ['low', 'medium', 'high', 'urgent'])) {
