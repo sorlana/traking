@@ -64,7 +64,9 @@ $isClosed = ($task['status_code'] === 'closed');
 
 <div class="flex flex-col h-full gap-4">
 
-    <!-- ===== Breadcrumb ===== -->
+    <!-- Ссылка «Все задачи» -->
+    <a href="<?= url('/tasks') ?>" class="text-xs text-gray-400 hover:text-blue-500 mb-1 inline-block">← Все задачи</a>
+
     <!-- ===== Шапка: Breadcrumb + Заголовок + Кнопки действий ===== -->
     <div class="bg-white rounded-lg shadow-sm border p-4">
         <!-- Breadcrumb (мелкий, внутри блока) -->

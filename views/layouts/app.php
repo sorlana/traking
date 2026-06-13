@@ -54,7 +54,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                                 Проекты
                             </a>
 
-                            <a href="<?= url('/tasks') ?>"
+                            <a href="<?= url('/tasks/last') ?>"
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Задачи
                             </a>
@@ -126,7 +126,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                             Проекты
                         </a>
 
-                        <a href="<?= url('/tasks') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <a href="<?= url('/tasks/last') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Задачи
                         </a>
                     <?php endif; ?>

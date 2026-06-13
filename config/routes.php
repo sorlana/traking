@@ -97,6 +97,15 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/projects/{id}/delete', [\Controllers\ProjectController::class, 'delete']);
 
     // Задачи
+    $router->get('/tasks/last', function () {
+        // Переход к последней просмотренной задаче
+        $lastTaskId = \Helpers\Session::get('last_task_id');
+        if ($lastTaskId) {
+            \Helpers\Response::redirect('/tasks/' . (int) $lastTaskId);
+        } else {
+            \Helpers\Response::redirect('/tasks');
+        }
+    });
     $router->get('/tasks', [\Controllers\TaskController::class, 'index']);
     $router->get('/tasks/create', [\Controllers\TaskController::class, 'create']);
     $router->post('/tasks/create', [\Controllers\TaskController::class, 'store']);

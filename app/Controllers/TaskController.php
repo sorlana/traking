@@ -163,6 +163,9 @@ class TaskController extends Controller
         $taskId = (int) $id;
         $db = Database::getInstance();
 
+        // Сохраняем последнюю просмотренную задачу в сессии
+        \Helpers\Session::set('last_task_id', $taskId);
+
         // Получаем задачу с расширенными данными
         $task = $db->fetch(
             "SELECT t.*, ts.name as status_name, ts.code as status_code,
