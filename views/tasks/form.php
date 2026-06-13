@@ -55,16 +55,12 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="<?= $isEdit ? url('/tasks/' . (int) $task['id'] . '/edit') : url('/tasks/create') ?>">
+        <form method="POST" action="<?= $isEdit ? url('/tasks/' . (int) $task['id'] . '/edit') : url('/tasks/create') ?>" x-data="{ showExtra: false }">
             <?= csrf_field() ?>
 
             <!-- Проект (select если не указан, hidden если указан) -->
             <?php if ($project ?? null): ?>
                 <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Проект</label>
-                    <p class="text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2"><?= e($project['title']) ?></p>
-                </div>
             <?php elseif (!empty($projects)): ?>
                 <div class="mb-4">
                     <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">
@@ -85,19 +81,11 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <!-- Родительская задача (hidden) -->
             <?php if (!empty($fieldParentId)): ?>
                 <input type="hidden" name="parent_id" value="<?= (int) $fieldParentId ?>">
-                <?php if ($parentTask ?? null): ?>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Родительская задача</label>
-                        <p class="text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2">
-                            <a href="<?= url('/tasks/' . (int) $parentTask['id']) ?>" class="text-blue-600 hover:text-blue-800">
-                                <?= e($parentTask['title']) ?>
-                            </a>
-                        </p>
-                    </div>
-                <?php endif; ?>
             <?php endif; ?>
 
-            <!-- Название -->
+            <!-- === Основные поля (всегда видны) === -->
+
+            <!-- Название (всегда) -->
             <div class="mb-4">
                 <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
                     Название <span class="text-red-500">*</span>
@@ -107,57 +95,82 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
 
-            <!-- Описание -->
+            <!-- Описание (показываем если заполнено) -->
+            <?php if (!empty($fieldDescription)): ?>
             <div class="mb-4">
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
-                <textarea name="description" id="description" rows="4" placeholder="Описание задачи (необязательно)"
+                <textarea name="description" id="description" rows="3"
                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><?= e($fieldDescription) ?></textarea>
             </div>
+            <?php endif; ?>
 
-            <!-- Приоритет + Статус (в строку) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <!-- Приоритет -->
-                <div>
-                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
-                    <select name="priority" id="priority"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="low" <?= $fieldPriority === 'low' ? 'selected' : '' ?>>Низкий</option>
-                        <option value="medium" <?= $fieldPriority === 'medium' ? 'selected' : '' ?>>Средний</option>
-                        <option value="high" <?= $fieldPriority === 'high' ? 'selected' : '' ?>>Высокий</option>
-                        <option value="urgent" <?= $fieldPriority === 'urgent' ? 'selected' : '' ?>>Срочный</option>
-                    </select>
-                </div>
+            <!-- Исполнитель (показываем если назначен) -->
+            <?php if (!empty($fieldAssignedTo)): ?>
+            <div class="mb-4">
+                <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
+                <select name="assigned_to" id="assigned_to"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Не назначен</option>
+                    <?php foreach ($projectUsers as $pu): ?>
+                        <option value="<?= (int) $pu['id'] ?>" <?= (int) $fieldAssignedTo === (int) $pu['id'] ? 'selected' : '' ?>>
+                            <?= e($pu['name']) ?> (<?= $pu['project_role'] === 'manager' ? 'руководитель' : 'исполнитель' ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
 
-                <!-- Статус -->
-                <div>
-                    <label for="status_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Статус <span class="text-red-500">*</span>
-                    </label>
-                    <select name="status_id" id="status_id" required
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">Выберите статус</option>
-                        <?php foreach ($statuses as $s): ?>
-                            <option value="<?= (int) $s['id'] ?>" <?= (int) $fieldStatusId === (int) $s['id'] ? 'selected' : '' ?>>
-                                <?= e($s['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <!-- Срок (показываем если установлен) -->
+            <?php if (!empty($fieldDeadline)): ?>
+            <div class="mb-4">
+                <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Срок выполнения</label>
+                <input type="date" name="deadline" id="deadline" value="<?= e($fieldDeadline) ?>"
+                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <?php endif; ?>
+
+            <!-- Приоритет (показываем если не medium) -->
+            <?php if ($fieldPriority !== 'medium'): ?>
+            <div class="mb-4">
+                <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
+                <select name="priority" id="priority"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="low" <?= $fieldPriority === 'low' ? 'selected' : '' ?>>Низкий</option>
+                    <option value="medium" <?= $fieldPriority === 'medium' ? 'selected' : '' ?>>Средний</option>
+                    <option value="high" <?= $fieldPriority === 'high' ? 'selected' : '' ?>>Высокий</option>
+                    <option value="urgent" <?= $fieldPriority === 'urgent' ? 'selected' : '' ?>>Срочный</option>
+                </select>
+            </div>
+            <?php endif; ?>
+
+            <!-- === Ссылка «Дополнительно» === -->
+            <div class="mb-4">
+                <button type="button" @click="showExtra = !showExtra"
+                        class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                    <span x-text="showExtra ? 'Скрыть' : 'Дополнительно'"></span>
+                    <svg class="w-4 h-4 transition-transform" :class="showExtra ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
             </div>
 
-            <!-- Срок + Исполнитель (в строку) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <!-- Срок -->
-                <div>
-                    <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Срок выполнения</label>
-                    <input type="date" name="deadline" id="deadline" value="<?= e($fieldDeadline) ?>"
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
+            <!-- === Дополнительные поля (скрытые по умолчанию) === -->
+            <div x-show="showExtra" x-transition class="space-y-4 mb-6" style="display: none;">
 
-                <!-- Исполнитель -->
+                <!-- Описание (если ещё не показано выше) -->
+                <?php if (empty($fieldDescription)): ?>
                 <div>
-                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
-                    <select name="assigned_to" id="assigned_to"
+                    <label for="description_extra" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                    <textarea name="description" id="description_extra" rows="3" placeholder="Описание задачи"
+                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><?= e($fieldDescription) ?></textarea>
+                </div>
+                <?php endif; ?>
+
+                <!-- Исполнитель (если не показан выше) -->
+                <?php if (empty($fieldAssignedTo)): ?>
+                <div>
+                    <label for="assigned_to_extra" class="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
+                    <select name="assigned_to" id="assigned_to_extra"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">Не назначен</option>
                         <?php foreach ($projectUsers as $pu): ?>
@@ -167,6 +180,46 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <?php endif; ?>
+
+                <!-- Срок (если не показан выше) -->
+                <?php if (empty($fieldDeadline)): ?>
+                <div>
+                    <label for="deadline_extra" class="block text-sm font-medium text-gray-700 mb-1">Срок выполнения</label>
+                    <input type="date" name="deadline" id="deadline_extra"
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <?php endif; ?>
+
+                <!-- Приоритет (если не показан выше) -->
+                <?php if ($fieldPriority === 'medium'): ?>
+                <div>
+                    <label for="priority_extra" class="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
+                    <select name="priority" id="priority_extra"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="low">Низкий</option>
+                        <option value="medium" selected>Средний</option>
+                        <option value="high">Высокий</option>
+                        <option value="urgent">Срочный</option>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <!-- Статус -->
+                <?php if (!empty($statuses)): ?>
+                <div>
+                    <label for="status_id" class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+                    <select name="status_id" id="status_id"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Автоматически (В работе)</option>
+                        <?php foreach ($statuses as $s): ?>
+                            <option value="<?= (int) $s['id'] ?>" <?= (int) $fieldStatusId === (int) $s['id'] ? 'selected' : '' ?>>
+                                <?= e($s['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Кнопки -->
