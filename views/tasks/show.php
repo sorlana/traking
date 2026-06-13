@@ -296,7 +296,8 @@ $isClosed = ($task['status_code'] === 'closed');
             <!-- ============================================================ -->
             <div x-show="tab === 'info'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
 
-                <!-- Приоритет -->
+                <!-- Приоритет (показываем если не medium) -->
+                <?php if (($task['priority'] ?? 'medium') !== 'medium'): ?>
                 <div>
                     <label class="text-xs text-gray-400">Приоритет</label>
                     <div class="mt-1">
@@ -305,26 +306,33 @@ $isClosed = ($task['status_code'] === 'closed');
                         </span>
                     </div>
                 </div>
+                <?php endif; ?>
 
-                <!-- Исполнитель -->
+                <!-- Исполнитель (показываем если назначен) -->
+                <?php if (!empty($task['assigned_name'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Исполнитель</label>
-                    <p class="text-sm text-gray-800 mt-1"><?= e($task['assigned_name'] ?? 'Не назначен') ?></p>
+                    <p class="text-sm text-gray-800 mt-1"><?= e($task['assigned_name']) ?></p>
                 </div>
+                <?php endif; ?>
 
                 <!-- Автор -->
+                <?php if (!empty($task['creator_name'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Автор</label>
-                    <p class="text-sm text-gray-800 mt-1"><?= e($task['creator_name'] ?? '—') ?></p>
+                    <p class="text-sm text-gray-800 mt-1"><?= e($task['creator_name']) ?></p>
                 </div>
+                <?php endif; ?>
 
-                <!-- Срок -->
+                <!-- Срок (показываем если установлен) -->
+                <?php if (!empty($task['deadline'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Срок</label>
                     <p class="text-sm mt-1 <?= $isOverdue ? 'text-red-600 font-medium' : 'text-gray-800' ?>">
-                        <?= $task['deadline'] ? date('d.m.Y', strtotime($task['deadline'])) : 'Не установлен' ?>
+                        <?= date('d.m.Y', strtotime($task['deadline'])) ?>
                     </p>
                 </div>
+                <?php endif; ?>
 
                 <!-- Создана -->
                 <div>
