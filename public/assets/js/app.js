@@ -89,3 +89,51 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js').catch(() => {});
     });
 }
+
+/**
+ * Мигающая фавиконка при непрочитанных уведомлениях
+ */
+const FaviconBlinker = {
+    originalHref: null,
+    blinkInterval: null,
+    isBlinking: false,
+    // Красная версия фавиконки (SVG data URI)
+    alertFavicon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#EF4444"/><path d="M16 4L8 28h3.5l4.5-12 4.5 12H24L16 4z" fill="white"/><path d="M16 4L14.5 28h3L16 4z" fill="#EF4444"/></svg>'),
+
+    start() {
+        if (this.isBlinking) return;
+        this.isBlinking = true;
+
+        const link = document.querySelector('link[rel="icon"]');
+        if (!link) return;
+        this.originalHref = link.href;
+
+        let visible = true;
+        this.blinkInterval = setInterval(() => {
+            link.href = visible ? this.alertFavicon : this.originalHref;
+            visible = !visible;
+        }, 800);
+    },
+
+    stop() {
+        if (!this.isBlinking) return;
+        this.isBlinking = false;
+
+        if (this.blinkInterval) {
+            clearInterval(this.blinkInterval);
+            this.blinkInterval = null;
+        }
+
+        const link = document.querySelector('link[rel="icon"]');
+        if (link && this.originalHref) {
+            link.href = this.originalHref;
+        }
+    }
+};
+
+// Останавливаем мигание при возвращении на вкладку
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        FaviconBlinker.stop();
+    }
+});

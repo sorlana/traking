@@ -143,7 +143,12 @@ function notificationBell() {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const data = await res.json();
-                this.unreadCount = data.count || 0;
+                const newCount = data.count || 0;
+                // Если появились новые непрочитанные и вкладка в фоне — мигаем
+                if (newCount > this.unreadCount && document.visibilityState !== 'visible' && typeof FaviconBlinker !== 'undefined') {
+                    FaviconBlinker.start();
+                }
+                this.unreadCount = newCount;
             } catch (e) {}
         },
 

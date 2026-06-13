@@ -559,15 +559,21 @@ function taskChat() {
 
                 // Новые сообщения
                 if (data.messages && data.messages.length > 0) {
+                    let hasNewFromOthers = false;
                     data.messages.forEach(msg => {
                         if (!this.messages.find(m => m.id === msg.id)) {
                             this.messages.push(msg);
+                            if (msg.user_id != this.currentUserId) hasNewFromOthers = true;
                         }
                     });
                     this.updateLastMessageId();
                     this.$nextTick(() => this.scrollToBottom());
                     // Отмечаем новые чужие сообщения как прочитанные
                     this.markMessagesAsRead();
+                    // Мигаем фавиконкой если вкладка в фоне и пришло чужое сообщение
+                    if (hasNewFromOthers && document.visibilityState !== 'visible' && typeof FaviconBlinker !== 'undefined') {
+                        FaviconBlinker.start();
+                    }
                 }
 
                 // Удалённые сообщения
