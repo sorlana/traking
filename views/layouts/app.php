@@ -193,7 +193,46 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=2"></script>
+
+    <!-- Мигающая фавиконка (inline для гарантированной работы) -->
+    <script>
+    window.FaviconBlinker = {
+        originalHref: null,
+        blinkInterval: null,
+        isBlinking: false,
+        alertFavicon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#EF4444"/><path d="M16 4L8 28h3.5l4.5-12 4.5 12H24L16 4z" fill="white"/><path d="M16 4L14.5 28h3L16 4z" fill="#EF4444"/></svg>'),
+        start() {
+            if (this.isBlinking) return;
+            this.isBlinking = true;
+            const link = document.querySelector('link[rel="icon"]');
+            if (!link) return;
+            this.originalHref = link.href;
+            let visible = true;
+            this.blinkInterval = setInterval(() => {
+                link.href = visible ? this.alertFavicon : this.originalHref;
+                visible = !visible;
+            }, 800);
+            // Также меняем title
+            this._titleInterval = setInterval(() => {
+                document.title = document.title.startsWith('💬') ? document.title.substring(2) : '💬 ' + document.title;
+            }, 1000);
+        },
+        stop() {
+            if (!this.isBlinking) return;
+            this.isBlinking = false;
+            if (this.blinkInterval) { clearInterval(this.blinkInterval); this.blinkInterval = null; }
+            if (this._titleInterval) { clearInterval(this._titleInterval); this._titleInterval = null; }
+            const link = document.querySelector('link[rel="icon"]');
+            if (link && this.originalHref) link.href = this.originalHref;
+            // Убираем 💬 из title
+            if (document.title.startsWith('💬')) document.title = document.title.substring(2);
+        }
+    };
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') FaviconBlinker.stop();
+    });
+    </script>
 
     <!-- Подписка на Web Push уведомления -->
     <script>
