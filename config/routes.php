@@ -63,6 +63,11 @@ $router->get('/logout', [\Controllers\AuthController::class, 'logout']);
 // ============================================================================
 $router->group(['middleware' => ['auth']], function (Router $router) {
 
+    // Push-уведомления
+    $router->post('/push/subscribe', [\Controllers\PushController::class, 'subscribe']);
+    $router->post('/push/unsubscribe', [\Controllers\PushController::class, 'unsubscribe']);
+    $router->get('/push/vapid-key', [\Controllers\PushController::class, 'vapidKey']);
+
     // Дашборд — главная страница после входа
     $router->get('/dashboard', [\Controllers\DashboardController::class, 'index']);
 

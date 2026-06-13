@@ -1,0 +1,257 @@
+<?php
+/**
+ * PushService — Сервис отправки Web Push уведомлений
+ *
+ * Реализует подписку/отписку пользователей и отправку push-уведомлений
+ * участникам задачи при новых сообщениях в чате.
+ * Использует Web Push Protocol (RFC 8030) с VAPID (RFC 8292).
+ */
+
+namespace Services;
+
+use Helpers\Database;
+
+class PushService
+{
+    private array $config;
+
+    public function __construct()
+    {
+        $this->config = require BASE_PATH . '/config/push.php';
+    }
+
+    /**
+     * Подписать пользователя на push
+     */
+    public function subscribe(int $userId, string $endpoint, string $p256dh, string $auth): void
+    {
+        $db = Database::getInstance();
+        
+        // Удаляем старую подписку с тем же endpoint (если переподписка)
+        $db->delete('push_subscriptions', 'endpoint = ?', [$endpoint]);
+        
+        $db->insert('push_subscriptions', [
+            'user_id' => $userId,
+            'endpoint' => $endpoint,
+            'p256dh_key' => $p256dh,
+            'auth_key' => $auth,
+        ]);
+    }
+
+    /**
+     * Отписать пользователя
+     */
+    public function unsubscribe(string $endpoint): void
+    {
+        $db = Database::getInstance();
+        $db->delete('push_subscriptions', 'endpoint = ?', [$endpoint]);
+    }
+
+    /**
+     * Отправить push всем подписчикам пользователя (кроме отправителя)
+     */
+    public function sendToUser(int $userId, string $title, string $body, ?string $url = null): void
+    {
+        $db = Database::getInstance();
+        $subscriptions = $db->fetchAll(
+            "SELECT * FROM push_subscriptions WHERE user_id = ?",
+            [$userId]
+        );
+
+        foreach ($subscriptions as $sub) {
+            $this->sendPush($sub, $title, $body, $url);
+        }
+    }
+
+    /**
+     * Отправить push участникам задачи (кроме отправителя)
+     */
+    public function sendToTaskParticipants(int $taskId, int $excludeUserId, string $title, string $body, ?string $url = null): void
+    {
+        $db = Database::getInstance();
+        
+        // Получаем задачу
+        $task = $db->fetch("SELECT assigned_to, created_by, project_id FROM tasks WHERE id = ?", [$taskId]);
+        if (!$task) return;
+
+        // Собираем получателей: assigned_to + created_by + все руководители проекта
+        $recipients = [];
+        if ($task['assigned_to'] && (int)$task['assigned_to'] !== $excludeUserId) {
+            $recipients[] = (int)$task['assigned_to'];
+        }
+        if ($task['created_by'] && (int)$task['created_by'] !== $excludeUserId) {
+            $recipients[] = (int)$task['created_by'];
+        }
+        
+        // Руководители проекта
+        $managers = $db->fetchAll(
+            "SELECT user_id FROM project_users WHERE project_id = ? AND project_role = 'manager'",
+            [(int)$task['project_id']]
+        );
+        foreach ($managers as $m) {
+            if ((int)$m['user_id'] !== $excludeUserId) {
+                $recipients[] = (int)$m['user_id'];
+            }
+        }
+
+        $recipients = array_unique($recipients);
+
+        // Отправляем push каждому получателю
+        foreach ($recipients as $recipientId) {
+            $this->sendToUser($recipientId, $title, $body, $url);
+        }
+    }
+
+    /**
+     * Отправить один push-запрос
+     * Использует Web Push Protocol (RFC 8030) с VAPID (RFC 8292)
+     */
+    private function sendPush(array $subscription, string $title, string $body, ?string $url = null): void
+    {
+        $payload = json_encode([
+            'title' => $title,
+            'body' => $body,
+            'url' => $url,
+            'icon' => '/favicon.svg',
+        ], JSON_UNESCAPED_UNICODE);
+
+        $endpoint = $subscription['endpoint'];
+
+        $headers = [
+            'Content-Type: application/json',
+            'TTL: 86400',
+        ];
+
+        // Создаём JWT для VAPID авторизации
+        $jwt = $this->createVapidJwt($endpoint);
+        if ($jwt) {
+            $headers[] = 'Authorization: vapid t=' . $jwt . ', k=' . $this->config['public_key'];
+        }
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // Если подписка протухла (410 Gone) — удаляем
+        if ($httpCode === 410 || $httpCode === 404) {
+            $db = Database::getInstance();
+            $db->delete('push_subscriptions', 'id = ?', [(int)$subscription['id']]);
+        }
+    }
+
+    /**
+     * Создать JWT токен для VAPID авторизации
+     */
+    private function createVapidJwt(string $endpoint): ?string
+    {
+        $parsedUrl = parse_url($endpoint);
+        $audience = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+
+        $header = $this->base64url(json_encode(['typ' => 'JWT', 'alg' => 'ES256']));
+        $payload = $this->base64url(json_encode([
+            'aud' => $audience,
+            'exp' => time() + 86400,
+            'sub' => $this->config['subject'],
+        ]));
+
+        $signingInput = $header . '.' . $payload;
+
+        // Декодируем приватный ключ
+        $privateKeyRaw = $this->base64urlDecode($this->config['private_key']);
+        
+        // Создаём EC key из raw bytes (32 байта приватный ключ P-256)
+        $pem = $this->createEcPem($privateKeyRaw);
+        if (!$pem) return null;
+
+        $key = openssl_pkey_get_private($pem);
+        if (!$key) return null;
+
+        $signature = '';
+        if (!openssl_sign($signingInput, $signature, $key, OPENSSL_ALGO_SHA256)) {
+            return null;
+        }
+
+        // Конвертируем DER-подпись в raw R+S (64 байта)
+        $rawSig = $this->derToRaw($signature);
+        if (!$rawSig) return null;
+
+        return $signingInput . '.' . $this->base64url($rawSig);
+    }
+
+    /**
+     * Создать PEM-формат EC-ключа из raw-байтов приватного ключа P-256
+     */
+    private function createEcPem(string $privateKeyRaw): ?string
+    {
+        if (strlen($privateKeyRaw) !== 32) return null;
+
+        // Формируем DER-структуру для EC private key (P-256)
+        $der = "\x30\x77\x02\x01\x01\x04\x20" . $privateKeyRaw
+             . "\xa0\x0a\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+
+        $pem = "-----BEGIN EC PRIVATE KEY-----\n"
+             . chunk_split(base64_encode($der), 64, "\n")
+             . "-----END EC PRIVATE KEY-----";
+
+        return $pem;
+    }
+
+    /**
+     * Конвертировать DER-подпись в raw R+S формат (64 байта для P-256)
+     */
+    private function derToRaw(string $der): ?string
+    {
+        // Парсим DER SEQUENCE → извлекаем R и S (каждый 32 байта для P-256)
+        $hex = bin2hex($der);
+        if (substr($hex, 0, 2) !== '30') return null;
+
+        $offset = 4; // skip SEQUENCE tag + length
+        // R
+        if (substr($hex, $offset, 2) !== '02') return null;
+        $offset += 2;
+        $rLen = hexdec(substr($hex, $offset, 2)) * 2;
+        $offset += 2;
+        $r = substr($hex, $offset, $rLen);
+        $offset += $rLen;
+        // S
+        if (substr($hex, $offset, 2) !== '02') return null;
+        $offset += 2;
+        $sLen = hexdec(substr($hex, $offset, 2)) * 2;
+        $offset += 2;
+        $s = substr($hex, $offset, $sLen);
+
+        // Pad/trim to 32 bytes each
+        $r = str_pad(ltrim($r, '0'), 64, '0', STR_PAD_LEFT);
+        $s = str_pad(ltrim($s, '0'), 64, '0', STR_PAD_LEFT);
+        // Берём последние 64 hex-символа (32 байта)
+        $r = substr($r, -64);
+        $s = substr($s, -64);
+
+        return hex2bin($r . $s);
+    }
+
+    /**
+     * Base64url кодирование (без padding)
+     */
+    private function base64url(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /**
+     * Base64url декодирование
+     */
+    private function base64urlDecode(string $data): string
+    {
+        return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', (4 - strlen($data) % 4) % 4));
+    }
+}

@@ -198,5 +198,74 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
     <script src="<?= url('/assets/js/app.js') ?>"></script>
+
+    <!-- Подписка на Web Push уведомления -->
+    <script>
+    // Подписка на push-уведомления
+    async function subscribeToPush() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Получаем VAPID public key
+            const response = await fetch(BASE_URL + '/push/vapid-key', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const { publicKey } = await response.json();
+            if (!publicKey || publicKey === 'ВСТАВЬ_СВОЙ_PUBLIC_KEY') return;
+            
+            // Конвертируем base64url в Uint8Array
+            const applicationServerKey = urlBase64ToUint8Array(publicKey);
+            
+            // Подписываемся
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey,
+            });
+            
+            const sub = subscription.toJSON();
+            
+            // Отправляем подписку на сервер
+            const formData = new FormData();
+            formData.append('endpoint', sub.endpoint);
+            formData.append('p256dh', sub.keys.p256dh);
+            formData.append('auth', sub.keys.auth);
+            
+            await fetch(BASE_URL + '/push/subscribe', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData,
+            });
+        } catch(e) {
+            // Пользователь отклонил или ошибка — молча пропускаем
+        }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Запрашиваем разрешение и подписываемся
+    if ('Notification' in window && Notification.permission === 'default') {
+        // Подписываемся через 3 секунды после загрузки (не сразу, чтобы не раздражать)
+        setTimeout(() => {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    subscribeToPush();
+                }
+            });
+        }, 3000);
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+        subscribeToPush();
+    }
+    </script>
 </body>
 </html>

@@ -78,3 +78,53 @@ self.addEventListener('fetch', (event) => {
         fetch(request).catch(() => caches.match(request))
     );
 });
+
+// ============================================================================
+// Push-уведомления
+// ============================================================================
+
+// Обработка входящего push-сообщения
+self.addEventListener('push', (event) => {
+    let data = { title: 'Traking', body: 'Новое сообщение', url: '/' };
+    
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch(e) {
+            data.body = event.data.text();
+        }
+    }
+
+    const options = {
+        body: data.body,
+        icon: '/favicon.svg',
+        badge: '/favicon.svg',
+        data: { url: data.url || '/' },
+        vibrate: [200, 100, 200],
+        requireInteraction: false,
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
+});
+
+// Клик по push-уведомлению — открыть задачу
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const url = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // Если есть открытая вкладка — переключиться на неё
+            for (const client of clientList) {
+                if (client.url.includes(url) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Иначе — открыть новую
+            return clients.openWindow(url);
+        })
+    );
+});

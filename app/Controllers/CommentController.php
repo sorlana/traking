@@ -19,6 +19,7 @@ use Models\TaskComment;
 use Models\TaskFile;
 use Models\Task;
 use Services\NotificationService;
+use Services\PushService;
 use Services\ActivityLogService;
 
 class CommentController extends Controller
@@ -129,6 +130,23 @@ class CommentController extends Controller
 
         // Уведомления о комментариях отключены — сообщения приходят через polling в чате
         // $this->notificationService->notifyCommentAdded($taskId, Auth::id());
+
+        // Отправляем push-уведомление участникам задачи
+        $pushService = new PushService();
+        $user = Auth::user();
+        $senderName = $user['name'] ?? $user['login'] ?? 'Кто-то';
+        $pushBody = mb_strlen($commentText) > 100 ? mb_substr($commentText, 0, 100) . '...' : $commentText;
+        if ($commentText === '' || $commentText === '📎 Файл') {
+            $pushBody = '📎 Отправлен файл';
+        }
+        $pushUrl = url('/tasks/' . $taskId);
+        $pushService->sendToTaskParticipants(
+            $taskId,
+            Auth::id(),
+            $senderName . ' — ' . ($task['title'] ?? 'Задача'),
+            $pushBody,
+            $pushUrl
+        );
 
         // Получаем созданный комментарий с именем автора
         $user = Auth::user();
