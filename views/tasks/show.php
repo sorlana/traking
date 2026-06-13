@@ -179,37 +179,68 @@ $isExecutor = \Helpers\Auth::isExecutor();
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
                     <div class="mt-2">
-                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
-                            <?= e($task['status_name'] ?? '') ?>
-                        </span>
-
-                        <?php if (!in_array($task['status_code'], ['closed'])): ?>
+                        <?php if (in_array($task['status_code'], ['closed'])): ?>
+                            <!-- Архив — просто бейдж -->
+                            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                                <?= e($task['status_name'] ?? '') ?>
+                            </span>
+                        <?php elseif ($canChangeStatus): ?>
                             <?php
-                            // Определяем какую кнопку-switch показать
-                            $switchStatus = null;
+                            // Определяем ID статусов для switch
+                            $doneStatusId = 0;
+                            $revisionStatusId = 0;
                             foreach ($statuses as $s) {
-                                if ($isExecutor && $s['code'] === 'done' && $task['status_code'] !== 'done') {
-                                    $switchStatus = $s;
-                                } elseif (!$isExecutor && $s['code'] === 'revision' && $task['status_code'] !== 'revision' && $task['status_code'] !== 'closed') {
-                                    $switchStatus = $s;
-                                }
+                                if ($s['code'] === 'done') $doneStatusId = (int) $s['id'];
+                                if ($s['code'] === 'revision') $revisionStatusId = (int) $s['id'];
                             }
+                            $isDone = ($task['status_code'] === 'done');
+                            $isRevision = ($task['status_code'] === 'revision');
                             ?>
-                            <?php if ($switchStatus && $canChangeStatus): ?>
-                                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline-block ml-2">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status_id" value="<?= (int) $switchStatus['id'] ?>">
-                                    <?php
-                                    $btnColor = $switchStatus['code'] === 'done'
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-orange-500 hover:bg-orange-600 text-white';
-                                    ?>
-                                    <button type="submit"
-                                            class="px-3 py-1 rounded-full text-xs font-medium <?= $btnColor ?> transition shadow-sm">
-                                        <?= e($switchStatus['name']) ?>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
+                            <!-- Switch: Доработки / Готово -->
+                            <div class="inline-flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
+                                <?php if ($isExecutor): ?>
+                                    <!-- Исполнитель: серая «Доработки» (неактивная) + зелёная «Готово» (кликабельная) -->
+                                    <span class="px-3 py-1.5 text-xs font-medium <?= $isRevision ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400' ?>">
+                                        Доработки
+                                    </span>
+                                    <?php if (!$isDone): ?>
+                                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
+                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-green-500 hover:bg-green-600 text-white transition cursor-pointer">
+                                                Готово
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1.5 text-xs font-medium bg-green-500 text-white">
+                                            Готово
+                                        </span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <!-- Руководитель: оранжевая «Доработки» (кликабельная) + серая «Готово» (неактивная) -->
+                                    <?php if (!$isRevision): ?>
+                                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
+                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white transition cursor-pointer">
+                                                Доработки
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1.5 text-xs font-medium bg-orange-500 text-white">
+                                            Доработки
+                                        </span>
+                                    <?php endif; ?>
+                                    <span class="px-3 py-1.5 text-xs font-medium <?= $isDone ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400' ?>">
+                                        Готово
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <!-- Нет прав — просто бейдж -->
+                            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                                <?= e($task['status_name'] ?? '') ?>
+                            </span>
                         <?php endif; ?>
                     </div>
                 </div>
