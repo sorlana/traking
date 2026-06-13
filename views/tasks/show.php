@@ -23,6 +23,7 @@ $statusColors = [
     'in_progress' => 'bg-yellow-100 text-yellow-800',
     'revision' => 'bg-orange-100 text-orange-800',
     'done' => 'bg-green-100 text-green-800',
+    'closed' => 'bg-gray-100 text-gray-800',
 ];
 
 // Цвета точек статусов для дочерних задач
@@ -30,11 +31,12 @@ $statusDots = [
     'in_progress' => 'bg-yellow-500',
     'revision' => 'bg-orange-500',
     'done' => 'bg-green-500',
+    'closed' => 'bg-gray-400',
 ];
 
 $isOverdue = !empty($task['deadline'])
     && strtotime($task['deadline']) < strtotime(date('Y-m-d'))
-    && ($task['status_code'] ?? '') !== 'done';
+    && !in_array($task['status_code'] ?? '', ['done', 'closed']);
 
 $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['medium'];
 $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
@@ -42,6 +44,7 @@ $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gr
 $canEdit = can('create_task', (int) $task['project_id']);
 // Исполнитель может менять статус своей задачи
 $canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Auth::id());
+$isExecutor = \Helpers\Auth::isExecutor();
 ?>
 
 <div class="space-y-6">
@@ -78,6 +81,17 @@ $canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Au
                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                 Редактировать
             </a>
+            <?php if ($task['status_code'] === 'done' && !$isExecutor): ?>
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
+                      onsubmit="return confirm('Закрыть задачу и перевести в архив?')" class="inline">
+                    <?= csrf_field() ?>
+                    <button type="submit"
+                            class="px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200 transition"
+                            <?= !$canClose['can'] ? 'disabled title="Есть незавершённые подзадачи"' : '' ?>>
+                        Закрыть задачу
+                    </button>
+                </form>
+            <?php endif; ?>
             <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                 <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
                       onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
@@ -168,16 +182,17 @@ $canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Au
                         <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
                             <?= e($task['status_name'] ?? '') ?>
                         </span>
-                        <?php if ($canChangeStatus && $task['status_code'] !== 'done'): ?>
+                        <?php if ($canChangeStatus && !in_array($task['status_code'], ['done', 'closed'])): ?>
                             <?php
-                            $isExecutor = \Helpers\Auth::isExecutor();
                             $availableStatuses = [];
                             foreach ($statuses as $s) {
-                                if ((int) $s['id'] === (int) $task['status_id']) continue; // Не показываем текущий
+                                if ((int) $s['id'] === (int) $task['status_id']) continue;
                                 if ($isExecutor) {
+                                    // Исполнитель может только «Готово»
                                     if ($s['code'] === 'done') $availableStatuses[] = $s;
                                 } else {
-                                    $availableStatuses[] = $s;
+                                    // Руководитель может только «Доработки»
+                                    if ($s['code'] === 'revision') $availableStatuses[] = $s;
                                 }
                             }
                             ?>

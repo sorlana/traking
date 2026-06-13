@@ -515,8 +515,8 @@ class TaskController extends Controller
             return;
         }
 
-        // Если статус «done» — проверяем подзадачи
-        if ($status['code'] === 'done') {
+        // Если статус «done» или «closed» — проверяем подзадачи
+        if (in_array($status['code'], ['done', 'closed'])) {
             $canClose = $this->treeService->canClose($taskId);
             if (!$canClose['can']) {
                 if ($this->isAjax()) {
@@ -533,7 +533,7 @@ class TaskController extends Controller
         }
 
         $updateData = ['status_id' => $statusId];
-        if ($status['code'] === 'done') {
+        if (in_array($status['code'], ['done', 'closed'])) {
             $updateData['closed_at'] = date('Y-m-d H:i:s');
         } else {
             $updateData['closed_at'] = null;
@@ -596,25 +596,25 @@ class TaskController extends Controller
             return;
         }
 
-        // Получаем ID статуса «done»
+        // Получаем ID статуса «closed» (Сделано / архив)
         $db = Database::getInstance();
-        $doneStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'done' LIMIT 1");
+        $closedStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'closed' LIMIT 1");
 
-        if (!$doneStatus) {
-            Session::flash('error', 'Статус «Готово» не найден в системе');
+        if (!$closedStatus) {
+            Session::flash('error', 'Статус «Сделано» не найден в системе');
             $this->redirect("/tasks/{$taskId}");
             return;
         }
 
         $this->taskModel->update($taskId, [
-            'status_id' => (int) $doneStatus['id'],
+            'status_id' => (int) $closedStatus['id'],
             'closed_at' => date('Y-m-d H:i:s'),
         ]);
 
         // Уведомляем участников
-        $this->notificationService->notifyStatusChanged($taskId, 'Готово', Auth::id());
+        $this->notificationService->notifyStatusChanged($taskId, 'Сделано', Auth::id());
 
-        Session::flash('success', 'Задача завершена');
+        Session::flash('success', 'Задача закрыта и перемещена в архив');
         $this->redirect("/tasks/{$taskId}");
     }
 
