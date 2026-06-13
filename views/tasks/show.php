@@ -178,52 +178,37 @@ $isExecutor = \Helpers\Auth::isExecutor();
                 <!-- Статус -->
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
-                    <div class="mt-1 flex items-center gap-2" x-data="{ statusOpen: false }">
-                        <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
+                    <div class="mt-2">
+                        <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
                             <?= e($task['status_name'] ?? '') ?>
                         </span>
-                        <?php if ($canChangeStatus && !in_array($task['status_code'], ['done', 'closed'])): ?>
+
+                        <?php if (!in_array($task['status_code'], ['closed'])): ?>
                             <?php
-                            $availableStatuses = [];
+                            // Определяем какую кнопку-switch показать
+                            $switchStatus = null;
                             foreach ($statuses as $s) {
-                                if ((int) $s['id'] === (int) $task['status_id']) continue;
-                                if ($isExecutor) {
-                                    // Исполнитель может только «Готово»
-                                    if ($s['code'] === 'done') $availableStatuses[] = $s;
-                                } else {
-                                    // Руководитель может только «Доработки»
-                                    if ($s['code'] === 'revision') $availableStatuses[] = $s;
+                                if ($isExecutor && $s['code'] === 'done' && $task['status_code'] !== 'done') {
+                                    $switchStatus = $s;
+                                } elseif (!$isExecutor && $s['code'] === 'revision' && $task['status_code'] !== 'revision' && $task['status_code'] !== 'closed') {
+                                    $switchStatus = $s;
                                 }
                             }
                             ?>
-                            <?php if (!empty($availableStatuses)): ?>
-                                <div class="relative">
-                                    <button @click="statusOpen = !statusOpen" class="text-gray-400 hover:text-blue-600 transition p-0.5 rounded">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                        </svg>
+                            <?php if ($switchStatus && $canChangeStatus): ?>
+                                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline-block ml-2">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="status_id" value="<?= (int) $switchStatus['id'] ?>">
+                                    <?php
+                                    $btnColor = $switchStatus['code'] === 'done'
+                                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                                        : 'bg-orange-500 hover:bg-orange-600 text-white';
+                                    ?>
+                                    <button type="submit"
+                                            class="px-3 py-1 rounded-full text-xs font-medium <?= $btnColor ?> transition shadow-sm">
+                                        <?= e($switchStatus['name']) ?>
                                     </button>
-                                    <div x-show="statusOpen" @click.outside="statusOpen = false" x-transition
-                                         class="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[140px] z-50"
-                                         style="display: none;">
-                                        <?php foreach ($availableStatuses as $s): ?>
-                                            <?php
-                                            $sColor = $statusColors[$s['code']] ?? 'bg-gray-100 text-gray-800';
-                                            ?>
-                                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="status_id" value="<?= (int) $s['id'] ?>">
-                                                <button type="submit"
-                                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2">
-                                                    <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium <?= $sColor ?>">
-                                                        <?= e($s['name']) ?>
-                                                    </span>
-                                                </button>
-                                            </form>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
+                                </form>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
