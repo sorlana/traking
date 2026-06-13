@@ -40,6 +40,8 @@ $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['mediu
 $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
 
 $canEdit = can('create_task', (int) $task['project_id']);
+// Исполнитель может менять статус своей задачи
+$canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Auth::id());
 ?>
 
 <div class="space-y-6">
@@ -162,7 +164,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                 <!-- Статус -->
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
-                    <?php if ($canEdit && $task['status_code'] !== 'done'): ?>
+                    <?php if ($canChangeStatus && $task['status_code'] !== 'done'): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="mt-1" x-data>
                             <?= csrf_field() ?>
                             <select name="status_id" onchange="this.form.submit()"
