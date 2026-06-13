@@ -58,11 +58,6 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Задачи
                             </a>
-
-                            <a href="<?= url('/notifications') ?>"
-                               class="text-sm font-medium <?= str_starts_with($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
-                                Уведомления
-                            </a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -134,12 +129,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
                         <a href="<?= url('/tasks') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Задачи
                         </a>
-
-                        <a href="<?= url('/notifications') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Уведомления
-                        </a>
                     <?php endif; ?>
-                    </a>
 
                     <div class="border-t pt-3 mt-3">
                         <a href="<?= url('/settings') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
