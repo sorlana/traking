@@ -88,14 +88,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="mt-1">
                                 <!-- Изображение — превью без фона -->
                                 <template x-if="isImage(file.file_type)">
-                                    <img :src="BASE_URL + '/files/' + file.id + '/download'"
+                                    <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Не изображение — иконка + имя -->
                                 <template x-if="!isImage(file.file_type)">
-                                    <a :href="BASE_URL + '/files/' + file.id + '/download'"
+                                    <a :href="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                        class="flex items-center gap-2 p-2 bg-blue-500 rounded-lg text-xs text-white hover:bg-blue-600 transition">
                                         <span>📄</span>
                                         <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
@@ -147,14 +147,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="mt-1">
                                 <!-- Изображение — превью без фона -->
                                 <template x-if="isImage(file.file_type)">
-                                    <img :src="BASE_URL + '/files/' + file.id + '/download'"
+                                    <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Не изображение — иконка + имя -->
                                 <template x-if="!isImage(file.file_type)">
-                                    <a :href="BASE_URL + '/files/' + file.id + '/download'"
+                                    <a :href="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                        class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg border text-xs text-blue-600 hover:bg-blue-50 transition">
                                         <span>📄</span>
                                         <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
@@ -418,13 +418,18 @@ function taskChat() {
                 this.updateLastMessageId();
                 this.markMessagesAsRead();
             });
+            // Повторный скролл через 1 сек (после загрузки изображений)
+            setTimeout(() => this.scrollToBottom(), 1000);
+            setTimeout(() => this.scrollToBottom(), 3000);
+
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
 
-            // При возвращении на вкладку — помечаем прочитанными
+            // При возвращении на вкладку — помечаем прочитанными и скроллим
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     this.markMessagesAsRead();
+                    this.scrollToBottom();
                 }
             });
         },
@@ -602,6 +607,10 @@ function taskChat() {
                         const idx = this.messages.findIndex(m => m.id === upd.id);
                         if (idx !== -1) {
                             this.messages[idx].comment_text = upd.comment_text;
+                            // Обновляем timestamp файлов для перезагрузки изображений
+                            if (this.messages[idx].files) {
+                                this.messages[idx].files.forEach(f => { f.updated = Date.now(); });
+                            }
                         }
                     });
                 }

@@ -480,8 +480,15 @@ class FileController extends Controller
         $db = Database::getInstance();
         $db->update('task_files', [
             'file_size' => $uploadedFile['size'],
-            'created_at' => date('Y-m-d H:i:s'),  // Обновляем дату — для cache-busting
+            'created_at' => date('Y-m-d H:i:s'),
         ], 'id = ?', [$fileId]);
+
+        // Обновляем updated_at комментария (чтобы polling обнаружил изменение)
+        if ($file['comment_id']) {
+            $db->update('task_comments', [
+                'updated_at' => date('Y-m-d H:i:s'),
+            ], 'id = ?', [(int) $file['comment_id']]);
+        }
 
         $this->json(['success' => true, 'updated_at' => time()]);
     }
