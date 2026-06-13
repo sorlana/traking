@@ -437,6 +437,48 @@ class FileController extends Controller
         }
     }
 
+    /**
+     * Заменить файл (отредактированное изображение)
+     * POST /files/{id}/replace
+     *
+     * @param string $id ID файла
+     * @return void
+     */
+    public function replace(string $id): void
+    {
+        $fileId = (int) $id;
+        $file = $this->fileModel->find($fileId);
+
+        if (!$file) {
+            $this->json(['error' => 'Файл не найден'], 404);
+            return;
+        }
+
+        if (!TaskAccessMiddleware::check((int) $file['task_id'])) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            $this->json(['error' => 'Файл не загружен'], 422);
+            return;
+        }
+
+        $uploadedFile = $_FILES['file'];
+
+        // Перезаписываем файл на диске
+        $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
+        move_uploaded_file($uploadedFile['tmp_name'], $fullPath);
+
+        // Обновляем размер в БД
+        $db = Database::getInstance();
+        $db->update('task_files', [
+            'file_size' => $uploadedFile['size'],
+        ], 'id = ?', [$fileId]);
+
+        $this->json(['success' => true]);
+    }
+
     // ========================================================================
     // Приватные методы
     // ========================================================================

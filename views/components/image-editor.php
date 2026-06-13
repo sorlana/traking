@@ -9,6 +9,7 @@
  * Инструменты:
  *   - Маркер (свободное рисование, палитра 6 цветов, 3 размера)
  *   - Комментарий (текстовый блок на цветном фоне, перетаскивание)
+ *   - Перемещение (двигать комментарий после добавления)
  *   - Отмена (undo)
  */
 ?>
@@ -42,6 +43,17 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+            </svg>
+        </button>
+
+        <!-- Перемещение (активно когда есть комментарий для перетаскивания) -->
+        <button @click="setTool('move')"
+                :class="tool === 'move' ? 'bg-blue-500' : 'hover:bg-blue-600'"
+                :disabled="!commentText"
+                class="w-10 h-10 rounded-lg flex items-center justify-center text-white transition disabled:opacity-30"
+                title="Переместить комментарий">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
             </svg>
         </button>
 
@@ -86,14 +98,23 @@
             </div>
         </template>
 
-        <!-- Доп.панель для комментария: цвет фона -->
-        <template x-if="tool === 'comment'">
+        <!-- Доп.панель для комментария: цвет фона + цвет текста -->
+        <template x-if="tool === 'comment' || tool === 'move'">
             <div class="space-y-2 flex flex-col items-center">
+                <span class="text-[10px] text-blue-200">Фон</span>
                 <template x-for="c in commentColors" :key="'cc-'+c">
                     <button @click="commentBg = c"
                             :class="commentBg === c ? 'ring-2 ring-white ring-offset-1 ring-offset-blue-700' : ''"
                             :style="'background-color: ' + c"
-                            class="w-6 h-6 rounded-full"></button>
+                            class="w-6 h-6 rounded-full border border-blue-400"></button>
+                </template>
+                <div class="border-t border-blue-500 w-8 my-2"></div>
+                <span class="text-[10px] text-blue-200">Текст</span>
+                <template x-for="c in textColors" :key="'tc-'+c">
+                    <button @click="commentTextColor = c"
+                            :class="commentTextColor === c ? 'ring-2 ring-white ring-offset-1 ring-offset-blue-700' : ''"
+                            :style="'background-color: ' + c"
+                            class="w-6 h-6 rounded-full border border-blue-400"></button>
                 </template>
             </div>
         </template>
@@ -155,8 +176,10 @@ function imageEditor() {
         color: '#EF4444',
         lineWidth: 4,
         colors: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#000000'],
-        commentColors: ['#FBBF24', '#34D399', '#60A5FA', '#F87171', '#A78BFA', '#FFFFFF'],
-        commentBg: '#FBBF24',
+        commentColors: ['#EF4444', '#34D399', '#60A5FA', '#F87171', '#A78BFA', '#FFFFFF'],
+        commentBg: '#EF4444',
+        commentTextColor: '#FFFFFF',
+        textColors: ['#FFFFFF', '#000000', '#EF4444', '#3B82F6'],
         commentInput: '',
         commentText: null,
         commentPos: null,
@@ -257,7 +280,7 @@ function imageEditor() {
          */
         startDraw(e) {
             // Перемещение комментария (если текст уже добавлен)
-            if (this.tool === 'comment' && this.commentText) {
+            if ((this.tool === 'comment' || this.tool === 'move') && this.commentText) {
                 this.dragging = true;
                 this.commentPos = this.getPos(e);
                 return;
@@ -278,7 +301,7 @@ function imageEditor() {
          */
         draw(e) {
             // Перетаскивание комментария
-            if (this.tool === 'comment' && this.dragging && this.commentText) {
+            if ((this.tool === 'comment' || this.tool === 'move') && this.dragging && this.commentText) {
                 const pos = this.getPos(e);
                 this.commentPos = pos;
                 const lastState = this.history[this.history.length - 1];
@@ -343,6 +366,8 @@ function imageEditor() {
             this.commentPos = pos;
             this.drawCommentBlock(pos.x, pos.y);
             this.saveState();
+            // Переключаем на перемещение
+            this.tool = 'move';
         },
 
         /**
@@ -363,14 +388,14 @@ function imageEditor() {
             this.ctx.roundRect(x, y - h / 2, w, h, 6);
             this.ctx.fill();
 
-            // Текст (тёмный на светлом фоне, белый на тёмном)
-            this.ctx.fillStyle = (this.commentBg === '#FFFFFF' || this.commentBg === '#FBBF24') ? '#000000' : '#FFFFFF';
+            // Текст — используем выбранный цвет текста
+            this.ctx.fillStyle = this.commentTextColor;
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText(text, x + padding, y);
         },
 
         /**
-         * Сохранить отредактированное изображение (отправка как новый комментарий)
+         * Сохранить отредактированное изображение (замена оригинального файла)
          */
         async saveImage() {
             const canvas = this.$refs.editorCanvas;
@@ -378,21 +403,10 @@ function imageEditor() {
                 if (!blob) return;
 
                 const formData = new FormData();
-                formData.append('file', blob, 'edited_' + (this.editingFile.file_name || 'image.png'));
-                formData.append('comment_text', '✏️ Изображение отредактировано');
+                formData.append('file', blob);
 
                 try {
-                    // Получаем taskId из файла, из PHP-переменной или из Alpine-компонента чата
-                    const taskId = this.editingFile.task_id
-                        || <?= isset($task) ? (int) $task['id'] : 0 ?>
-                        || null;
-
-                    if (!taskId) {
-                        alert('Ошибка: не удалось определить задачу');
-                        return;
-                    }
-
-                    const response = await fetch(BASE_URL + `/tasks/${taskId}/comments`, {
+                    const response = await fetch(BASE_URL + `/files/${this.editingFile.id}/replace`, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData,
@@ -400,7 +414,6 @@ function imageEditor() {
                     const data = await response.json();
                     if (data.success) {
                         this.closeEditor();
-                        // Перезагружаем страницу чтобы обновить чат
                         window.location.reload();
                     } else {
                         alert('Ошибка: ' + (data.error || 'не удалось сохранить'));

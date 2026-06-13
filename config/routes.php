@@ -132,6 +132,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/tasks/{id}/files', [\Controllers\FileController::class, 'upload']);
     $router->get('/files/{id}/download', [\Controllers\FileController::class, 'download']);
     $router->post('/files/{id}/delete', [\Controllers\FileController::class, 'delete']);
+    $router->post('/files/{id}/replace', [\Controllers\FileController::class, 'replace']);
     $router->post('/tasks/{id}/links', [\Controllers\FileController::class, 'addLink']);
     $router->post('/links/{id}/delete', [\Controllers\FileController::class, 'deleteLink']);
 });
