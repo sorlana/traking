@@ -51,7 +51,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </template>
 
     <!-- Область сообщений (скролл) -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages">
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 opacity-0 transition-opacity duration-150" id="chat-messages" x-ref="chatMessages">
         <!-- Пустое состояние -->
         <div x-show="messages.length === 0" class="flex items-center justify-center h-full">
             <p class="text-sm text-gray-400">Сообщений пока нет. Начните обсуждение!</p>
@@ -431,10 +431,14 @@ function taskChat() {
                 this.scrollToBottom();
                 this.updateLastMessageId();
                 this.markMessagesAsRead();
+                // Показываем чат после прокрутки вниз (убираем дёрганье)
+                if (this.$refs.chatMessages) {
+                    this.$refs.chatMessages.classList.remove('opacity-0');
+                }
             });
-            // Повторный скролл через 1 сек (после загрузки изображений)
-            setTimeout(() => this.scrollToBottom(), 1000);
-            setTimeout(() => this.scrollToBottom(), 3000);
+
+            // Дополнительный скролл после загрузки изображений (тихий, пользователь уже внизу)
+            setTimeout(() => this.scrollToBottom(), 1500);
 
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
