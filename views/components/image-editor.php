@@ -360,13 +360,8 @@ function imageEditor() {
             if (!this.commentInput.trim()) return;
             this.commentText = this.commentInput.trim();
             this.commentInput = '';
-            // Размещаем комментарий по центру canvas
-            const canvas = this.$refs.editorCanvas;
-            const pos = { x: canvas.width / 2 - 50, y: canvas.height / 2 };
-            this.commentPos = pos;
-            this.drawCommentBlock(pos.x, pos.y);
-            this.saveState();
-            // Переключаем на перемещение
+            // НЕ рисуем сразу — только сохраняем текст и переключаем на перемещение
+            // Комментарий будет нарисован при первом клике/перетаскивании
             this.tool = 'move';
         },
 
