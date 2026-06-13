@@ -34,6 +34,7 @@ class SettingsController extends Controller
         $db = Database::getInstance();
 
         $pushEnabled = isset($_POST['push_enabled']) ? 1 : 0;
+        $soundEnabled = isset($_POST['sound_enabled']) ? 1 : 0;
         $scheduleEnabled = isset($_POST['schedule_enabled']) ? 1 : 0;
         $scheduleStart = $_POST['schedule_start'] ?? '09:00';
         $scheduleEnd = $_POST['schedule_end'] ?? '18:00';
@@ -45,6 +46,7 @@ class SettingsController extends Controller
         if ($existing) {
             $db->update('user_settings', [
                 'push_enabled' => $pushEnabled,
+                'sound_enabled' => $soundEnabled,
                 'schedule_enabled' => $scheduleEnabled,
                 'schedule_start' => $scheduleStart . ':00',
                 'schedule_end' => $scheduleEnd . ':00',
@@ -54,6 +56,7 @@ class SettingsController extends Controller
             $db->insert('user_settings', [
                 'user_id' => $userId,
                 'push_enabled' => $pushEnabled,
+                'sound_enabled' => $soundEnabled,
                 'schedule_enabled' => $scheduleEnabled,
                 'schedule_start' => $scheduleStart . ':00',
                 'schedule_end' => $scheduleEnd . ':00',
@@ -96,6 +99,7 @@ class SettingsController extends Controller
 
         return $settings ?: [
             'push_enabled' => 1,
+            'sound_enabled' => 0,
             'dnd_enabled' => 0,
             'schedule_enabled' => 0,
             'schedule_start' => '09:00:00',

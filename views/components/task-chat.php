@@ -411,6 +411,7 @@ function taskChat() {
         lastMessageId: 0,
         currentUserId: <?= (int) $currentUserId ?>,
         taskId: <?= (int) $task['id'] ?>,
+        taskStatus: '<?= e($task['status'] ?? 'in_progress') ?>',
 
         // Контекстное меню
         contextMenu: { show: false, x: 0, y: 0, msg: null },
@@ -625,6 +626,10 @@ function taskChat() {
                     if (hasNewFromOthers && document.visibilityState !== 'visible' && typeof FaviconBlinker !== 'undefined') {
                         FaviconBlinker.start();
                     }
+                    // Звуковое уведомление при новых сообщениях от других
+                    if (hasNewFromOthers && typeof NotificationSound !== 'undefined') {
+                        NotificationSound.play();
+                    }
                 }
 
                 // Удалённые сообщения
@@ -658,6 +663,21 @@ function taskChat() {
                         const idx = this.messages.findIndex(m => m.id === id);
                         if (idx !== -1) this.messages[idx].read_by_others = true;
                     });
+                }
+
+                // Отслеживаем смену статуса задачи
+                if (data.task_status && data.task_status !== this.taskStatus) {
+                    this.taskStatus = data.task_status;
+                    // Звук при смене статуса
+                    if (typeof NotificationSound !== 'undefined') {
+                        NotificationSound.play();
+                    }
+                    // Обновляем бейдж статуса на странице (если есть)
+                    const statusBadge = document.querySelector('[data-task-status]');
+                    if (statusBadge) {
+                        const statusLabels = {in_progress: 'В работе', revision: 'Доработки', done: 'Готово', closed: 'Сделано'};
+                        statusBadge.textContent = statusLabels[data.task_status] || data.task_status;
+                    }
                 }
             } catch(e) {}
         },

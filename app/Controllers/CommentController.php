@@ -366,6 +366,7 @@ class CommentController extends Controller
             'deleted' => $deleted,
             'updated' => $updated,
             'newly_read' => $newlyRead,
+            'task_status' => $db->fetch("SELECT status FROM tasks WHERE id = ?", [$taskId])['status'] ?? null,
         ]);
     }
 

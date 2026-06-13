@@ -25,6 +25,17 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
             </label>
         </div>
 
+        <!-- Звуковые уведомления -->
+        <div class="border-t pt-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Звук</h3>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="sound_enabled" value="1"
+                       <?= ($settings['sound_enabled'] ?? 0) ? 'checked' : '' ?>
+                       class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Включить звук при новых сообщениях и смене статуса</span>
+            </label>
+        </div>
+
         <!-- Расписание уведомлений -->
         <div class="border-t pt-6">
             <h3 class="text-sm font-medium text-gray-700 mb-3">Расписание уведомлений</h3>

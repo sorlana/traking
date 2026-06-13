@@ -8,6 +8,14 @@
 
 $currentUser = \Helpers\Auth::user();
 $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
+
+// Получаем настройку звука для текущего пользователя
+$_soundEnabled = 0;
+if ($currentUser) {
+    $db = \Helpers\Database::getInstance();
+    $_userSettings = $db->fetch("SELECT sound_enabled FROM user_settings WHERE user_id = ?", [(int)$currentUser['id']]);
+    $_soundEnabled = (int) ($_userSettings['sound_enabled'] ?? 0);
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -232,6 +240,37 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') FaviconBlinker.stop();
     });
+    </script>
+
+    <!-- Звуковое уведомление -->
+    <script>
+    window.NotificationSound = {
+        enabled: <?= $_soundEnabled ? 'true' : 'false' ?>,
+        audioCtx: null,
+        /**
+         * Воспроизвести звук уведомления (синтезированный, без файла)
+         */
+        play() {
+            if (!this.enabled) return;
+            try {
+                if (!this.audioCtx) {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const ctx = this.audioCtx;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+    };
     </script>
 
     <!-- Подписка на Web Push уведомления -->
