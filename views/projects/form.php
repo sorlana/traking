@@ -14,6 +14,20 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
 ?>
 
 <div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-4 flex-wrap">
+        <a href="<?= url('/projects') ?>" class="hover:text-blue-600">Проекты</a>
+        <?php if ($isEdit): ?>
+            <span>→</span>
+            <a href="<?= url('/projects/' . (int) $project['id']) ?>" class="hover:text-blue-600"><?= e($project['title']) ?></a>
+            <span>→</span>
+            <span class="text-gray-800">Редактирование</span>
+        <?php else: ?>
+            <span>→</span>
+            <span class="text-gray-800">Создание проекта</span>
+        <?php endif; ?>
+    </nav>
+
     <h1 class="text-xl font-bold text-gray-800 mb-6">
         <?= $isEdit ? 'Редактирование проекта' : 'Создание проекта' ?>
     </h1>
