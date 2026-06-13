@@ -265,11 +265,11 @@ $isClosed = ($task['status_code'] === 'closed');
                     </div>
                 <?php endif; ?>
 
-                <!-- Блокирующие подзадачи (если задачу нельзя закрыть) -->
-                <?php if (!$canClose['can'] && !empty($canClose['blocking'])): ?>
+                <!-- Блокирующие подзадачи (показываем только руководителю) -->
+                <?php if (!$isExecutor && !$canClose['can'] && !empty($canClose['blocking'])): ?>
                 <div class="mt-4 bg-orange-50 rounded-lg border border-orange-200 p-3">
-                    <h4 class="text-xs font-medium text-orange-800 mb-1">Блокирующие подзадачи</h4>
-                    <p class="text-xs text-orange-600 mb-2">Задачу нельзя закрыть, пока не завершены:</p>
+                    <h4 class="text-xs font-medium text-orange-800 mb-1">Незавершённые подзадачи</h4>
+                    <p class="text-xs text-orange-600 mb-2">Для закрытия задачи все подзадачи должны быть завершены:</p>
                     <ul class="space-y-1">
                         <?php foreach (array_slice($canClose['blocking'], 0, 10) as $blocking): ?>
                             <li class="text-xs text-orange-700">
