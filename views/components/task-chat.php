@@ -288,6 +288,18 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     <div x-show="attachedFile" class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2">
         <span class="text-xs text-gray-600">📎</span>
         <span class="text-xs text-gray-700 truncate flex-1" x-text="attachedFile ? attachedFile.name : ''"></span>
+        <!-- Toggle Редактировать (только для изображений) -->
+        <label x-show="attachedFile && isImageFile(attachedFile)"
+               class="flex items-center gap-1 cursor-pointer select-none mr-2">
+            <span class="text-xs text-gray-500">Редактировать</span>
+            <div class="relative">
+                <input type="checkbox" x-model="editBeforeSend" class="sr-only">
+                <div class="w-8 h-4 rounded-full transition"
+                     :class="editBeforeSend ? 'bg-blue-500' : 'bg-gray-300'"></div>
+                <div class="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform"
+                     :class="editBeforeSend ? 'translate-x-4' : ''"></div>
+            </div>
+        </label>
         <button @click="removeAttachment()" class="text-xs text-red-500 hover:text-red-700">✕</button>
     </div>
 
@@ -391,6 +403,7 @@ function taskChat() {
         }, $comments), JSON_UNESCAPED_UNICODE) ?>,
         newMessage: '',
         attachedFile: null,
+        editBeforeSend: false,
         modalFile: null,
         modalZoom: 1,
         sending: false,
@@ -431,6 +444,24 @@ function taskChat() {
                     this.markMessagesAsRead();
                     this.scrollToBottom();
                 }
+            });
+
+            // Слушаем событие из редактора: отправить отредактированный файл в чат
+            window.addEventListener('editor-send-file', (e) => {
+                const blob = e.detail.blob;
+                const fileName = e.detail.fileName || 'image.png';
+                const text = e.detail.text || '';
+                const file = new File([blob], fileName, { type: blob.type });
+                this.attachedFile = file;
+                this.editBeforeSend = false;
+                this.newMessage = text;
+                this.$nextTick(() => this.sendMessage());
+            });
+
+            // Слушаем событие из редактора: закрыли без сохранения — отправляем как есть
+            window.addEventListener('editor-cancel-send', (e) => {
+                this.editBeforeSend = false;
+                this.$nextTick(() => this.sendMessage());
             });
         },
 
@@ -639,6 +670,12 @@ function taskChat() {
             if (text === '' && !this.attachedFile) return;
             if (this.sending) return;
 
+            // Если toggle «Редактировать» активен и прикреплено изображение — открываем редактор
+            if (this.editBeforeSend && this.attachedFile && this.isImageFile(this.attachedFile)) {
+                this.$dispatch('open-editor-local', { file: this.attachedFile, text: text });
+                return;
+            }
+
             this.sending = true;
             this.errorMessage = '';
 
@@ -796,6 +833,7 @@ function taskChat() {
          */
         removeAttachment() {
             this.attachedFile = null;
+            this.editBeforeSend = false;
             if (this.$refs.fileInput) {
                 this.$refs.fileInput.value = '';
             }
@@ -854,10 +892,20 @@ function taskChat() {
         },
 
         /**
-         * Проверка: является ли файл изображением
+         * Проверка: является ли файл изображением (по расширению)
          */
         isImage(fileType) {
             return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((fileType || '').toLowerCase());
+        },
+
+        /**
+         * Проверка: является ли прикреплённый File объект изображением (по имени/типу)
+         */
+        isImageFile(file) {
+            if (!file) return false;
+            if (file.type && file.type.startsWith('image/')) return true;
+            const ext = (file.name || '').split('.').pop().toLowerCase();
+            return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
         },
 
         /**

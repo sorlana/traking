@@ -3,8 +3,9 @@
  * Редактор изображений — views/components/image-editor.php
  *
  * Полноэкранный редактор на Canvas + Alpine.js.
- * Появляется при нажатии «Редактировать» в модалке просмотра изображения.
- * Связь с чатом через Alpine $dispatch('open-editor', {file: ...}).
+ * Два режима работы:
+ *   1. Редактирование перед отправкой (open-editor-local) — получает локальный File
+ *   2. Редактирование загруженного файла (open-editor) — получает file с сервера
  *
  * Инструменты:
  *   - Маркер (свободное рисование, палитра 6 цветов, 3 размера)
@@ -16,7 +17,8 @@
 
 <!-- Редактор изображений -->
 <div x-data="imageEditor()"
-     @open-editor.window="openEditor($event.detail.file)"
+     @open-editor.window="openEditorRemote($event.detail.file)"
+     @open-editor-local.window="openEditorLocal($event.detail.file, $event.detail.text)"
      x-show="editorOpen"
      x-transition
      class="fixed inset-0 z-[150] bg-gray-900 flex"
@@ -46,7 +48,7 @@
             </svg>
         </button>
 
-        <!-- Перемещение (активно когда есть комментарий для перетаскивания) -->
+        <!-- Перемещение -->
         <button @click="setTool('move')"
                 :class="tool === 'move' ? 'bg-blue-500' : 'hover:bg-blue-600'"
                 :disabled="!commentText"
@@ -98,7 +100,7 @@
             </div>
         </template>
 
-        <!-- Доп.панель для комментария: цвет фона + цвет текста -->
+        <!-- Доп.панель для комментария: цвет фона + цвет текста + размер -->
         <template x-if="tool === 'comment' || tool === 'move'">
             <div class="space-y-2 flex flex-col items-center">
                 <span class="text-[10px] text-blue-200">Фон</span>
@@ -135,7 +137,7 @@
                         class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition">
                     Сохранить
                 </button>
-                <button @click="closeEditor()"
+                <button @click="cancelEditor()"
                         class="px-4 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition">
                     Отмена
                 </button>
@@ -176,7 +178,11 @@
 function imageEditor() {
     return {
         editorOpen: false,
-        editingFile: null,
+        // Режим: 'local' (редактирование перед отправкой) или 'remote' (редактирование загруженного файла)
+        mode: 'local',
+        editingFile: null,        // Для remote: объект файла с сервера {id, file_name, ...}
+        localFile: null,          // Для local: File объект
+        pendingText: '',          // Текст сообщения для отправки вместе с файлом
         tool: 'marker',
         color: '#EF4444',
         lineWidth: 4,
@@ -196,16 +202,16 @@ function imageEditor() {
         img: null,
 
         /**
-         * Открыть редактор с переданным файлом
+         * Открыть редактор с файлом с сервера (из модалки просмотра)
          */
-        openEditor(file) {
+        openEditorRemote(file) {
             if (!file) return;
+            this.mode = 'remote';
             this.editingFile = file;
+            this.localFile = null;
+            this.pendingText = '';
             this.editorOpen = true;
-            this.history = [];
-            this.commentText = null;
-            this.commentInput = '';
-            this.tool = 'marker';
+            this.resetState();
 
             this.$nextTick(() => {
                 const canvas = this.$refs.editorCanvas;
@@ -213,17 +219,58 @@ function imageEditor() {
                 this.img = new Image();
                 this.img.crossOrigin = 'anonymous';
                 this.img.onload = () => {
-                    // Масштабируем canvas под размер экрана
-                    const maxW = Math.min(this.img.width, window.innerWidth - 100);
-                    const maxH = Math.min(this.img.height, window.innerHeight - 150);
-                    const scale = Math.min(maxW / this.img.width, maxH / this.img.height, 1);
-                    canvas.width = this.img.width * scale;
-                    canvas.height = this.img.height * scale;
-                    this.ctx.drawImage(this.img, 0, 0, canvas.width, canvas.height);
-                    this.saveState();
+                    this.fitCanvas();
                 };
-                this.img.src = BASE_URL + '/files/' + file.id + '/download';
+                this.img.src = BASE_URL + '/files/' + file.id + '/download?t=' + Date.now();
             });
+        },
+
+        /**
+         * Открыть редактор с локальным файлом (перед отправкой в чат)
+         */
+        openEditorLocal(file, text) {
+            if (!file) return;
+            this.mode = 'local';
+            this.localFile = file;
+            this.editingFile = null;
+            this.pendingText = text || '';
+            this.editorOpen = true;
+            this.resetState();
+
+            this.$nextTick(() => {
+                const canvas = this.$refs.editorCanvas;
+                this.ctx = canvas.getContext('2d');
+                this.img = new Image();
+                this.img.onload = () => {
+                    this.fitCanvas();
+                };
+                // Создаём URL из локального файла
+                this.img.src = URL.createObjectURL(file);
+            });
+        },
+
+        /**
+         * Сбросить состояние редактора
+         */
+        resetState() {
+            this.history = [];
+            this.commentText = null;
+            this.commentInput = '';
+            this.tool = 'marker';
+        },
+
+        /**
+         * Масштабировать canvas под размер экрана
+         */
+        fitCanvas() {
+            const canvas = this.$refs.editorCanvas;
+            const maxW = Math.min(this.img.width, window.innerWidth - 100);
+            const maxH = Math.min(this.img.height, window.innerHeight - 150);
+            const scale = Math.min(maxW / this.img.width, maxH / this.img.height, 1);
+            canvas.width = this.img.width * scale;
+            canvas.height = this.img.height * scale;
+            this.ctx.drawImage(this.img, 0, 0, canvas.width, canvas.height);
+            this.saveState();
         },
 
         /**
@@ -232,6 +279,19 @@ function imageEditor() {
         closeEditor() {
             this.editorOpen = false;
             this.editingFile = null;
+            this.localFile = null;
+        },
+
+        /**
+         * Нажата «Отмена» — закрыть редактор
+         * Если mode === 'local', отправляем файл как есть (без редактирования)
+         */
+        cancelEditor() {
+            if (this.mode === 'local') {
+                // Отправляем оригинальный файл в чат без редактирования
+                window.dispatchEvent(new CustomEvent('editor-cancel-send', {}));
+            }
+            this.closeEditor();
         },
 
         /**
@@ -239,7 +299,6 @@ function imageEditor() {
          */
         setTool(t) {
             this.tool = t;
-            // При переключении на маркер — сбрасываем комментарий
             if (t === 'marker') {
                 this.commentText = null;
             }
@@ -260,7 +319,7 @@ function imageEditor() {
                 const canvas = this.$refs.editorCanvas;
                 this.history.push(canvas.toDataURL());
             } catch(e) {
-                console.error('saveState error (tainted canvas?):', e);
+                console.error('saveState error:', e);
             }
         },
 
@@ -293,7 +352,6 @@ function imageEditor() {
          * Начало рисования / перетаскивания комментария
          */
         startDraw(e) {
-            // Перемещение комментария (если текст уже добавлен)
             if ((this.tool === 'comment' || this.tool === 'move') && this.commentText) {
                 this.dragging = true;
                 this.commentPos = this.getPos(e);
@@ -308,7 +366,6 @@ function imageEditor() {
             this.ctx.lineCap = 'round';
             this.ctx.lineJoin = 'round';
             this.ctx.moveTo(pos.x, pos.y);
-            // Рисуем точку сразу при клике
             this.ctx.lineTo(pos.x + 0.1, pos.y + 0.1);
             this.ctx.stroke();
             this.ctx.beginPath();
@@ -319,7 +376,6 @@ function imageEditor() {
          * Процесс рисования / перетаскивания
          */
         draw(e) {
-            // Перетаскивание комментария
             if ((this.tool === 'comment' || this.tool === 'move') && this.dragging && this.commentText) {
                 const pos = this.getPos(e);
                 this.commentPos = pos;
@@ -379,8 +435,6 @@ function imageEditor() {
             if (!this.commentInput.trim()) return;
             this.commentText = this.commentInput.trim();
             this.commentInput = '';
-            // НЕ рисуем сразу — только сохраняем текст и переключаем на перемещение
-            // Комментарий будет нарисован при первом клике/перетаскивании
             this.tool = 'move';
         },
 
@@ -396,60 +450,47 @@ function imageEditor() {
             const w = metrics.width + padding * 2;
             const h = this.fontSize + padding * 2;
 
-            // Фон блока
             this.ctx.fillStyle = this.commentBg;
             this.ctx.beginPath();
             this.ctx.roundRect(x, y - h / 2, w, h, 6);
             this.ctx.fill();
 
-            // Текст — используем выбранный цвет текста
             this.ctx.fillStyle = this.commentTextColor;
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText(text, x + padding, y);
         },
 
         /**
-         * Сохранить отредактированное изображение (замена оригинального файла)
+         * Сохранить изображение
+         * - mode 'local': отправляем blob в чат через событие
+         * - mode 'remote': заменяем файл на сервере через /files/{id}/replace
          */
         async saveImage() {
             const canvas = this.$refs.editorCanvas;
             canvas.toBlob(async (blob) => {
                 if (!blob) return;
 
-                const formData = new FormData();
-                formData.append('file', blob);
+                if (this.mode === 'local') {
+                    // Отправляем отредактированный файл в чат
+                    const fileName = this.localFile ? this.localFile.name : 'image.png';
+                    window.dispatchEvent(new CustomEvent('editor-send-file', {
+                        detail: { blob: blob, fileName: fileName, text: this.pendingText }
+                    }));
+                    this.closeEditor();
+                } else {
+                    // Режим remote: заменяем файл на сервере
+                    const formData = new FormData();
+                    formData.append('file', blob);
 
-                try {
-                    const response = await fetch(BASE_URL + `/files/${this.editingFile.id}/replace`, {
-                        method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: formData,
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        // Обновляем изображение в чате без перезагрузки страницы
-                        // Ищем Alpine-компонент чата и обновляем файл
-                        const chatEl = document.querySelector('[x-data="taskChat()"]');
-                        if (chatEl && chatEl.__x) {
-                            const chatData = chatEl.__x.$data;
-                            chatData.messages.forEach((msg, mIdx) => {
-                                if (msg.files) {
-                                    msg.files.forEach((f, fIdx) => {
-                                        if (f.id === this.editingFile.id) {
-                                            chatData.messages[mIdx].files[fIdx] = {...f, updated: Date.now()};
-                                        }
-                                    });
-                                }
-                            });
-                            // Пересоздаём массив для реактивности
-                            chatData.messages = [...chatData.messages];
-                            // Скроллим чат вниз
-                            const chatMessages = chatEl.querySelector('#chat-messages');
-                            if (chatMessages) {
-                                setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
-                            }
-                        } else {
-                            // Fallback: пробуем через Alpine.js v3 API
+                    try {
+                        const response = await fetch(BASE_URL + `/files/${this.editingFile.id}/replace`, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: formData,
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            // Обновляем изображение в чате через Alpine
                             const chatComp = document.querySelector('[x-data="taskChat()"]');
                             if (chatComp) {
                                 const scope = Alpine.$data(chatComp);
@@ -467,13 +508,13 @@ function imageEditor() {
                                     setTimeout(() => scope.scrollToBottom(), 100);
                                 }
                             }
+                            this.closeEditor();
+                        } else {
+                            alert('Ошибка: ' + (data.error || 'не удалось сохранить'));
                         }
-                        this.closeEditor();
-                    } else {
-                        alert('Ошибка: ' + (data.error || 'не удалось сохранить'));
+                    } catch (e) {
+                        alert('Ошибка сохранения');
                     }
-                } catch (e) {
-                    alert('Ошибка сохранения');
                 }
             }, 'image/png');
         }
