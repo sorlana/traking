@@ -216,22 +216,49 @@ class FileController extends Controller
         // Отдаём файл с правильными заголовками
         $mimeType = $this->getMimeType($file['file_type']);
         $fileName = $file['file_name'];
+        $fileSize = filesize($fullPath);
 
-        // Изображения отдаём inline (для отображения в чате), остальные — attachment
+        // Видео и изображения отдаём inline
         $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $disposition = in_array($mimeType, $imageTypes) ? 'inline' : 'attachment';
+        $videoTypes = ['video/mp4', 'video/quicktime', 'video/webm'];
+        $isInline = in_array($mimeType, $imageTypes) || in_array($mimeType, $videoTypes);
+        $disposition = $isInline ? 'inline' : 'attachment';
+
+        // Поддержка Range-запросов (необходимо для видео-плеера в браузере)
+        if (in_array($mimeType, $videoTypes) && isset($_SERVER['HTTP_RANGE'])) {
+            $range = $_SERVER['HTTP_RANGE'];
+            if (preg_match('/bytes=(\d+)-(\d*)/', $range, $matches)) {
+                $start = (int) $matches[1];
+                $end = $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
+                $end = min($end, $fileSize - 1);
+                $length = $end - $start + 1;
+
+                header('HTTP/1.1 206 Partial Content');
+                header('Content-Type: ' . $mimeType);
+                header('Content-Length: ' . $length);
+                header('Content-Range: bytes ' . $start . '-' . $end . '/' . $fileSize);
+                header('Accept-Ranges: bytes');
+                header('Access-Control-Allow-Origin: *');
+
+                $fp = fopen($fullPath, 'rb');
+                fseek($fp, $start);
+                echo fread($fp, $length);
+                fclose($fp);
+                exit;
+            }
+        }
 
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: ' . $disposition . '; filename="' . $fileName . '"');
-        header('Content-Length: ' . filesize($fullPath));
+        header('Content-Length: ' . $fileSize);
+        header('Accept-Ranges: bytes');
         header('Access-Control-Allow-Origin: *');
-        // Короткий кэш для изображений (могут редактироваться), длинный для остальных
+        // Короткий кэш для изображений, длинный для остальных
         if (in_array($mimeType, $imageTypes)) {
             header('Cache-Control: no-cache, must-revalidate');
         } else {
             header('Cache-Control: public, max-age=86400');
         }
-        header('Pragma: no-cache');
 
         readfile($fullPath);
         exit;

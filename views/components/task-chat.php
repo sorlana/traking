@@ -51,7 +51,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </template>
 
     <!-- Область сообщений (скролл) -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-3 opacity-0 transition-opacity duration-150" id="chat-messages" x-ref="chatMessages">
+    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages" style="visibility: hidden;">
         <!-- Пустое состояние -->
         <div x-show="messages.length === 0" class="flex items-center justify-center h-full">
             <p class="text-sm text-gray-400">Сообщений пока нет. Начните обсуждение!</p>
@@ -86,15 +86,22 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <!-- Прикреплённые файлы (без фона для изображений) -->
                         <template x-for="file in msg.files" :key="file.id">
                             <div class="mt-1">
-                                <!-- Изображение — превью без фона -->
+                                <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-white/80"
                                          :alt="file.file_name">
                                 </template>
-                                <!-- Не изображение — иконка + имя -->
-                                <template x-if="!isImage(file.file_type)">
+                                <!-- Видео — встроенный плеер -->
+                                <template x-if="isVideo(file.file_type)">
+                                    <video :src="BASE_URL + '/files/' + file.id + '/download'"
+                                           controls preload="metadata"
+                                           class="max-w-full max-h-56 rounded-lg shadow-sm">
+                                    </video>
+                                </template>
+                                <!-- Остальные файлы — иконка + имя -->
+                                <template x-if="!isImage(file.file_type) && !isVideo(file.file_type)">
                                     <a :href="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                        class="flex items-center gap-2 p-2 bg-blue-500 rounded-lg text-xs text-white hover:bg-blue-600 transition">
                                         <span>📄</span>
@@ -145,15 +152,22 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <!-- Прикреплённые файлы (без фона для изображений) -->
                         <template x-for="file in msg.files" :key="file.id">
                             <div class="mt-1">
-                                <!-- Изображение — превью без фона -->
+                                <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-gray-200"
                                          :alt="file.file_name">
                                 </template>
-                                <!-- Не изображение — иконка + имя -->
-                                <template x-if="!isImage(file.file_type)">
+                                <!-- Видео — встроенный плеер -->
+                                <template x-if="isVideo(file.file_type)">
+                                    <video :src="BASE_URL + '/files/' + file.id + '/download'"
+                                           controls preload="metadata"
+                                           class="max-w-full max-h-56 rounded-lg shadow-sm border border-gray-200">
+                                    </video>
+                                </template>
+                                <!-- Остальные файлы — иконка + имя -->
+                                <template x-if="!isImage(file.file_type) && !isVideo(file.file_type)">
                                     <a :href="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                        class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg border text-xs text-blue-600 hover:bg-blue-50 transition">
                                         <span>📄</span>
@@ -427,18 +441,47 @@ function taskChat() {
          * Инициализация: скролл вниз при загрузке + polling + отметка прочтения
          */
         init() {
+            const container = this.$refs.chatMessages;
+
+            // Функция: скролл вниз + показать контейнер
+            const revealChat = () => {
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                    container.style.visibility = 'visible';
+                }
+            };
+
+            // Ждём загрузки всех изображений в чате, потом скроллим и показываем
             this.$nextTick(() => {
-                this.scrollToBottom();
                 this.updateLastMessageId();
                 this.markMessagesAsRead();
-                // Показываем чат после прокрутки вниз (убираем дёрганье)
-                if (this.$refs.chatMessages) {
-                    this.$refs.chatMessages.classList.remove('opacity-0');
+
+                if (container) {
+                    const images = container.querySelectorAll('img');
+                    if (images.length === 0) {
+                        revealChat();
+                    } else {
+                        let loaded = 0;
+                        const total = images.length;
+                        const onLoad = () => {
+                            loaded++;
+                            if (loaded >= total) revealChat();
+                        };
+                        images.forEach(img => {
+                            if (img.complete) {
+                                onLoad();
+                            } else {
+                                img.addEventListener('load', onLoad, { once: true });
+                                img.addEventListener('error', onLoad, { once: true });
+                            }
+                        });
+                        // Подстраховка: показать через 3 сек если изображения не загрузились
+                        setTimeout(revealChat, 3000);
+                    }
+                } else {
+                    revealChat();
                 }
             });
-
-            // Дополнительный скролл после загрузки изображений (тихий, пользователь уже внизу)
-            setTimeout(() => this.scrollToBottom(), 1500);
 
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
@@ -920,6 +963,13 @@ function taskChat() {
          */
         isImage(fileType) {
             return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((fileType || '').toLowerCase());
+        },
+
+        /**
+         * Проверка: является ли файл видео (по расширению)
+         */
+        isVideo(fileType) {
+            return ['mp4', 'mov', 'webm'].includes((fileType || '').toLowerCase());
         },
 
         /**
