@@ -427,8 +427,48 @@ function imageEditor() {
                     });
                     const data = await response.json();
                     if (data.success) {
+                        // Обновляем изображение в чате без перезагрузки страницы
+                        // Ищем Alpine-компонент чата и обновляем файл
+                        const chatEl = document.querySelector('[x-data="taskChat()"]');
+                        if (chatEl && chatEl.__x) {
+                            const chatData = chatEl.__x.$data;
+                            chatData.messages.forEach((msg, mIdx) => {
+                                if (msg.files) {
+                                    msg.files.forEach((f, fIdx) => {
+                                        if (f.id === this.editingFile.id) {
+                                            chatData.messages[mIdx].files[fIdx] = {...f, updated: Date.now()};
+                                        }
+                                    });
+                                }
+                            });
+                            // Пересоздаём массив для реактивности
+                            chatData.messages = [...chatData.messages];
+                            // Скроллим чат вниз
+                            const chatMessages = chatEl.querySelector('#chat-messages');
+                            if (chatMessages) {
+                                setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 100);
+                            }
+                        } else {
+                            // Fallback: пробуем через Alpine.js v3 API
+                            const chatComp = document.querySelector('[x-data="taskChat()"]');
+                            if (chatComp) {
+                                const scope = Alpine.$data(chatComp);
+                                if (scope) {
+                                    scope.messages.forEach((msg, mIdx) => {
+                                        if (msg.files) {
+                                            msg.files.forEach((f, fIdx) => {
+                                                if (f.id === this.editingFile.id) {
+                                                    scope.messages[mIdx].files[fIdx] = {...f, updated: Date.now()};
+                                                }
+                                            });
+                                        }
+                                    });
+                                    scope.messages = [...scope.messages];
+                                    setTimeout(() => scope.scrollToBottom(), 100);
+                                }
+                            }
+                        }
                         this.closeEditor();
-                        window.location.reload();
                     } else {
                         alert('Ошибка: ' + (data.error || 'не удалось сохранить'));
                     }

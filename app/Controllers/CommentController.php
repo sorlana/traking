@@ -318,7 +318,7 @@ class CommentController extends Controller
             }
         }
 
-        // Определяем обновлённые сообщения (отредактированные за последние 10 сек)
+        // Определяем обновлённые сообщения (отредактированные за последние 30 сек)
         $updated = [];
         if ($clientIds !== '') {
             $updatedRows = $db->fetchAll(
@@ -327,7 +327,24 @@ class CommentController extends Controller
                 [$taskId]
             );
             foreach ($updatedRows as $row) {
-                $updated[] = ['id' => (int) $row['id'], 'comment_text' => $row['comment_text']];
+                // Включаем файлы для обновлённого комментария (нужно для обновления изображений)
+                $files = $db->fetchAll(
+                    "SELECT id, file_name, file_size, file_type, created_at FROM task_files WHERE comment_id = ?",
+                    [(int) $row['id']]
+                );
+                $updated[] = [
+                    'id' => (int) $row['id'],
+                    'comment_text' => $row['comment_text'],
+                    'files' => array_map(function($f) {
+                        return [
+                            'id' => (int) $f['id'],
+                            'file_name' => $f['file_name'],
+                            'file_size' => (int) $f['file_size'],
+                            'file_type' => $f['file_type'],
+                            'updated' => strtotime($f['created_at']),
+                        ];
+                    }, $files),
+                ];
             }
         }
 

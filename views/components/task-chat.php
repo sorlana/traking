@@ -90,7 +90,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
-                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm"
+                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-white/80"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Не изображение — иконка + имя -->
@@ -149,7 +149,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                          @click="openModal(file)"
-                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm"
+                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-gray-200"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Не изображение — иконка + имя -->
@@ -224,8 +224,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
     <!-- Модальное окно для просмотра изображения -->
     <div x-show="modalFile" x-transition.opacity
-         @click.self="modalFile = null; modalZoom = 1;"
-         @keydown.escape.window="modalFile = null; modalZoom = 1;"
+         @click.self="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());"
+         @keydown.escape.window="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());"
          class="fixed inset-0 z-[100] bg-black bg-opacity-90 flex flex-col"
          style="display: none;">
         <!-- Верхняя панель -->
@@ -249,7 +249,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                     </svg>
                 </a>
                 <!-- Закрыть -->
-                <button @click="modalFile = null; modalZoom = 1;"
+                <button @click="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());"
                         class="text-white hover:text-red-300 p-2 rounded transition" title="Закрыть">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -258,8 +258,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </div>
         </div>
         <!-- Область изображения (на всё окно) -->
-        <div class="flex-1 overflow-auto flex items-center justify-center" @click.self="modalFile = null; modalZoom = 1;">
-            <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
+        <div class="flex-1 overflow-auto flex items-center justify-center" @click.self="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());">
+            <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download?t=' + (modalFile.updated || modalFile.id) : ''"
                  :style="'transform: scale(' + modalZoom + '); transition: transform 0.2s;'"
                  class="max-w-full max-h-full object-contain"
                  :alt="modalFile ? modalFile.file_name : ''">
@@ -601,18 +601,24 @@ function taskChat() {
                     this.messages = this.messages.filter(m => !data.deleted.includes(m.id));
                 }
 
-                // Обновлённые сообщения (отредактированные)
+                // Обновлённые сообщения (отредактированные или с замененными файлами)
                 if (data.updated && data.updated.length > 0) {
                     data.updated.forEach(upd => {
                         const idx = this.messages.findIndex(m => m.id === upd.id);
                         if (idx !== -1) {
-                            this.messages[idx].comment_text = upd.comment_text;
-                            // Пересоздаём массив файлов с новым timestamp (для перезагрузки изображений)
-                            if (this.messages[idx].files && this.messages[idx].files.length > 0) {
-                                this.messages[idx].files = this.messages[idx].files.map(f => ({...f, updated: Date.now()}));
-                            }
+                            // Полная замена объекта для реактивности Alpine.js
+                            const existing = this.messages[idx];
+                            this.messages[idx] = {
+                                ...existing,
+                                comment_text: upd.comment_text,
+                                files: upd.files && upd.files.length > 0
+                                    ? upd.files.map(f => ({...f, updated: f.updated || Date.now()}))
+                                    : (existing.files || []).map(f => ({...f, updated: Date.now()})),
+                            };
                         }
                     });
+                    // Пересоздаём массив для гарантии реактивности
+                    this.messages = [...this.messages];
                 }
 
                 // Обновляем статус прочтения (галочки становятся синими)
