@@ -64,23 +64,23 @@ $isClosed = ($task['status_code'] === 'closed');
 
 <div class="flex flex-col h-full gap-4">
 
-    <!-- Ссылка «Все задачи» -->
-    <a href="<?= url('/tasks') ?>" class="text-xs text-gray-400 hover:text-blue-500 mb-1 inline-block">← Все задачи</a>
-
     <!-- ===== Шапка: Breadcrumb + Заголовок + Кнопки действий ===== -->
     <div class="bg-white rounded-lg shadow-sm border p-4">
-        <!-- Breadcrumb (мелкий, внутри блока) -->
-        <nav class="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-            <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500">
-                <?= e($task['project_title'] ?? 'Проект') ?>
-            </a>
-            <?php if ($parent ?? null): ?>
-                <span>›</span>
-                <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-500">
-                    <?= e($parent['title']) ?>
+        <!-- Breadcrumb + ссылка «Все задачи» -->
+        <div class="flex items-center justify-between mb-2">
+            <nav class="flex items-center gap-1.5 text-xs text-gray-400">
+                <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500">
+                    <?= e($task['project_title'] ?? 'Проект') ?>
                 </a>
-            <?php endif; ?>
-        </nav>
+                <?php if ($parent ?? null): ?>
+                    <span>›</span>
+                    <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-500">
+                        <?= e($parent['title']) ?>
+                    </a>
+                <?php endif; ?>
+            </nav>
+            <a href="<?= url('/tasks') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все задачи</a>
+        </div>
 
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 

@@ -8,40 +8,32 @@ $layout = 'layouts/app';
 ?>
 
 <!-- Шапка проекта -->
-<div class="mb-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <a href="<?= url('/projects') ?>" class="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block">&larr; К списку проектов</a>
-            <h1 class="text-2xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
-        </div>
-
-        <?php if (can('edit_project', (int) $project['id'])): ?>
-            <div class="flex gap-2">
-                <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>"
-                   class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    Редактировать
-                </a>
-                <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
-                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>"
-                          onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все его задачи? Это действие нельзя отменить!')">
-                        <?= csrf_field() ?>
-                        <button type="submit"
-                                class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-medium transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Удалить
-                        </button>
-                    </form>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
+<div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <!-- Название + «Все проекты» -->
+    <div class="flex items-center justify-between mb-3">
+        <h1 class="text-xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
+        <a href="<?= url('/projects') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все проекты</a>
     </div>
+
+    <!-- Кнопки действий -->
+    <?php if (can('edit_project', (int) $project['id'])): ?>
+        <div class="flex items-center gap-2">
+            <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>"
+               class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                Редактировать
+            </a>
+            <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
+                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>"
+                      onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все его задачи? Это действие нельзя отменить!')" class="inline">
+                    <?= csrf_field() ?>
+                    <button type="submit"
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                        Удалить
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Вкладки -->
