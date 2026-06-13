@@ -5,9 +5,9 @@
     # Запрет прямого доступа к служебным папкам
     RewriteRule ^(app|config|database|storage|views)(/|$) - [F,L]
 
-    # Если запрос к реальному файлу (CSS, JS, картинки в public/) — отдаём
-    RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^ - [L]
+    # Если запрос к реальному файлу в public/ — отдаём его оттуда
+    RewriteCond %{DOCUMENT_ROOT}/traking/public/$1 -f
+    RewriteRule ^(.+)$ public/$1 [L]
 
     # Всё остальное — на public/index.php (включая корень и все маршруты)
     RewriteRule ^(.*)$ public/index.php [QSA,L]
