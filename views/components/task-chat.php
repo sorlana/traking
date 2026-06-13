@@ -412,6 +412,13 @@ function taskChat() {
             });
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
+
+            // При возвращении на вкладку — помечаем прочитанными
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    this.markMessagesAsRead();
+                }
+            });
         },
 
         /**
