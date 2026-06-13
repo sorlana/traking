@@ -152,7 +152,7 @@
                     @touchstart.prevent="startDrawTouch($event)"
                     @touchmove.prevent="drawTouch($event)"
                     @touchend="endDraw()"
-                    class="max-w-full max-h-full cursor-crosshair shadow-lg"></canvas>
+                    class="max-w-full max-h-full cursor-crosshair shadow-lg border border-white/30"></canvas>
         </div>
 
         <!-- Поле ввода комментария (для инструмента Comment) -->

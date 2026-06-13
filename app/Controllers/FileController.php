@@ -224,8 +224,13 @@ class FileController extends Controller
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: ' . $disposition . '; filename="' . $fileName . '"');
         header('Content-Length: ' . filesize($fullPath));
-        header('Cache-Control: public, max-age=86400');
         header('Access-Control-Allow-Origin: *');
+        // Короткий кэш для изображений (могут редактироваться), длинный для остальных
+        if (in_array($mimeType, $imageTypes)) {
+            header('Cache-Control: no-cache, must-revalidate');
+        } else {
+            header('Cache-Control: public, max-age=86400');
+        }
         header('Pragma: no-cache');
 
         readfile($fullPath);
@@ -471,13 +476,14 @@ class FileController extends Controller
         $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
         move_uploaded_file($uploadedFile['tmp_name'], $fullPath);
 
-        // Обновляем размер в БД
+        // Обновляем размер и timestamp в БД (для сброса кэша у собеседника)
         $db = Database::getInstance();
         $db->update('task_files', [
             'file_size' => $uploadedFile['size'],
+            'created_at' => date('Y-m-d H:i:s'),  // Обновляем дату — для cache-busting
         ], 'id = ?', [$fileId]);
 
-        $this->json(['success' => true]);
+        $this->json(['success' => true, 'updated_at' => time()]);
     }
 
     // ========================================================================
