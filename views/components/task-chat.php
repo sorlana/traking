@@ -232,6 +232,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <div class="flex items-center justify-between px-4 py-2 bg-black bg-opacity-50">
             <span class="text-white text-sm truncate" x-text="modalFile ? modalFile.file_name : ''"></span>
             <div class="flex items-center gap-2">
+                <!-- Редактировать -->
+                <button @click="$dispatch('open-editor', {file: modalFile}); modalFile = null; modalZoom = 1;"
+                        class="text-white hover:text-green-300 p-2 rounded transition" title="Редактировать">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                </button>
                 <!-- Скачать -->
                 <a :href="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' + '?force=1' : '#'"
                    class="text-white hover:text-blue-300 p-2 rounded transition" title="Скачать" download>

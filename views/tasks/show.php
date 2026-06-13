@@ -204,6 +204,9 @@ $isClosed = ($task['status_code'] === 'closed');
 
             <!-- Чат задачи (занимает всё оставшееся пространство) -->
             <?php include BASE_PATH . '/views/components/task-chat.php'; ?>
+
+            <!-- Редактор изображений (полноэкранный оверлей) -->
+            <?php include BASE_PATH . '/views/components/image-editor.php'; ?>
         </div>
 
         <!-- ===== Правая колонка (1/3): Вкладки ===== -->
