@@ -233,6 +233,10 @@ function imageEditor() {
          */
         setTool(t) {
             this.tool = t;
+            // При переключении на маркер — сбрасываем комментарий
+            if (t === 'marker') {
+                this.commentText = null;
+            }
             if (t === 'comment') {
                 this.$nextTick(() => {
                     if (this.$refs.commentTextInput) {
