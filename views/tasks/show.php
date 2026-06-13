@@ -199,7 +199,7 @@ $isExecutor = \Helpers\Auth::isExecutor();
                             <!-- Switch: Доработки / Готово -->
                             <div class="inline-flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
                                 <?php if ($isExecutor): ?>
-                                    <!-- Исполнитель: левая ВСЕГДА серая, правая — зелёная кнопка -->
+                                    <!-- Исполнитель: левая ВСЕГДА серая, правая — зелёная кнопка (до нажатия) или зелёный бейдж (после) -->
                                     <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400">
                                         Доработки
                                     </span>
@@ -213,7 +213,7 @@ $isExecutor = \Helpers\Auth::isExecutor();
                                         </form>
                                     <?php else: ?>
                                         <span class="px-3 py-1.5 text-xs font-medium bg-green-500 text-white">
-                                            Готово ✓
+                                            Готово
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
