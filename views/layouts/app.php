@@ -12,9 +12,13 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 // Получаем настройку звука для текущего пользователя
 $_soundEnabled = 0;
 if ($currentUser) {
-    $db = \Helpers\Database::getInstance();
-    $_userSettings = $db->fetch("SELECT sound_enabled FROM user_settings WHERE user_id = ?", [(int)$currentUser['id']]);
-    $_soundEnabled = (int) ($_userSettings['sound_enabled'] ?? 0);
+    try {
+        $db = \Helpers\Database::getInstance();
+        $_userSettings = $db->fetch("SELECT sound_enabled FROM user_settings WHERE user_id = ?", [(int)$currentUser['id']]);
+        $_soundEnabled = (int) ($_userSettings['sound_enabled'] ?? 0);
+    } catch (\Throwable $e) {
+        $_soundEnabled = 0;
+    }
 }
 ?>
 <!DOCTYPE html>

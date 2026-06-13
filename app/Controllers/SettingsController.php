@@ -95,7 +95,11 @@ class SettingsController extends Controller
     private function getUserSettings(int $userId): array
     {
         $db = Database::getInstance();
-        $settings = $db->fetch("SELECT * FROM user_settings WHERE user_id = ?", [$userId]);
+        try {
+            $settings = $db->fetch("SELECT * FROM user_settings WHERE user_id = ?", [$userId]);
+        } catch (\Throwable $e) {
+            $settings = null;
+        }
 
         return $settings ?: [
             'push_enabled' => 1,
