@@ -4,6 +4,7 @@
  *
  * Единый мессенджер-интерфейс для комментариев, файлов и ссылок.
  * Сообщения отображаются в виде «пузырей» (bubbles) как в Telegram/WhatsApp.
+ * Поддержка: кликабельные URL, контекстное меню (ответ, редактирование, удаление).
  *
  * Ожидаемые переменные:
  *   $task — массив данных задачи
@@ -34,10 +35,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             <div>
                 <!-- Своё сообщение (справа) -->
                 <div x-show="msg.user_id == currentUserId" class="flex justify-end">
-                    <div class="max-w-[80%]">
+                    <div class="max-w-[80%]"
+                         @contextmenu.prevent="showContext($event, msg)"
+                         @touchstart="startLongPress($event, msg)"
+                         @touchend="cancelLongPress()"
+                         @touchmove="cancelLongPress()">
                         <!-- Текстовая часть (синий фон) -->
                         <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-blue-500 text-white rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
-                            <div class="text-sm whitespace-pre-wrap" x-text="msg.comment_text"></div>
+                            <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
                         </div>
                         <!-- Прикреплённые файлы (без фона для изображений) -->
@@ -75,12 +80,16 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
                 <!-- Чужое сообщение (слева) -->
                 <div x-show="msg.user_id != currentUserId" class="flex justify-start">
-                    <div class="max-w-[80%]">
+                    <div class="max-w-[80%]"
+                         @contextmenu.prevent="showContext($event, msg)"
+                         @touchstart="startLongPress($event, msg)"
+                         @touchend="cancelLongPress()"
+                         @touchmove="cancelLongPress()">
                         <!-- Имя отправителя -->
                         <div class="text-xs font-medium text-gray-500 mb-1 ml-1" x-text="msg.user_name"></div>
                         <!-- Текстовая часть (серый фон) -->
                         <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-gray-100 rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
-                            <div class="text-sm text-gray-800 whitespace-pre-wrap" x-text="msg.comment_text"></div>
+                            <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
                         </div>
                         <!-- Прикреплённые файлы (без фона для изображений) -->
@@ -117,6 +126,41 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 </div>
             </div>
         </template>
+    </div>
+
+    <!-- Контекстное меню сообщения -->
+    <div x-show="contextMenu.show"
+         x-transition
+         @click.outside="contextMenu.show = false"
+         :style="'position: fixed; left: ' + contextMenu.x + 'px; top: ' + contextMenu.y + 'px;'"
+         class="z-[200] bg-white rounded-lg shadow-lg border py-1 min-w-[150px]"
+         style="display: none;">
+        <!-- Ответить -->
+        <button @click="replyToMessage(contextMenu.msg); contextMenu.show = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+            Ответить
+        </button>
+        <!-- Редактировать (только свои) -->
+        <button x-show="contextMenu.msg && contextMenu.msg.user_id == currentUserId"
+                @click="editMessage(contextMenu.msg); contextMenu.show = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Редактировать
+        </button>
+        <!-- Удалить (только свои) -->
+        <button x-show="contextMenu.msg && contextMenu.msg.user_id == currentUserId"
+                @click="deleteMessage(contextMenu.msg); contextMenu.show = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Удалить
+        </button>
     </div>
 
     <!-- Модальное окно для просмотра изображения -->
@@ -178,6 +222,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <span class="text-xs text-gray-600">📎</span>
         <span class="text-xs text-gray-700 truncate flex-1" x-text="attachedFile ? attachedFile.name : ''"></span>
         <button @click="removeAttachment()" class="text-xs text-red-500 hover:text-red-700">✕</button>
+    </div>
+
+    <!-- Блок «Ответ на...» или «Редактирование» -->
+    <div x-show="replyTo || editingMsg" class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between">
+        <div class="text-xs text-blue-700">
+            <span x-show="replyTo">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
+            <span x-show="editingMsg">✏️ Редактирование</span>
+        </div>
+        <button @click="cancelReply(); cancelEdit();" class="text-xs text-gray-500 hover:text-red-500">✕</button>
     </div>
 
     <!-- Поле ввода -->
@@ -257,6 +310,12 @@ function taskChat() {
         currentUserId: <?= (int) $currentUserId ?>,
         taskId: <?= (int) $task['id'] ?>,
 
+        // Контекстное меню
+        contextMenu: { show: false, x: 0, y: 0, msg: null },
+        longPressTimer: null,
+        replyTo: null,
+        editingMsg: null,
+
         /**
          * Инициализация: скролл вниз при загрузке + polling
          */
@@ -267,6 +326,94 @@ function taskChat() {
             });
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
+        },
+
+        /**
+         * Превращает URL в тексте в кликабельные ссылки (с экранированием HTML)
+         */
+        linkify(text) {
+            if (!text) return '';
+            // Экранируем HTML
+            const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Заменяем URL на кликабельные ссылки
+            const urlRegex = /(https?:\/\/[^\s<]+)/gi;
+            return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener" class="underline hover:no-underline">$1</a>');
+        },
+
+        /**
+         * Показать контекстное меню (правая кнопка мыши)
+         */
+        showContext(event, msg) {
+            this.contextMenu = { show: true, x: event.clientX, y: event.clientY, msg: msg };
+        },
+
+        /**
+         * Начать long press (для мобильных устройств)
+         */
+        startLongPress(event, msg) {
+            this.longPressTimer = setTimeout(() => {
+                const touch = event.touches[0];
+                this.contextMenu = { show: true, x: touch.clientX, y: touch.clientY, msg: msg };
+            }, 500);
+        },
+
+        /**
+         * Отменить long press
+         */
+        cancelLongPress() {
+            if (this.longPressTimer) {
+                clearTimeout(this.longPressTimer);
+                this.longPressTimer = null;
+            }
+        },
+
+        /**
+         * Ответить на сообщение
+         */
+        replyToMessage(msg) {
+            this.replyTo = msg;
+            this.$refs.messageInput.focus();
+        },
+
+        /**
+         * Отменить ответ
+         */
+        cancelReply() {
+            this.replyTo = null;
+        },
+
+        /**
+         * Редактировать сообщение
+         */
+        editMessage(msg) {
+            this.editingMsg = msg;
+            this.newMessage = msg.comment_text;
+            this.$refs.messageInput.focus();
+        },
+
+        /**
+         * Отменить редактирование
+         */
+        cancelEdit() {
+            this.editingMsg = null;
+            this.newMessage = '';
+        },
+
+        /**
+         * Удалить сообщение
+         */
+        async deleteMessage(msg) {
+            if (!confirm('Удалить сообщение?')) return;
+            try {
+                const response = await fetch(BASE_URL + `/comments/${msg.id}/delete`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.messages = this.messages.filter(m => m.id !== msg.id);
+                }
+            } catch(e) {}
         },
 
         /**
@@ -303,7 +450,7 @@ function taskChat() {
         },
 
         /**
-         * Отправить сообщение (с файлом или без)
+         * Отправить сообщение (с файлом или без, с поддержкой ответа и редактирования)
          */
         async sendMessage() {
             const text = this.newMessage.trim();
@@ -314,8 +461,51 @@ function taskChat() {
             this.errorMessage = '';
 
             try {
+                // Режим редактирования
+                if (this.editingMsg) {
+                    const formData = new FormData();
+                    formData.append('comment_text', text);
+
+                    const response = await fetch(BASE_URL + `/comments/${this.editingMsg.id}/edit`, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData,
+                    });
+
+                    const responseText = await response.text();
+                    let data;
+                    try { data = JSON.parse(responseText); } catch(parseErr) {
+                        this.errorMessage = 'Ошибка сервера';
+                        return;
+                    }
+
+                    if (data.success) {
+                        // Обновляем текст в локальном массиве
+                        const idx = this.messages.findIndex(m => m.id === this.editingMsg.id);
+                        if (idx !== -1) {
+                            this.messages[idx].comment_text = text;
+                        }
+                        this.newMessage = '';
+                        this.editingMsg = null;
+
+                        // Сбрасываем высоту textarea
+                        if (this.$refs.messageInput) {
+                            this.$refs.messageInput.style.height = 'auto';
+                        }
+                    } else {
+                        this.errorMessage = data.error || 'Ошибка при редактировании';
+                    }
+                    return;
+                }
+
+                // Режим создания нового сообщения (с возможным ответом)
                 const formData = new FormData();
                 formData.append('comment_text', text || '');
+
+                // Если отвечаем на сообщение — передаём parent_comment_id
+                if (this.replyTo) {
+                    formData.append('parent_comment_id', this.replyTo.id);
+                }
 
                 // Если есть прикреплённый файл — добавляем
                 if (this.attachedFile) {
@@ -347,6 +537,7 @@ function taskChat() {
                         links: data.comment.links || [],
                     });
                     this.newMessage = '';
+                    this.replyTo = null;
                     this.removeAttachment();
                     this.$nextTick(() => this.scrollToBottom());
 
