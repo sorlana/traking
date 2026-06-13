@@ -17,12 +17,6 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 ?>
 
 <div class="bg-white rounded-lg shadow-sm border flex flex-col" style="height: 500px;" x-data="taskChat()">
-    <!-- Заголовок -->
-    <div class="px-4 py-3 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
-        <h3 class="text-sm font-medium text-gray-700">
-            Чат задачи (<span x-text="messages.length"><?= count($comments) ?></span>)
-        </h3>
-    </div>
 
     <!-- Область сообщений (скролл) -->
     <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages">

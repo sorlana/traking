@@ -103,6 +103,11 @@ $isClosed = ($task['status_code'] === 'closed');
                         Сделано
                     </span>
                 <?php elseif ($canChangeStatus): ?>
+                    <!-- Бейдж текущего статуса -->
+                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                        <?= e($task['status_name'] ?? '') ?>
+                    </span>
+                    <!-- Switch -->
                     <div class="inline-flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
                         <?php if ($isExecutor): ?>
                             <!-- Исполнитель: левая серая, правая — зелёная -->
