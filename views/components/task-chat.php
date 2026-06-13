@@ -426,25 +426,43 @@ function taskChat() {
         },
 
         /**
-         * Polling: запрос новых сообщений с сервера
+         * Polling: запрос новых/изменённых/удалённых сообщений с сервера
          */
         async pollNewMessages() {
             if (!this.taskId) return;
             try {
-                const response = await fetch(BASE_URL + `/ajax/tasks/${this.taskId}/messages?after=${this.lastMessageId}`, {
+                // Передаём список ID текущих сообщений для определения удалённых
+                const currentIds = this.messages.map(m => m.id).join(',');
+                const response = await fetch(BASE_URL + `/ajax/tasks/${this.taskId}/messages?after=${this.lastMessageId}&ids=${currentIds}`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (!response.ok) return;
                 const data = await response.json();
+
+                // Новые сообщения
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
-                        // Не добавляем дубликаты
                         if (!this.messages.find(m => m.id === msg.id)) {
                             this.messages.push(msg);
                         }
                     });
                     this.updateLastMessageId();
                     this.$nextTick(() => this.scrollToBottom());
+                }
+
+                // Удалённые сообщения
+                if (data.deleted && data.deleted.length > 0) {
+                    this.messages = this.messages.filter(m => !data.deleted.includes(m.id));
+                }
+
+                // Обновлённые сообщения (отредактированные)
+                if (data.updated && data.updated.length > 0) {
+                    data.updated.forEach(upd => {
+                        const idx = this.messages.findIndex(m => m.id === upd.id);
+                        if (idx !== -1) {
+                            this.messages[idx].comment_text = upd.comment_text;
+                        }
+                    });
                 }
             } catch(e) {}
         },

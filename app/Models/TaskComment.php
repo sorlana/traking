@@ -23,6 +23,7 @@ class TaskComment extends Model
         'user_id',
         'comment_text',
         'parent_comment_id',
+        'updated_at',
     ];
 
     /**

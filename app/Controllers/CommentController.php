@@ -278,7 +278,42 @@ class CommentController extends Controller
         }
         unset($msg);
 
-        $this->json(['messages' => $messages]);
+        // Определяем удалённые сообщения (если клиент передал список своих ID)
+        $deleted = [];
+        $clientIds = trim($_GET['ids'] ?? '');
+        if ($clientIds !== '') {
+            $idArray = array_map('intval', explode(',', $clientIds));
+            if (!empty($idArray)) {
+                // Проверяем какие из переданных ID больше не существуют в БД
+                $placeholders = implode(',', array_fill(0, count($idArray), '?'));
+                $existing = $db->fetchAll(
+                    "SELECT id FROM task_comments WHERE task_id = ? AND id IN ({$placeholders})",
+                    array_merge([$taskId], $idArray)
+                );
+                $existingIds = array_column($existing, 'id');
+                $existingIds = array_map('intval', $existingIds);
+                $deleted = array_values(array_diff($idArray, $existingIds));
+            }
+        }
+
+        // Определяем обновлённые сообщения (отредактированные за последние 10 сек)
+        $updated = [];
+        if ($clientIds !== '') {
+            $updatedRows = $db->fetchAll(
+                "SELECT id, comment_text FROM task_comments 
+                 WHERE task_id = ? AND updated_at IS NOT NULL AND updated_at >= DATE_SUB(NOW(), INTERVAL 10 SECOND)",
+                [$taskId]
+            );
+            foreach ($updatedRows as $row) {
+                $updated[] = ['id' => (int) $row['id'], 'comment_text' => $row['comment_text']];
+            }
+        }
+
+        $this->json([
+            'messages' => $messages,
+            'deleted' => $deleted,
+            'updated' => $updated,
+        ]);
     }
 
     /**
@@ -339,8 +374,11 @@ class CommentController extends Controller
             return;
         }
 
-        // Обновляем комментарий
-        $this->commentModel->update($commentId, ['comment_text' => $commentText]);
+        // Обновляем комментарий (с updated_at для синхронизации через polling)
+        $this->commentModel->update($commentId, [
+            'comment_text' => $commentText,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
 
         if ($this->isAjax()) {
             $this->json(['success' => true, 'comment_text' => $commentText]);
