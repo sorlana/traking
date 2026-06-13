@@ -323,7 +323,7 @@ class CommentController extends Controller
         if ($clientIds !== '') {
             $updatedRows = $db->fetchAll(
                 "SELECT id, comment_text FROM task_comments 
-                 WHERE task_id = ? AND updated_at IS NOT NULL AND updated_at >= DATE_SUB(NOW(), INTERVAL 10 SECOND)",
+                 WHERE task_id = ? AND updated_at IS NOT NULL AND updated_at >= DATE_SUB(NOW(), INTERVAL 30 SECOND)",
                 [$taskId]
             );
             foreach ($updatedRows as $row) {

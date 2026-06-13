@@ -607,9 +607,9 @@ function taskChat() {
                         const idx = this.messages.findIndex(m => m.id === upd.id);
                         if (idx !== -1) {
                             this.messages[idx].comment_text = upd.comment_text;
-                            // Обновляем timestamp файлов для перезагрузки изображений
-                            if (this.messages[idx].files) {
-                                this.messages[idx].files.forEach(f => { f.updated = Date.now(); });
+                            // Пересоздаём массив файлов с новым timestamp (для перезагрузки изображений)
+                            if (this.messages[idx].files && this.messages[idx].files.length > 0) {
+                                this.messages[idx].files = this.messages[idx].files.map(f => ({...f, updated: Date.now()}));
                             }
                         }
                     });
