@@ -49,9 +49,13 @@ class PushService
 
     /**
      * Отправить push всем подписчикам пользователя (кроме отправителя)
+     * Перед отправкой проверяет настройки пользователя (push, DND, расписание)
      */
     public function sendToUser(int $userId, string $title, string $body, ?string $url = null): void
     {
+        // Проверяем настройки пользователя
+        if (!$this->canSendToUser($userId)) return;
+
         $db = Database::getInstance();
         $subscriptions = $db->fetchAll(
             "SELECT * FROM push_subscriptions WHERE user_id = ?",
@@ -111,6 +115,44 @@ class PushService
         foreach ($recipients as $recipientId) {
             $this->sendToUser($recipientId, $title, $body, $url);
         }
+    }
+
+    /**
+     * Проверить, можно ли отправить push-уведомление пользователю
+     * Учитывает: push_enabled, dnd_enabled, schedule (время + дни)
+     */
+    private function canSendToUser(int $userId): bool
+    {
+        $db = Database::getInstance();
+
+        try {
+            $settings = $db->fetch("SELECT * FROM user_settings WHERE user_id = ?", [$userId]);
+        } catch (\Throwable $e) {
+            // Таблица может не существовать — разрешаем отправку
+            return true;
+        }
+
+        if (!$settings) return true; // Нет настроек — отправляем по умолчанию
+
+        // Push выключен
+        if (!(int) $settings['push_enabled']) return false;
+
+        // Режим "не беспокоить"
+        if ((int) $settings['dnd_enabled']) return false;
+
+        // Расписание
+        if ((int) $settings['schedule_enabled']) {
+            $now = new \DateTime('now', new \DateTimeZone('Europe/Moscow'));
+            $currentDay = (int) $now->format('N'); // 1=пн, 7=вс
+            $currentTime = $now->format('H:i:s');
+
+            $allowedDays = explode(',', $settings['schedule_days'] ?? '');
+            if (!in_array((string) $currentDay, $allowedDays)) return false;
+
+            if ($currentTime < $settings['schedule_start'] || $currentTime > $settings['schedule_end']) return false;
+        }
+
+        return true;
     }
 
     /**

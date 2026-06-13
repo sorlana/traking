@@ -63,6 +63,11 @@ $router->get('/logout', [\Controllers\AuthController::class, 'logout']);
 // ============================================================================
 $router->group(['middleware' => ['auth']], function (Router $router) {
 
+    // Настройки пользователя
+    $router->get('/settings', [\Controllers\SettingsController::class, 'index']);
+    $router->post('/settings', [\Controllers\SettingsController::class, 'update']);
+    $router->post('/settings/dnd', [\Controllers\SettingsController::class, 'toggleDnd']);
+
     // Push-уведомления
     $router->post('/push/subscribe', [\Controllers\PushController::class, 'subscribe']);
     $router->post('/push/unsubscribe', [\Controllers\PushController::class, 'unsubscribe']);

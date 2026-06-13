@@ -30,7 +30,21 @@
         <!-- Заголовок dropdown -->
         <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
             <h3 class="text-sm font-medium text-gray-800">Уведомления</h3>
-            <a href="<?= url('/notifications') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все</a>
+            <div class="flex items-center gap-2">
+                <!-- DND toggle (перечёркнутый колокольчик) -->
+                <button @click.stop="toggleDnd()" class="p-1 rounded hover:bg-gray-100 transition" :title="dndEnabled ? 'Включить уведомления' : 'Выключить уведомления'">
+                    <!-- Колокольчик (если уведомления включены) -->
+                    <svg x-show="!dndEnabled" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <!-- Перечёркнутый колокольчик (если DND) -->
+                    <svg x-show="dndEnabled" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+                    </svg>
+                </button>
+                <a href="<?= url('/notifications') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все</a>
+            </div>
         </div>
 
         <!-- Список уведомлений -->
@@ -90,6 +104,7 @@ function notificationBell() {
         unreadCount: 0,
         items: [],
         pollInterval: null,
+        dndEnabled: <?= (int) ($GLOBALS['_user_dnd'] ?? 0) ?>,
 
         init() {
             this.fetchCount();
@@ -102,6 +117,17 @@ function notificationBell() {
             if (this.open) {
                 this.fetchList();
             }
+        },
+
+        async toggleDnd() {
+            try {
+                const response = await fetch(BASE_URL + '/settings/dnd', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+                if (data.success) this.dndEnabled = data.dnd_enabled;
+            } catch (e) {}
         },
 
         async fetchCount() {
