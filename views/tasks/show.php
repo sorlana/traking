@@ -199,8 +199,8 @@ $isExecutor = \Helpers\Auth::isExecutor();
                             <!-- Switch: Доработки / Готово -->
                             <div class="inline-flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
                                 <?php if ($isExecutor): ?>
-                                    <!-- Исполнитель: серая «Доработки» (неактивная) + зелёная «Готово» (кликабельная) -->
-                                    <span class="px-3 py-1.5 text-xs font-medium <?= $isRevision ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400' ?>">
+                                    <!-- Исполнитель: левая ВСЕГДА серая, правая — зелёная кнопка -->
+                                    <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400">
                                         Доработки
                                     </span>
                                     <?php if (!$isDone): ?>
@@ -213,11 +213,11 @@ $isExecutor = \Helpers\Auth::isExecutor();
                                         </form>
                                     <?php else: ?>
                                         <span class="px-3 py-1.5 text-xs font-medium bg-green-500 text-white">
-                                            Готово
+                                            Готово ✓
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <!-- Руководитель: оранжевая «Доработки» (кликабельная) + серая «Готово» (неактивная) -->
+                                    <!-- Руководитель: левая — оранжевая кнопка, правая ВСЕГДА серая -->
                                     <?php if (!$isRevision): ?>
                                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                             <?= csrf_field() ?>
@@ -228,10 +228,10 @@ $isExecutor = \Helpers\Auth::isExecutor();
                                         </form>
                                     <?php else: ?>
                                         <span class="px-3 py-1.5 text-xs font-medium bg-orange-500 text-white">
-                                            Доработки
+                                            Доработки ✓
                                         </span>
                                     <?php endif; ?>
-                                    <span class="px-3 py-1.5 text-xs font-medium <?= $isDone ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400' ?>">
+                                    <span class="px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-400">
                                         Готово
                                     </span>
                                 <?php endif; ?>
