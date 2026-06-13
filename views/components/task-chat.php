@@ -21,15 +21,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     <!-- Закреплённые сообщения -->
     <template x-if="messages.filter(m => m.is_pinned).length > 0">
         <div class="border-b bg-blue-50 px-3 py-2 flex-shrink-0" x-data="{ pinsOpen: false }">
-            <!-- Одна строка: иконка + счётчик/текст + стрелка -->
+            <!-- Одна строка: иконка + счётчик/текст + стрелка (фиксированная справа) -->
             <div class="flex items-center gap-2 cursor-pointer" @click="pinsOpen = !pinsOpen">
-                <span class="text-blue-500 text-sm">📌</span>
-                <span class="text-xs font-medium text-blue-700"
-                      x-text="messages.filter(m => m.is_pinned).length + ' закрепл.'"></span>
+                <span class="text-blue-500 text-sm flex-shrink-0">📌</span>
+                <span class="text-xs font-medium text-blue-700 flex-shrink-0"
+                      x-text="messages.filter(m => m.is_pinned).length"></span>
                 <span class="text-xs text-blue-600 truncate flex-1"
                       x-show="!pinsOpen"
                       x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></span>
-                <svg class="w-4 h-4 text-blue-400 transition-transform flex-shrink-0" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-blue-400 transition-transform flex-shrink-0 ml-auto" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </div>
@@ -37,8 +37,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             <div x-show="pinsOpen" x-transition class="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
                 <template x-for="pin in messages.filter(m => m.is_pinned)" :key="'pin-' + pin.id">
                     <div class="flex items-center gap-2 text-xs bg-white rounded px-2 py-1.5 border border-blue-100">
-                        <span class="text-blue-500">📌</span>
-                        <span class="font-medium text-blue-700" x-text="pin.user_name"></span>
+                        <span class="font-medium text-blue-700 flex-shrink-0" x-text="pin.user_name"></span>
                         <span class="text-gray-700 truncate flex-1" x-text="pin.comment_text"></span>
                         <button @click.stop="togglePin(pin)" class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Открепить">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

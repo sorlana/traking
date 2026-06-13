@@ -100,8 +100,8 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?= e($task['status_name'] ?? '') ?>
                 </span>
 
-                <!-- Кнопки действий (в стиле «Редактировать») -->
-                <div class="flex items-center gap-2">
+                <!-- Кнопки действий -->
+                <div class="flex items-center gap-2" x-data="{ reassignOpen: false }">
                     <?php if ($canEdit): ?>
                         <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>"
                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
@@ -111,7 +111,6 @@ $isClosed = ($task['status_code'] === 'closed');
 
                     <?php if (!$isClosed): ?>
                         <?php if ($isExecutor && $canChangeStatus && !$isDone): ?>
-                            <!-- Исполнитель: кнопка «Готово» -->
                             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
@@ -121,7 +120,6 @@ $isClosed = ($task['status_code'] === 'closed');
                                 </button>
                             </form>
                         <?php elseif (!$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
-                            <!-- Руководитель: кнопка «Доработать» -->
                             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
@@ -131,6 +129,34 @@ $isClosed = ($task['status_code'] === 'closed');
                                 </button>
                             </form>
                         <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php if ($canEdit && !$isClosed): ?>
+                        <!-- Переназначить (dropdown) -->
+                        <div class="relative">
+                            <button @click="reassignOpen = !reassignOpen"
+                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                                Переназначить
+                            </button>
+                            <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition
+                                 class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50"
+                                 style="display: none;">
+                                <?php foreach ($projectUsers as $pu): ?>
+                                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>">
+                                        <button type="submit"
+                                                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 <?= (int)($task['assigned_to'] ?? 0) === (int)$pu['id'] ? 'text-blue-600 font-medium' : 'text-gray-700' ?>">
+                                            <?= e($pu['name']) ?>
+                                            <span class="text-xs text-gray-400"><?= $pu['project_role'] === 'manager' ? 'рук.' : 'исп.' ?></span>
+                                            <?php if ((int)($task['assigned_to'] ?? 0) === (int)$pu['id']): ?>
+                                                <span class="text-xs text-blue-500 ml-auto">✓</span>
+                                            <?php endif; ?>
+                                        </button>
+                                    </form>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     <?php endif; ?>
 
                     <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
@@ -150,7 +176,7 @@ $isClosed = ($task['status_code'] === 'closed');
                               onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
                             <?= csrf_field() ?>
                             <button type="submit"
-                                    class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition">
+                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                                 Удалить
                             </button>
                         </form>
@@ -314,24 +340,6 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php endif; ?>
 
                 <!-- Переназначение исполнителя -->
-                <?php if ($canEdit && $task['status_code'] !== 'done'): ?>
-                <div class="pt-3 border-t">
-                    <label class="text-xs text-gray-400 mb-2 block">Переназначить</label>
-                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
-                        <?= csrf_field() ?>
-                        <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
-                            <option value="">Не назначен</option>
-                            <?php foreach ($projectUsers as $pu): ?>
-                                <option value="<?= (int) $pu['id'] ?>" <?= (int) ($task['assigned_to'] ?? 0) === (int) $pu['id'] ? 'selected' : '' ?>>
-                                    <?= e($pu['name']) ?> (<?= $pu['project_role'] === 'manager' ? 'руководитель' : 'исполнитель' ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="w-full px-3 py-1.5 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">
-                            Назначить
-                        </button>
-                    </form>
-                </div>
                 <?php endif; ?>
             </div>
 
