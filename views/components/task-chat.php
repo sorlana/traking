@@ -411,7 +411,7 @@ function taskChat() {
         lastMessageId: 0,
         currentUserId: <?= (int) $currentUserId ?>,
         taskId: <?= (int) $task['id'] ?>,
-        taskStatus: '<?= e($task['status'] ?? 'in_progress') ?>',
+        taskStatus: '<?= e($task['status_code'] ?? 'in_progress') ?>',
 
         // Контекстное меню
         contextMenu: { show: false, x: 0, y: 0, msg: null },

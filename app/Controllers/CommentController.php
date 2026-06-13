@@ -361,12 +361,19 @@ class CommentController extends Controller
             $newlyRead = array_map(fn($r) => (int) $r['comment_id'], $newlyReadRows);
         } catch (\Throwable $e) {}
 
+        // Получаем текущий статус задачи
+        $taskStatus = null;
+        try {
+            $taskStatusRow = $db->fetch("SELECT ts.code as status FROM tasks t JOIN task_statuses ts ON t.status_id = ts.id WHERE t.id = ?", [$taskId]);
+            $taskStatus = $taskStatusRow['status'] ?? null;
+        } catch (\Throwable $e) {}
+
         $this->json([
             'messages' => $messages,
             'deleted' => $deleted,
             'updated' => $updated,
             'newly_read' => $newlyRead,
-            'task_status' => $db->fetch("SELECT status FROM tasks WHERE id = ?", [$taskId])['status'] ?? null,
+            'task_status' => $taskStatus,
         ]);
     }
 
