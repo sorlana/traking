@@ -514,6 +514,9 @@ function taskChat() {
          * Отметить чужие сообщения как прочитанные (AJAX)
          */
         markMessagesAsRead() {
+            // Помечаем прочитанными ТОЛЬКО если вкладка активна (пользователь реально видит чат)
+            if (document.visibilityState !== 'visible') return;
+
             // Собираем ID чужих сообщений
             const unreadIds = this.messages
                 .filter(m => m.user_id != this.currentUserId)
