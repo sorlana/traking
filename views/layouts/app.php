@@ -23,7 +23,7 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>">
 </head>
-<body class="min-h-screen bg-gray-100 flex flex-col">
+<body class="h-screen bg-gray-100 flex flex-col overflow-hidden">
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b sticky top-0 z-50" x-data="{ mobileOpen: false }">
@@ -178,17 +178,10 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
         </div>
     <?php endif; ?>
 
-    <!-- Основное содержимое -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+    <!-- Основное содержимое (без прокрутки — прокрутка внутри чата и боковой панели) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 overflow-hidden">
         <?= $content ?>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t mt-auto">
-        <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-400">
-            &copy; <?= date('Y') ?> Traking. Система управления проектами.
-        </div>
-    </footer>
 
     <!-- Toast-уведомления (контейнер) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>

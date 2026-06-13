@@ -62,7 +62,7 @@ $isRevision = ($task['status_code'] === 'revision');
 $isClosed = ($task['status_code'] === 'closed');
 ?>
 
-<div class="space-y-6">
+<div class="flex flex-col h-full gap-4">
 
     <!-- ===== Breadcrumb ===== -->
     <!-- ===== Шапка: Breadcrumb + Заголовок + Кнопки действий ===== -->
@@ -160,26 +160,26 @@ $isClosed = ($task['status_code'] === 'closed');
         </div>
     </div>
 
-    <!-- ===== Двухколоночная сетка ===== -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- ===== Двухколоночная сетка (на всю оставшуюся высоту) ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
 
         <!-- ===== Левая колонка (2/3): Описание + Чат ===== -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 flex flex-col min-h-0">
 
             <!-- Описание -->
             <?php if (!empty($task['description'])): ?>
-            <div class="bg-white rounded-lg shadow-sm border p-5">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Описание</h3>
-                <div class="text-gray-700 whitespace-pre-wrap"><?= e($task['description']) ?></div>
+            <div class="bg-white rounded-lg shadow-sm border p-4 mb-4">
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Описание</h3>
+                <div class="text-gray-700 text-sm whitespace-pre-wrap"><?= e($task['description']) ?></div>
             </div>
             <?php endif; ?>
 
-            <!-- Чат задачи (мессенджер-интерфейс: комментарии + файлы) -->
+            <!-- Чат задачи (занимает всё оставшееся пространство) -->
             <?php include BASE_PATH . '/views/components/task-chat.php'; ?>
         </div>
 
         <!-- ===== Правая колонка (1/3): Вкладки ===== -->
-        <div class="space-y-0" x-data="{ tab: 'subtasks' }">
+        <div class="flex flex-col min-h-0" x-data="{ tab: 'subtasks' }">
 
             <!-- Навигация вкладок -->
             <div class="bg-white rounded-t-lg shadow-sm border border-b-0">
@@ -206,7 +206,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <!-- ============================================================ -->
             <!-- Вкладка: Подзадачи -->
             <!-- ============================================================ -->
-            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4" x-data="{ showAddForm: false }">
+            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
                 <!-- Кнопка/форма добавления подзадачи -->
                 <?php if ($canEdit): ?>
                     <div class="mb-3">
@@ -268,7 +268,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <!-- ============================================================ -->
             <!-- Вкладка: Информация -->
             <!-- ============================================================ -->
-            <div x-show="tab === 'info'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 space-y-4">
+            <div x-show="tab === 'info'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
 
                 <!-- Приоритет -->
                 <div>
@@ -338,7 +338,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <!-- ============================================================ -->
             <!-- Вкладка: История -->
             <!-- ============================================================ -->
-            <div x-show="tab === 'history'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4">
+            <div x-show="tab === 'history'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto">
                 <?php include BASE_PATH . '/views/components/activity-log.php'; ?>
             </div>
 

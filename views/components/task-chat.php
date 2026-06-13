@@ -16,7 +16,7 @@ $currentUser = \Helpers\Auth::user();
 $roleId = (int) ($currentUser['role_id'] ?? 0);
 ?>
 
-<div class="bg-white rounded-lg shadow-sm border flex flex-col" style="height: 500px;" x-data="taskChat()">
+<div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0" x-data="taskChat()">
 
     <!-- Область сообщений (скролл) -->
     <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages">
