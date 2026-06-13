@@ -109,7 +109,7 @@ class TaskController extends Controller
                 }
                 if (!empty($filters['deadline'])) {
                     if ($filters['deadline'] === 'overdue') {
-                        $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+                        $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
                     } elseif ($filters['deadline'] === 'week') {
                         $sql .= " AND t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
                     } elseif ($filters['deadline'] === 'today') {
@@ -117,7 +117,7 @@ class TaskController extends Controller
                     }
                 }
                 if (!empty($filters['overdue'])) {
-                    $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+                    $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
                 }
 
                 $sql .= " ORDER BY t.created_at DESC";
@@ -515,17 +515,17 @@ class TaskController extends Controller
             return;
         }
 
-        // Если статус «closed» — проверяем подзадачи
-        if ($status['code'] === 'closed') {
+        // Если статус «done» — проверяем подзадачи
+        if ($status['code'] === 'done') {
             $canClose = $this->treeService->canClose($taskId);
             if (!$canClose['can']) {
                 if ($this->isAjax()) {
                     $this->json([
-                        'error' => 'Нельзя закрыть: есть незавершённые подзадачи',
+                        'error' => 'Нельзя завершить: есть незавершённые подзадачи',
                         'blocking' => $canClose['blocking'],
                     ], 400);
                 } else {
-                    Session::flash('error', 'Нельзя закрыть задачу: есть незавершённые подзадачи');
+                    Session::flash('error', 'Нельзя завершить задачу: есть незавершённые подзадачи');
                     $this->redirect("/tasks/{$taskId}");
                 }
                 return;
@@ -533,7 +533,7 @@ class TaskController extends Controller
         }
 
         $updateData = ['status_id' => $statusId];
-        if ($status['code'] === 'closed') {
+        if ($status['code'] === 'done') {
             $updateData['closed_at'] = date('Y-m-d H:i:s');
         } else {
             $updateData['closed_at'] = null;
@@ -568,7 +568,7 @@ class TaskController extends Controller
     }
 
     /**
-     * Закрытие задачи (с проверкой подзадач)
+     * Закрытие задачи (завершение — статус «Готово»)
      * POST /tasks/{id}/close
      */
     public function close(string $id): void
@@ -591,31 +591,30 @@ class TaskController extends Controller
 
         if (!$canClose['can']) {
             $blockingTitles = array_map(fn($t) => $t['title'], $canClose['blocking']);
-            Session::flash('error', 'Нельзя закрыть задачу. Незавершённые подзадачи: ' . implode(', ', $blockingTitles));
+            Session::flash('error', 'Нельзя завершить задачу. Незавершённые подзадачи: ' . implode(', ', $blockingTitles));
             $this->redirect("/tasks/{$taskId}");
             return;
         }
 
-        // Получаем ID статуса «closed»
+        // Получаем ID статуса «done»
         $db = Database::getInstance();
-        $closedStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'closed' LIMIT 1");
+        $doneStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'done' LIMIT 1");
 
-        if (!$closedStatus) {
-            Session::flash('error', 'Статус «Закрыта» не найден в системе');
+        if (!$doneStatus) {
+            Session::flash('error', 'Статус «Готово» не найден в системе');
             $this->redirect("/tasks/{$taskId}");
             return;
         }
 
         $this->taskModel->update($taskId, [
-            'status_id' => (int) $closedStatus['id'],
+            'status_id' => (int) $doneStatus['id'],
             'closed_at' => date('Y-m-d H:i:s'),
         ]);
 
-        // Логируем закрытие задачи
         // Уведомляем участников
-        $this->notificationService->notifyStatusChanged($taskId, 'Закрыта', Auth::id());
+        $this->notificationService->notifyStatusChanged($taskId, 'Готово', Auth::id());
 
-        Session::flash('success', 'Задача закрыта');
+        Session::flash('success', 'Задача завершена');
         $this->redirect("/tasks/{$taskId}");
     }
 

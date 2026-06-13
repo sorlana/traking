@@ -142,7 +142,7 @@ class Project extends Model
      * Получить статистику задач проекта (количество по статусам)
      *
      * @param int $projectId ID проекта
-     * @return array Массив ['total' => N, 'statuses' => [...], 'open' => N, 'closed' => N]
+     * @return array Массив ['total' => N, 'statuses' => [...], 'open' => N, 'closed' => N (завершённые)]
      */
     public function getTaskStats(int $projectId): array
     {
@@ -161,7 +161,7 @@ class Project extends Model
 
         foreach ($rows as $row) {
             $total += (int) $row['count'];
-            if ($row['code'] === 'closed' || $row['code'] === 'done') {
+            if ($row['code'] === 'done') {
                 $closed += (int) $row['count'];
             }
             $statuses[] = $row;

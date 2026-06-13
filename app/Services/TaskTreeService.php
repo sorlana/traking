@@ -154,7 +154,7 @@ class TaskTreeService
     }
 
     /**
-     * Получить блокирующие подзадачи (незакрытые/неотменённые) рекурсивно
+     * Получить блокирующие подзадачи (незавершённые) рекурсивно
      *
      * @param int $parentId ID родительской задачи
      * @return array Массив блокирующих задач
@@ -168,7 +168,7 @@ class TaskTreeService
              FROM tasks t
              JOIN task_statuses ts ON t.status_id = ts.id
              WHERE t.parent_id = ?
-               AND ts.code NOT IN ('closed', 'cancelled')",
+               AND ts.code NOT IN ('done')",
             [$parentId]
         );
 

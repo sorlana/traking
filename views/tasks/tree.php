@@ -9,21 +9,15 @@ $layout = 'layouts/app';
 
 // Цвета точек статусов
 $statusDots = [
-    'new' => 'bg-blue-500',
     'in_progress' => 'bg-yellow-500',
-    'review' => 'bg-purple-500',
+    'revision' => 'bg-orange-500',
     'done' => 'bg-green-500',
-    'closed' => 'bg-gray-400',
-    'cancelled' => 'bg-red-400',
 ];
 
 $statusColors = [
-    'new' => 'bg-blue-100 text-blue-800',
     'in_progress' => 'bg-yellow-100 text-yellow-800',
-    'review' => 'bg-purple-100 text-purple-800',
+    'revision' => 'bg-orange-100 text-orange-800',
     'done' => 'bg-green-100 text-green-800',
-    'closed' => 'bg-gray-100 text-gray-800',
-    'cancelled' => 'bg-red-100 text-red-800',
 ];
 
 /**
@@ -34,7 +28,7 @@ function renderTreeNode(array $node, array $statusDots, array $statusColors, int
     $dotColor = $statusDots[$node['status_code'] ?? ''] ?? 'bg-gray-400';
     $isOverdue = !empty($node['deadline'])
         && strtotime($node['deadline']) < strtotime(date('Y-m-d'))
-        && !in_array($node['status_code'] ?? '', ['closed', 'cancelled', 'done']);
+        && ($node['status_code'] ?? '') !== 'done';
 
     $indent = $depth * 24; // px отступ
 
@@ -107,12 +101,9 @@ function renderTreeNode(array $node, array $statusDots, array $statusColors, int
     <!-- Легенда статусов -->
     <div class="bg-white rounded-lg shadow-sm border p-4">
         <div class="flex flex-wrap gap-4 text-xs">
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Новая</span>
             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span> В работе</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> На проверке</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Выполнена</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span> Закрыта</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Отменена</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Доработки</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Готово</span>
         </div>
     </div>
 

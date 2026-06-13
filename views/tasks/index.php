@@ -21,12 +21,9 @@ $priorityLabels = [
 
 // Карта статусов → цвета
 $statusColors = [
-    'new' => 'bg-blue-100 text-blue-800',
     'in_progress' => 'bg-yellow-100 text-yellow-800',
-    'review' => 'bg-purple-100 text-purple-800',
+    'revision' => 'bg-orange-100 text-orange-800',
     'done' => 'bg-green-100 text-green-800',
-    'closed' => 'bg-gray-100 text-gray-800',
-    'cancelled' => 'bg-red-100 text-red-800',
 ];
 ?>
 
@@ -173,7 +170,7 @@ $statusColors = [
                             <?php
                             $isOverdue = !empty($task['deadline'])
                                 && strtotime($task['deadline']) < strtotime(date('Y-m-d'))
-                                && !in_array($task['status_code'] ?? '', ['closed', 'cancelled', 'done']);
+                                && ($task['status_code'] ?? '') !== 'done';
                             $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['medium'];
                             $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
                             ?>

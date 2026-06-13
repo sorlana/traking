@@ -134,13 +134,13 @@ class Task extends Model
     }
 
     /**
-     * Проверка: можно ли закрыть задачу (нет открытых подзадач)
+     * Проверка: можно ли завершить задачу (нет открытых подзадач)
      *
-     * Задача не может быть закрыта, если есть дочерние задачи
-     * со статусом, отличным от closed/cancelled.
+     * Задача не может быть завершена, если есть дочерние задачи
+     * со статусом, отличным от done.
      *
      * @param int $taskId ID задачи
-     * @return bool true если задачу можно закрыть
+     * @return bool true если задачу можно завершить
      */
     public function canBeClosed(int $taskId): bool
     {
@@ -148,7 +148,7 @@ class Task extends Model
                 FROM tasks t
                 JOIN task_statuses ts ON t.status_id = ts.id
                 WHERE t.parent_id = ?
-                  AND ts.code NOT IN ('closed', 'cancelled')";
+                  AND ts.code != 'done'";
 
         $result = $this->db()->fetch($sql, [$taskId]);
 
@@ -167,9 +167,9 @@ class Task extends Model
             return false;
         }
 
-        // Закрытые/отменённые задачи не считаются просроченными
+        // Завершённые задачи не считаются просроченными
         $statusCode = $task['status_code'] ?? '';
-        if (in_array($statusCode, ['closed', 'cancelled', 'done'])) {
+        if ($statusCode === 'done') {
             return false;
         }
 
@@ -215,7 +215,7 @@ class Task extends Model
         // Фильтр по сроку
         if (!empty($filters['deadline'])) {
             if ($filters['deadline'] === 'overdue') {
-                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
             } elseif ($filters['deadline'] === 'week') {
                 $sql .= " AND t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
             } elseif ($filters['deadline'] === 'today') {
@@ -225,7 +225,7 @@ class Task extends Model
 
         // Фильтр: только просроченные
         if (!empty($filters['overdue'])) {
-            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
         }
 
         $sql .= " ORDER BY t.created_at DESC";
@@ -274,7 +274,7 @@ class Task extends Model
         // Фильтр по сроку
         if (!empty($filters['deadline'])) {
             if ($filters['deadline'] === 'overdue') {
-                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
             } elseif ($filters['deadline'] === 'week') {
                 $sql .= " AND t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
             } elseif ($filters['deadline'] === 'today') {
@@ -284,7 +284,7 @@ class Task extends Model
 
         // Фильтр: только просроченные
         if (!empty($filters['overdue'])) {
-            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('closed', 'cancelled', 'done')";
+            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
         }
 
         $sql .= " ORDER BY t.created_at DESC";

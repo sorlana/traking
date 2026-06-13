@@ -43,17 +43,17 @@ $layout = 'layouts/app';
             <?php endif; ?>
         </div>
 
-        <!-- Задачи на проверке -->
+        <!-- Задачи со статусом «Готово» (для проверки руководителем) -->
         <div class="bg-white rounded-lg shadow-sm border p-5">
             <h3 class="text-sm font-medium text-gray-500 mb-4">
-                На проверке
+                Готово к проверке
                 <?php if (!empty($reviewTasks)): ?>
-                    <span class="inline-block px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs ml-1"><?= count($reviewTasks) ?></span>
+                    <span class="inline-block px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs ml-1"><?= count($reviewTasks) ?></span>
                 <?php endif; ?>
             </h3>
 
             <?php if (empty($reviewTasks)): ?>
-                <p class="text-sm text-gray-400">Нет задач на проверке</p>
+                <p class="text-sm text-gray-400">Нет задач для проверки</p>
             <?php else: ?>
                 <div class="space-y-2 max-h-64 overflow-y-auto">
                     <?php foreach ($reviewTasks as $task): ?>

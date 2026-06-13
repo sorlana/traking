@@ -20,27 +20,21 @@ $priorityLabels = [
 
 // Карта статусов → цвета
 $statusColors = [
-    'new' => 'bg-blue-100 text-blue-800',
     'in_progress' => 'bg-yellow-100 text-yellow-800',
-    'review' => 'bg-purple-100 text-purple-800',
+    'revision' => 'bg-orange-100 text-orange-800',
     'done' => 'bg-green-100 text-green-800',
-    'closed' => 'bg-gray-100 text-gray-800',
-    'cancelled' => 'bg-red-100 text-red-800',
 ];
 
 // Цвета точек статусов для дочерних задач
 $statusDots = [
-    'new' => 'bg-blue-500',
     'in_progress' => 'bg-yellow-500',
-    'review' => 'bg-purple-500',
+    'revision' => 'bg-orange-500',
     'done' => 'bg-green-500',
-    'closed' => 'bg-gray-400',
-    'cancelled' => 'bg-red-400',
 ];
 
 $isOverdue = !empty($task['deadline'])
     && strtotime($task['deadline']) < strtotime(date('Y-m-d'))
-    && !in_array($task['status_code'] ?? '', ['closed', 'cancelled', 'done']);
+    && ($task['status_code'] ?? '') !== 'done';
 
 $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['medium'];
 $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
@@ -82,17 +76,6 @@ $canEdit = can('create_task', (int) $task['project_id']);
                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
                 Редактировать
             </a>
-            <?php if ($task['status_code'] !== 'closed' && $task['status_code'] !== 'cancelled'): ?>
-                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
-                      onsubmit="return confirm('Закрыть задачу?')" class="inline">
-                    <?= csrf_field() ?>
-                    <button type="submit"
-                            class="px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200 transition"
-                            <?= !$canClose['can'] ? 'disabled title="Есть незавершённые подзадачи"' : '' ?>>
-                        Закрыть задачу
-                    </button>
-                </form>
-            <?php endif; ?>
             <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                 <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
                       onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
@@ -137,7 +120,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                             <?php
                             $childOverdue = !empty($child['deadline'])
                                 && strtotime($child['deadline']) < strtotime(date('Y-m-d'))
-                                && !in_array($child['status_code'] ?? '', ['closed', 'cancelled', 'done']);
+                                && ($child['status_code'] ?? '') !== 'done';
                             $dotColor = $statusDots[$child['status_code'] ?? ''] ?? 'bg-gray-400';
                             ?>
                             <div class="flex items-center gap-3 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>">
@@ -179,7 +162,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
                 <!-- Статус -->
                 <div>
                     <label class="text-xs text-gray-400">Статус</label>
-                    <?php if ($canEdit && $task['status_code'] !== 'closed'): ?>
+                    <?php if ($canEdit && $task['status_code'] !== 'done'): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="mt-1" x-data>
                             <?= csrf_field() ?>
                             <select name="status_id" onchange="this.form.submit()"
@@ -245,7 +228,7 @@ $canEdit = can('create_task', (int) $task['project_id']);
             </div>
 
             <!-- Переназначение исполнителя -->
-            <?php if ($canEdit && $task['status_code'] !== 'closed'): ?>
+            <?php if ($canEdit && $task['status_code'] !== 'done'): ?>
             <div class="bg-white rounded-lg shadow-sm border p-5">
                 <h3 class="text-sm font-medium text-gray-500 border-b pb-2 mb-3">Переназначить</h3>
                 <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">

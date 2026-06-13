@@ -67,7 +67,7 @@ class DashboardController extends Controller
              LEFT JOIN users u ON t.assigned_to = u.id
              JOIN projects p ON t.project_id = p.id
              WHERE t.deadline < CURDATE()
-               AND ts.code NOT IN ('closed', 'cancelled', 'done')
+               AND ts.code NOT IN ('done')
              ORDER BY t.deadline ASC
              LIMIT 10"
         );
@@ -102,7 +102,7 @@ class DashboardController extends Controller
             [$userId]
         );
 
-        // Задачи на проверке
+        // Задачи со статусом «Готово» (руководитель проверяет)
         $reviewTasks = $db->fetchAll(
             "SELECT t.*, ts.name as status_name, u.name as assigned_name, p.title as project_title
              FROM tasks t
@@ -110,7 +110,7 @@ class DashboardController extends Controller
              LEFT JOIN users u ON t.assigned_to = u.id
              JOIN projects p ON t.project_id = p.id
              JOIN project_users pu ON pu.project_id = t.project_id AND pu.user_id = ?
-             WHERE ts.code = 'review'
+             WHERE ts.code = 'done'
              ORDER BY t.updated_at DESC
              LIMIT 10",
             [$userId]
@@ -125,7 +125,7 @@ class DashboardController extends Controller
              JOIN projects p ON t.project_id = p.id
              JOIN project_users pu ON pu.project_id = t.project_id AND pu.user_id = ?
              WHERE t.deadline < CURDATE()
-               AND ts.code NOT IN ('closed', 'cancelled', 'done')
+               AND ts.code NOT IN ('done')
              ORDER BY t.deadline ASC
              LIMIT 10",
             [$userId]
@@ -160,7 +160,7 @@ class DashboardController extends Controller
     {
         $userId = (int) $user['id'];
 
-        // Мои задачи по статусам
+        // Мои задачи по статусам (активные: в работе и доработки)
         $myTasks = $db->fetchAll(
             "SELECT t.*, ts.name as status_name, ts.code as status_code,
                     p.title as project_title
@@ -168,32 +168,31 @@ class DashboardController extends Controller
              JOIN task_statuses ts ON t.status_id = ts.id
              JOIN projects p ON t.project_id = p.id
              WHERE t.assigned_to = ?
-               AND ts.code NOT IN ('closed', 'cancelled')
-             ORDER BY FIELD(ts.code, 'in_progress', 'new', 'review', 'done') , t.deadline ASC",
+               AND ts.code NOT IN ('done')
+             ORDER BY FIELD(ts.code, 'in_progress', 'revision'), t.deadline ASC",
             [$userId]
         );
 
-        // Задачи на проверке (мои)
+        // Задачи со статусом «Готово» (мои завершённые)
         $reviewTasks = $db->fetchAll(
             "SELECT t.*, ts.name as status_name, p.title as project_title
              FROM tasks t
              JOIN task_statuses ts ON t.status_id = ts.id
              JOIN projects p ON t.project_id = p.id
-             WHERE t.assigned_to = ? AND ts.code = 'review'
+             WHERE t.assigned_to = ? AND ts.code = 'done'
              ORDER BY t.updated_at DESC",
             [$userId]
         );
 
-        // Новые назначенные задачи (за последние 7 дней)
+        // Задачи на доработке (мои)
         $newAssigned = $db->fetchAll(
             "SELECT t.*, ts.name as status_name, p.title as project_title
              FROM tasks t
              JOIN task_statuses ts ON t.status_id = ts.id
              JOIN projects p ON t.project_id = p.id
              WHERE t.assigned_to = ?
-               AND ts.code = 'new'
-               AND t.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-             ORDER BY t.created_at DESC
+               AND ts.code = 'revision'
+             ORDER BY t.updated_at DESC
              LIMIT 10",
             [$userId]
         );
