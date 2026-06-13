@@ -145,8 +145,8 @@
         <!-- Canvas область -->
         <div class="flex-1 flex items-center justify-center bg-gray-800 p-4 overflow-auto" x-ref="canvasContainer">
             <canvas x-ref="editorCanvas"
-                    @mousedown="startDraw($event)"
-                    @mousemove="draw($event)"
+                    @mousedown.prevent="startDraw($event)"
+                    @mousemove.prevent="draw($event)"
                     @mouseup="endDraw()"
                     @mouseleave="endDraw()"
                     @touchstart.prevent="startDrawTouch($event)"
@@ -303,11 +303,16 @@ function imageEditor() {
             this.drawing = true;
             const pos = this.getPos(e);
             this.ctx.beginPath();
-            this.ctx.moveTo(pos.x, pos.y);
             this.ctx.strokeStyle = this.color;
             this.ctx.lineWidth = this.lineWidth;
             this.ctx.lineCap = 'round';
             this.ctx.lineJoin = 'round';
+            this.ctx.moveTo(pos.x, pos.y);
+            // Рисуем точку сразу при клике
+            this.ctx.lineTo(pos.x + 0.1, pos.y + 0.1);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(pos.x, pos.y);
         },
 
         /**
