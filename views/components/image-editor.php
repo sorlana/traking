@@ -116,6 +116,11 @@
                             :style="'background-color: ' + c"
                             class="w-6 h-6 rounded-full border border-blue-400"></button>
                 </template>
+                <div class="border-t border-blue-500 w-8 my-2"></div>
+                <span class="text-[10px] text-blue-200">Размер</span>
+                <button @click="fontSize = 12" :class="fontSize === 12 ? 'bg-blue-500' : ''" class="w-8 h-8 rounded flex items-center justify-center text-white text-[10px]">S</button>
+                <button @click="fontSize = 16" :class="fontSize === 16 ? 'bg-blue-500' : ''" class="w-8 h-8 rounded flex items-center justify-center text-white text-xs">M</button>
+                <button @click="fontSize = 22" :class="fontSize === 22 ? 'bg-blue-500' : ''" class="w-8 h-8 rounded flex items-center justify-center text-white text-sm">L</button>
             </div>
         </template>
     </div>
@@ -180,6 +185,7 @@ function imageEditor() {
         commentBg: '#EF4444',
         commentTextColor: '#FFFFFF',
         textColors: ['#FFFFFF', '#000000', '#EF4444', '#3B82F6'],
+        fontSize: 14,
         commentInput: '',
         commentText: null,
         commentPos: null,
@@ -205,7 +211,6 @@ function imageEditor() {
                 const canvas = this.$refs.editorCanvas;
                 this.ctx = canvas.getContext('2d');
                 this.img = new Image();
-                this.img.crossOrigin = 'anonymous';
                 this.img.onload = () => {
                     // Масштабируем canvas под размер экрана
                     const maxW = Math.min(this.img.width, window.innerWidth - 100);
@@ -375,11 +380,11 @@ function imageEditor() {
         drawCommentBlock(x, y) {
             const text = this.commentText;
             if (!text) return;
-            this.ctx.font = '14px sans-serif';
+            this.ctx.font = this.fontSize + 'px sans-serif';
             const metrics = this.ctx.measureText(text);
             const padding = 8;
             const w = metrics.width + padding * 2;
-            const h = 28;
+            const h = this.fontSize + padding * 2;
 
             // Фон блока
             this.ctx.fillStyle = this.commentBg;
