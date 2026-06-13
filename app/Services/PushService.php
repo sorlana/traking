@@ -65,8 +65,19 @@ class PushService
 
     /**
      * Отправить push участникам задачи (кроме отправителя)
+     * Обёрнуто в try-catch — если таблица не существует, просто пропускаем
      */
     public function sendToTaskParticipants(int $taskId, int $excludeUserId, string $title, string $body, ?string $url = null): void
+    {
+        try {
+            $this->doSendToTaskParticipants($taskId, $excludeUserId, $title, $body, $url);
+        } catch (\Throwable $e) {
+            // Если таблица push_subscriptions не существует или другая ошибка — пропускаем
+            error_log('PushService error: ' . $e->getMessage());
+        }
+    }
+
+    private function doSendToTaskParticipants(int $taskId, int $excludeUserId, string $title, string $body, ?string $url = null): void
     {
         $db = Database::getInstance();
         
