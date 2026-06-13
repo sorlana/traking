@@ -42,6 +42,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                          @touchmove="cancelLongPress()">
                         <!-- Текстовая часть (синий фон) -->
                         <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-blue-500 text-white rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
+                            <!-- Цитата (ответ на сообщение) -->
+                            <template x-if="getParentMessage(msg)">
+                                <div class="bg-blue-400 bg-opacity-50 rounded px-2 py-1 mb-2 border-l-2 border-white border-opacity-70 text-xs">
+                                    <div class="font-medium text-blue-100" x-text="getParentMessage(msg).user_name"></div>
+                                    <div class="text-blue-200 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                </div>
+                            </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
                         </div>
@@ -89,6 +96,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <div class="text-xs font-medium text-gray-500 mb-1 ml-1" x-text="msg.user_name"></div>
                         <!-- Текстовая часть (серый фон) -->
                         <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-gray-100 rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
+                            <!-- Цитата (ответ на сообщение) -->
+                            <template x-if="getParentMessage(msg)">
+                                <div class="bg-gray-200 rounded px-2 py-1 mb-2 border-l-2 border-blue-400 text-xs">
+                                    <div class="font-medium text-blue-600" x-text="getParentMessage(msg).user_name"></div>
+                                    <div class="text-gray-600 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                </div>
+                            </template>
                             <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
                         </div>
@@ -283,6 +297,7 @@ function taskChat() {
                 'comment_text' => $c['comment_text'],
                 'user_name' => $c['user_name'] ?? $c['user_login'] ?? '',
                 'created_at' => $c['created_at'],
+                'parent_comment_id' => $c['parent_comment_id'] ? (int) $c['parent_comment_id'] : null,
                 'files' => array_map(function($f) {
                     return [
                         'id' => (int) $f['id'],
@@ -326,6 +341,14 @@ function taskChat() {
             });
             // Polling каждые 5 секунд
             setInterval(() => this.pollNewMessages(), 5000);
+        },
+
+        /**
+         * Получить родительское сообщение (для цитирования)
+         */
+        getParentMessage(msg) {
+            if (!msg.parent_comment_id) return null;
+            return this.messages.find(m => m.id === msg.parent_comment_id) || null;
         },
 
         /**
@@ -551,6 +574,7 @@ function taskChat() {
                         comment_text: data.comment.comment_text,
                         user_name: data.comment.user_name,
                         created_at: data.comment.created_at,
+                        parent_comment_id: this.replyTo ? this.replyTo.id : null,
                         files: data.comment.files || [],
                         links: data.comment.links || [],
                     });

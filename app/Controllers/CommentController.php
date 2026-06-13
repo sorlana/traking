@@ -275,6 +275,7 @@ class CommentController extends Controller
             $msg['id'] = (int) $msg['id'];
             $msg['user_id'] = (int) $msg['user_id'];
             $msg['task_id'] = (int) $msg['task_id'];
+            $msg['parent_comment_id'] = $msg['parent_comment_id'] ? (int) $msg['parent_comment_id'] : null;
         }
         unset($msg);
 
