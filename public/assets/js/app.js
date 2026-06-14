@@ -216,7 +216,9 @@ document.addEventListener('click', async function (e) {
         // Проверяем, что ответ — JSON (сервер может вернуть HTML при ошибке)
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-            showToast('Ошибка сервера. Возможно, не выполнена миграция БД.', 'error');
+            const text = await response.text();
+            console.error('Time save error (non-JSON):', response.status, text.substring(0, 500));
+            showToast('Ошибка сервера: ' + (text.substring(0, 100) || response.status), 'error');
             return;
         }
 
