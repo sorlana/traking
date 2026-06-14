@@ -4,7 +4,7 @@
  * - Offline-fallback страница
  */
 
-const CACHE_NAME = 'traking-v8';
+const CACHE_NAME = 'traking-v9';
 const OFFLINE_URL = '/offline.html';
 
 // Ресурсы для предварительного кэширования

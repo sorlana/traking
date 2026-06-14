@@ -203,7 +203,7 @@ document.addEventListener('click', async function (e) {
     btn.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        const response = await fetch(`/tasks/${taskId}/time`, {
+        const response = await fetch(`${BASE_URL}/tasks/${taskId}/time`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
