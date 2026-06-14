@@ -206,10 +206,9 @@ $isClosed = ($task['status_code'] === 'closed');
 <!-- МОБИЛЬНАЯ/ПЛАНШЕТНАЯ ВЕРСИЯ (<lg) -->
 <!-- ============================================================ -->
 <style>
-    @media (max-width: 1023px) {
-        body { height: 100vh; overflow: hidden; }
-        main { overflow: hidden; height: calc(100vh - 4rem - 2rem); }
-    }
+    /* Страница задачи: фиксированная высота, без прокрутки body */
+    body { height: 100vh; overflow: hidden; }
+    main { overflow: hidden; height: calc(100vh - 4rem - 2rem); }
 </style>
 
 <div class="lg:hidden flex flex-col h-full" x-data="{ modal: null, tab: 'subtasks', reassignOpen: false }">
