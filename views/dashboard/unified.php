@@ -28,7 +28,7 @@ $layout = 'layouts/app';
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border">
                 <div class="overflow-x-auto">
-                    <div class="flex gap-4 p-3 min-w-max">
+                    <div class="flex items-center gap-4 p-3 min-w-max">
                         <template x-for="project in projects" :key="project.id">
                             <button
                                 x-on:click="selectProject(project.id)"
@@ -39,12 +39,89 @@ $layout = 'layouts/app';
                                 x-text="project.title"
                             ></button>
                         </template>
+                        <!-- Иконка Инфо (только мобильный) -->
+                        <button @click="showInfoModal = true" class="md:hidden ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Статистика">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats_Panel: три карточки статистики + прогресс и время в 4-м столбце -->
-            <div class="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-4">
+            <!-- Модалка со статистикой (мобильная) -->
+            <div x-show="showInfoModal" x-transition.opacity
+                 @click.self="showInfoModal = false"
+                 class="md:hidden fixed inset-0 z-[80] bg-black bg-opacity-50 flex items-end"
+                 style="display: none;">
+                <div class="bg-white w-full rounded-t-2xl p-4 pb-8 space-y-3 max-h-[70vh] overflow-y-auto"
+                     @click.stop x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
+                    <!-- Заголовок модалки -->
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-700">Статистика проекта</h3>
+                        <button @click="showInfoModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <!-- Три карточки -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-white rounded-lg border border-t-4 border-t-amber-400 p-2">
+                            <div class="text-xs text-gray-500 mb-1">В работе</div>
+                            <div class="text-lg font-bold text-gray-800" x-text="currentStats.in_progress"></div>
+                            <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
+                        </div>
+                        <div class="bg-white rounded-lg border border-t-4 border-t-orange-500 p-2">
+                            <div class="text-xs text-gray-500 mb-1">Доработки</div>
+                            <div class="text-lg font-bold text-gray-800" x-text="currentStats.revision"></div>
+                            <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
+                        </div>
+                        <div class="bg-white rounded-lg border border-t-4 border-t-green-500 p-2">
+                            <div class="text-xs text-gray-500 mb-1">Готово</div>
+                            <div class="text-lg font-bold text-gray-800" x-text="currentStats.done"></div>
+                            <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
+                        </div>
+                    </div>
+                    <!-- Прогресс -->
+                    <div class="bg-white rounded-lg border p-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500">Прогресс</span>
+                            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-green-500" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
+                                <div class="h-full bg-orange-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
+                                <div class="h-full bg-amber-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
+                        </div>
+                    </div>
+                    <!-- План/Факт -->
+                    <template x-if="currentTimeData.estimated > 0 || currentTimeData.actual > 0">
+                        <div class="bg-white rounded-lg border p-3 space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-500 w-10">План</span>
+                                <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                                    <div class="h-full bg-blue-400 rounded" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                </div>
+                                <span class="text-xs font-medium text-gray-700 w-12 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-500 w-10">Факт</span>
+                                <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                                    <div class="h-full rounded" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                </div>
+                                <span class="text-xs font-medium w-12 text-right" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'" x-text="currentTimeData.actual + ' ч'"></span>
+                            </div>
+                            <template x-if="currentTimeData.estimated > 0">
+                                <div class="text-center pt-1 border-t">
+                                    <span class="text-xs font-bold" :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'" x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
+                                    <span class="text-xs text-gray-400"> от плана</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Stats_Panel: только десктоп -->
+            <div class="hidden md:grid grid-cols-4 gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
@@ -63,8 +140,8 @@ $layout = 'layouts/app';
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- 4-й столбец: Прогресс + Время (только десктоп в ряд, на мобиле полная ширина) -->
-                <div class="col-span-3 md:col-span-1 space-y-2">
+                <!-- 4-й столбец: Прогресс + Время -->
+                <div class="space-y-2">
                     <!-- Прогресс-бар -->
                     <div class="bg-white rounded-lg shadow-sm border p-2 md:p-3">
                         <div class="flex items-center gap-2">
@@ -280,6 +357,7 @@ document.addEventListener('alpine:init', () => {
         boardData: <?= json_encode($boardData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         timeData: <?= json_encode($timeData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         activeProjectId: null,
+        showInfoModal: false,
 
         init() {
             if (this.projects.length > 0) {
