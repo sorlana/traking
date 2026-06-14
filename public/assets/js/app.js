@@ -308,3 +308,173 @@ function switchToEditMode(container) {
     // Фокус на поле ввода
     input.focus();
 }
+
+/**
+ * Alpine.js компонент: Таймер учёта времени для задачи
+ *
+ * Логика:
+ * - Запуск: начинает отсчёт секунд
+ * - Пауза: останавливает отсчёт, сохраняет накопленное время
+ * - Продолжить: продолжает отсчёт от накопленного
+ * - Стоп: суммирует с предыдущим значением, сохраняет на сервер через AJAX
+ * - localStorage: сохраняет состояние таймера при закрытии страницы
+ */
+document.addEventListener('alpine:init', () => {
+    Alpine.data('taskTimer', (taskId) => ({
+        taskId: taskId,
+        running: false,
+        paused: false,
+        seconds: 0,          // Текущая сессия: накопленные секунды
+        intervalId: null,
+        storageKey: `timer_${taskId}`,
+
+        init() {
+            // Восстановление из localStorage
+            const saved = localStorage.getItem(this.storageKey);
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    this.seconds = state.seconds || 0;
+                    if (state.running && state.startedAt) {
+                        // Таймер работал — пересчитать с учётом прошедшего времени
+                        const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+                        this.seconds += elapsed;
+                        this.startInterval();
+                        this.running = true;
+                    } else if (state.paused && this.seconds > 0) {
+                        this.paused = true;
+                    }
+                } catch (e) {
+                    localStorage.removeItem(this.storageKey);
+                }
+            }
+
+            // Сохранение состояния при закрытии/уходе со страницы
+            window.addEventListener('beforeunload', () => this.saveState());
+        },
+
+        get display() {
+            const h = Math.floor(this.seconds / 3600);
+            const m = Math.floor((this.seconds % 3600) / 60);
+            const s = this.seconds % 60;
+            if (h > 0) {
+                return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        },
+
+        start() {
+            this.running = true;
+            this.paused = false;
+            this.startInterval();
+            this.saveState();
+        },
+
+        pause() {
+            this.running = false;
+            this.paused = true;
+            this.stopInterval();
+            this.saveState();
+        },
+
+        resume() {
+            this.running = true;
+            this.paused = false;
+            this.startInterval();
+            this.saveState();
+        },
+
+        async stop() {
+            this.stopInterval();
+            this.running = false;
+            this.paused = false;
+
+            if (this.seconds === 0) {
+                localStorage.removeItem(this.storageKey);
+                return;
+            }
+
+            // Конвертируем секунды в часы с округлением до 0.5
+            const hours = this.seconds / 3600;
+            const rounded = Math.round(hours * 2) / 2; // Округление до 0.5
+            const timeToSave = Math.max(rounded, 0.5); // Минимум 0.5 ч
+
+            // Суммируем с текущим значением из поля ввода
+            const container = document.querySelector(`.js-time-container[data-task-id="${this.taskId}"]`);
+            let existingValue = 0;
+            if (container) {
+                const input = container.querySelector('.js-time-input');
+                const display = container.querySelector('.js-time-display');
+                if (input && input.value) {
+                    existingValue = parseFloat(input.value) || 0;
+                } else if (display && display.textContent) {
+                    const match = display.textContent.match(/([\d.]+)/);
+                    if (match) existingValue = parseFloat(match[1]) || 0;
+                }
+            }
+
+            const totalTime = existingValue + timeToSave;
+            // Ограничение 999.5
+            const finalTime = Math.min(totalTime, 999.5);
+
+            // Отправляем на сервер
+            try {
+                const response = await fetch(`${BASE_URL}/tasks/${this.taskId}/time`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ time_spent: finalTime }),
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        // Обновляем отображение на вкладке Информация
+                        if (container) {
+                            switchToViewMode(container, data.time_spent);
+                        }
+                        showToast(`Время сохранено: +${timeToSave} ч (всего ${data.time_spent} ч)`, 'success');
+                    } else {
+                        showToast(data.error || 'Ошибка сохранения времени', 'error');
+                    }
+                } else {
+                    showToast('Ошибка сервера при сохранении времени', 'error');
+                }
+            } catch (err) {
+                showToast('Ошибка сети. Время не сохранено.', 'error');
+            }
+
+            // Обнуляем таймер
+            this.seconds = 0;
+            localStorage.removeItem(this.storageKey);
+        },
+
+        startInterval() {
+            this.stopInterval();
+            this.intervalId = setInterval(() => {
+                this.seconds++;
+            }, 1000);
+        },
+
+        stopInterval() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+        },
+
+        saveState() {
+            const state = {
+                seconds: this.seconds,
+                running: this.running,
+                paused: this.paused,
+                startedAt: this.running ? Date.now() : null,
+            };
+            localStorage.setItem(this.storageKey, JSON.stringify(state));
+        }
+    }));
+});
