@@ -7,11 +7,11 @@
  */
 return [
     // VAPID public key (base64url) — отдаётся клиенту
-    'public_key' => 'ВСТАВЬ_СВОЙ_PUBLIC_KEY',
+    'public_key' => 'BAdElViMdhGhIG4pzM2ERfsBrNzisoEqGHSw1pO0sxpVNqwHqpoz8-lombFZOOf3vdr_owH55Wudy4MVMCJHGio',
     
     // VAPID private key (base64url) — хранится на сервере
-    'private_key' => 'ВСТАВЬ_СВОЙ_PRIVATE_KEY',
+    'private_key' => 'cwfhS5jPfaKtZWNcbzHE-Nz8IAZGH3UQDUjyZ1VJwNw',
     
     // Контактный email для push-провайдера
-    'subject' => 'mailto:admin@unique-style.ru',
+    'subject' => 'mailto:sorlana@yandex.ru',
 ];
