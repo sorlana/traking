@@ -44,7 +44,7 @@ if ($currentUser) {
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b sticky top-0 z-50" x-data="{ mobileOpen: false }">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-10 md:h-16">
                 <!-- Логотип -->
                 <div class="flex items-center gap-6">
                     <a href="<?= url('/dashboard') ?>" class="text-xl font-bold text-blue-700">Traking</a>
@@ -117,58 +117,50 @@ if ($currentUser) {
                     </a>
                 </div>
 
-                <!-- Мобильный бургер -->
-                <button @click="mobileOpen = !mobileOpen"
-                        class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path x-show="!mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16"/>
-                        <path x-show="mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Мобильное меню -->
-            <div x-show="mobileOpen" x-transition class="md:hidden pb-4 border-t">
-                <div class="pt-3 space-y-2">
-                    <?php if (\Helpers\Auth::isAdmin()): ?>
-                        <a href="<?= url('/admin/users') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Пользователи
-                        </a>
-                    <?php else: ?>
-                        <a href="<?= url('/dashboard') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Дашборд
-                        </a>
-
-                        <a href="<?= url('/tasks/last') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Задачи
-                        </a>
-
-                        <a href="<?= url('/projects') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Проекты
-                        </a>
-                    <?php endif; ?>
-
-                    <div class="border-t pt-3 mt-3">
-                        <a href="<?= url('/help') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Помощь
-                        </a>
-                        <a href="<?= url('/settings') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Настройки
-                        </a>
-                        <div class="px-3 py-1 text-sm text-gray-500">
-                            <?= e($currentUser['name'] ?? $currentUser['login'] ?? '') ?>
-                            <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded ml-1">
-                                <?= $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '' ?>
-                            </span>
-                        </div>
-                        <a href="<?= url('/logout') ?>" class="block px-3 py-2 rounded text-sm font-medium text-red-600 hover:bg-red-50">
-                            Выйти
-                        </a>
-                    </div>
+                <!-- Мобильный хедер: колокольчик + имя + выход -->
+                <div class="md:hidden flex items-center gap-2">
+                    <?php
+                    if (!isset($GLOBALS['_user_dnd'])) {
+                        $_dndSettings2 = \Helpers\Database::getInstance()->fetch(
+                            "SELECT dnd_enabled FROM user_settings WHERE user_id = ?", [\Helpers\Auth::id()]
+                        );
+                        $GLOBALS['_user_dnd'] = (int) ($_dndSettings2['dnd_enabled'] ?? 0);
+                    }
+                    ?>
+                    <?php include BASE_PATH . '/views/components/notification-bell.php'; ?>
+                    <span class="text-xs text-gray-500"><?= e($currentUser['name'] ?? '') ?></span>
+                    <a href="<?= url('/logout') ?>" class="text-xs text-red-500">Выйти</a>
                 </div>
             </div>
+        </div>
+    </nav>
+
+    <!-- Нижняя навигация (мобильная) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+        <div class="flex justify-around items-center h-14">
+            <?php if (\Helpers\Auth::isAdmin()): ?>
+                <a href="<?= url('/admin/users') ?>" class="flex flex-col items-center gap-0.5 px-2 py-1 <?= str_contains($currentPath, '/admin') ? 'text-blue-600' : 'text-gray-500' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <span class="text-xs">Пользователи</span>
+                </a>
+            <?php else: ?>
+                <a href="<?= url('/dashboard') ?>" class="flex flex-col items-center gap-0.5 px-2 py-1 <?= str_contains($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-500' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-xs">Главная</span>
+                </a>
+                <a href="<?= url('/tasks/last') ?>" class="flex flex-col items-center gap-0.5 px-2 py-1 <?= str_contains($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-500' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <span class="text-xs">Задачи</span>
+                </a>
+                <a href="<?= url('/projects') ?>" class="flex flex-col items-center gap-0.5 px-2 py-1 <?= str_contains($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-500' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span class="text-xs">Проекты</span>
+                </a>
+            <?php endif; ?>
+            <a href="<?= url('/settings') ?>" class="flex flex-col items-center gap-0.5 px-2 py-1 <?= str_contains($currentPath, '/settings') ? 'text-blue-600' : 'text-gray-500' ?>">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span class="text-xs">Настройки</span>
+            </a>
         </div>
     </nav>
 
@@ -212,8 +204,8 @@ if ($currentUser) {
         </div>
     <?php endif; ?>
 
-    <!-- Основное содержимое (без прокрутки — прокрутка внутри чата и боковой панели) -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4">
+    <!-- Основное содержимое -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-20 md:pb-4">
         <?= $content ?>
     </main>
 
