@@ -28,9 +28,15 @@ $layout = 'layouts/app';
         <?php endif; ?>
     </div>
 
-    <!-- МОБИЛЬНЫЕ: кнопка «Проект» (<lg) -->
-    <div class="lg:hidden flex items-center gap-3 mb-4 flex-wrap">
-        <button @click="showProject = true" class="px-3 py-1.5 bg-white border rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition">Проект</button>
+    <!-- МОБИЛЬНЫЕ: заголовок проекта + ссылка «Все проекты» (<lg) -->
+    <div class="lg:hidden flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <button @click="showProject = true" class="text-lg font-bold text-gray-800"><?= e($project['title']) ?></button>
+        </div>
+        <a href="<?= url('/projects') ?>" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 flex-shrink-0">
+            Все проекты
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
     </div>
 
     <!-- Навигация вкладок (общая) -->
