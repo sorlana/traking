@@ -3,6 +3,7 @@
  * Страница помощи — Руководство пользователя
  * views/help/index.php
  */
+$layout = 'layouts/app';
 ?>
 
 <div class="max-w-4xl mx-auto space-y-8">
