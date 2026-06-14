@@ -68,6 +68,9 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/settings', [\Controllers\SettingsController::class, 'update']);
     $router->post('/settings/dnd', [\Controllers\SettingsController::class, 'toggleDnd']);
 
+    // Помощь / руководство пользователя
+    $router->get('/help', [\Controllers\HelpController::class, 'index']);
+
     // Push-уведомления
     $router->post('/push/subscribe', [\Controllers\PushController::class, 'subscribe']);
     $router->post('/push/unsubscribe', [\Controllers\PushController::class, 'unsubscribe']);
