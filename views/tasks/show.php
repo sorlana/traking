@@ -7,7 +7,7 @@
  * 2. Шапка: Заголовок + Switch (Доработки/Готово) + кнопки действий
  * 3. Двухколоночная сетка:
  *    - Левая (2/3): Описание + Чат задачи
- *    - Правая (1/3): Вкладки (Подзадачи, Информация, История)
+ *    - Правая (1/3): Вкладки (Доработки, Информация, История)
  */
 $layout = 'layouts/app';
 
@@ -167,7 +167,7 @@ $isClosed = ($task['status_code'] === 'closed');
                             <?= csrf_field() ?>
                             <button type="submit"
                                     class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition"
-                                    <?= !$canClose['can'] ? 'disabled title="Есть незавершённые подзадачи"' : '' ?>>
+                                    <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>
                                 Закрыть задачу
                             </button>
                         </form>
@@ -175,7 +175,7 @@ $isClosed = ($task['status_code'] === 'closed');
 
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
-                              onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все подзадачи? Это действие нельзя отменить!')" class="inline">
+                              onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все доработки? Это действие нельзя отменить!')" class="inline">
                             <?= csrf_field() ?>
                             <button type="submit"
                                     class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
@@ -218,7 +218,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <button @click="tab = 'subtasks'"
                             :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">
-                        Подзадачи
+                        Доработки
                         <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full"><?= count($children) ?></span>
                     </button>
                     <button @click="tab = 'info'"
@@ -235,16 +235,16 @@ $isClosed = ($task['status_code'] === 'closed');
             </div>
 
             <!-- ============================================================ -->
-            <!-- Вкладка: Подзадачи -->
+            <!-- Вкладка: Доработки -->
             <!-- ============================================================ -->
             <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
-                <!-- Кнопка/форма добавления подзадачи -->
+                <!-- Кнопка/форма добавления доработки -->
                 <?php if ($canEdit): ?>
                     <div class="mb-3">
                         <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())"
                                 class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
 
-                        <!-- Inline-форма создания подзадачи -->
+                        <!-- Inline-форма создания доработки -->
                         <form x-show="showAddForm" x-transition
                               method="POST" action="<?= url('/tasks/create') ?>"
                               class="flex gap-2" style="display: none;">
@@ -254,7 +254,7 @@ $isClosed = ($task['status_code'] === 'closed');
                             <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
                             <input type="hidden" name="priority" value="medium">
                             <input type="text" name="title" x-ref="subtaskInput" required
-                                   placeholder="Название подзадачи..."
+                                   placeholder="Название доработки..."
                                    class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
                             <button type="submit"
                                     class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">
@@ -267,7 +267,7 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php endif; ?>
 
                 <?php if (empty($children)): ?>
-                    <p class="text-sm text-gray-400">Подзадач нет</p>
+                    <p class="text-sm text-gray-400">Доработок нет</p>
                 <?php else: ?>
                     <div class="space-y-2">
                         <?php foreach ($children as $child): ?>

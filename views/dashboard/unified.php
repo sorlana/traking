@@ -50,16 +50,19 @@ $layout = 'layouts/app';
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-2xl font-bold text-gray-800" x-text="currentStats.in_progress"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Доработки — оранжевая рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-orange-500 p-4">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
                     <div class="text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Готово — зелёная рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Прогресс — сводная диаграмма -->
                 <div class="bg-white rounded-lg shadow-sm border p-4 flex flex-col justify-center">
