@@ -137,3 +137,100 @@ document.addEventListener('visibilitychange', () => {
         FaviconBlinker.stop();
     }
 });
+
+/**
+ * Валидация значения затраченного времени (клиентская)
+ *
+ * @param {*} value — значение из поля ввода
+ * @returns {{ valid: boolean, error: string|null }}
+ */
+function validateTimeSpent(value) {
+    const num = parseFloat(value);
+
+    if (isNaN(num) || value === '' || value === null) {
+        return { valid: false, error: 'Введите корректное числовое значение' };
+    }
+
+    if (num <= 0) {
+        return { valid: false, error: 'Время должно быть положительным числом' };
+    }
+
+    if (num > 999.5) {
+        return { valid: false, error: 'Время не может превышать 999.5 часов' };
+    }
+
+    // Проверка кратности 0.5: num % 0.5 === 0
+    // Используем округление для избежания проблем с плавающей точкой
+    if (Math.round(num * 2) !== num * 2) {
+        return { valid: false, error: 'Время должно быть кратно 0.5 часа' };
+    }
+
+    return { valid: true, error: null };
+}
+
+// Делаем функцию доступной глобально для тестирования
+window.validateTimeSpent = validateTimeSpent;
+
+/**
+ * Обработчик сохранения затраченного времени (AJAX)
+ * Использует делегирование событий на document
+ */
+document.addEventListener('click', async function (e) {
+    const btn = e.target.closest('.js-save-time');
+    if (!btn) return;
+
+    // Находим контейнер с data-task-id и поле ввода
+    const container = btn.closest('[data-task-id]');
+    if (!container) return;
+
+    const taskId = container.dataset.taskId;
+    const input = container.querySelector('input[name="time_spent"]');
+    if (!input) return;
+
+    const rawValue = input.value.trim();
+
+    // Клиентская валидация
+    const validation = validateTimeSpent(rawValue);
+    if (!validation.valid) {
+        showToast(validation.error, 'error');
+        return;
+    }
+
+    const timeSpent = parseFloat(rawValue);
+
+    // Блокируем кнопку для предотвращения повторной отправки
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    try {
+        const response = await fetch(`/tasks/${taskId}/time`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({ time_spent: timeSpent }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Обновляем значение в поле ввода (если сервер вернул скорректированное)
+            if (data.time_spent !== undefined) {
+                input.value = data.time_spent;
+            }
+            showToast('Время сохранено', 'success');
+        } else {
+            // Ошибка от сервера
+            const errorMsg = data.error || 'Ошибка при сохранении времени';
+            showToast(errorMsg, 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка сети. Попробуйте позже.', 'error');
+    } finally {
+        // Разблокируем кнопку
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+});

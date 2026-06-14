@@ -193,6 +193,30 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php if (!empty($task['deadline'])): ?><div><label class="text-xs text-gray-400">Срок</label><p class="text-sm mt-1 <?= $isOverdue ? 'text-red-600 font-medium' : 'text-gray-800' ?>"><?= date('d.m.Y', strtotime($task['deadline'])) ?></p></div><?php endif; ?>
                 <div><label class="text-xs text-gray-400">Создана</label><p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['created_at'])) ?></p></div>
                 <?php if ($task['closed_at']): ?><div><label class="text-xs text-gray-400">Закрыта</label><p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['closed_at'])) ?></p></div><?php endif; ?>
+
+                <!-- Затраченное время -->
+                <div class="border-t pt-4">
+                    <label class="text-xs text-gray-400">Затраченное время</label>
+                    <?php if ($canEditTime): ?>
+                        <div class="mt-1 flex items-center gap-2" data-task-id="<?= (int) $task['id'] ?>">
+                            <input type="number" step="0.5" min="0.5" max="999.5"
+                                   name="time_spent"
+                                   value="<?= $time_spent !== null ? e($time_spent) : '' ?>"
+                                   placeholder="0.5"
+                                   class="w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
+                            <span class="text-xs text-gray-400">ч</span>
+                            <button type="button" class="js-save-time px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Сохранить</button>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
+                    <?php endif; ?>
+                    <?php if (count($children) > 0): ?>
+                        <div class="mt-2">
+                            <label class="text-xs text-gray-400">Суммарное время</label>
+                            <p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
             <!-- История -->
             <div x-show="tab === 'history'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto">
@@ -315,6 +339,30 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php if (!empty($task['deadline'])): ?><div><label class="text-xs text-gray-400">Срок</label><p class="text-sm mt-1 <?= $isOverdue ? 'text-red-600 font-medium' : 'text-gray-800' ?>"><?= date('d.m.Y', strtotime($task['deadline'])) ?></p></div><?php endif; ?>
                     <div><label class="text-xs text-gray-400">Создана</label><p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['created_at'])) ?></p></div>
                     <?php if ($task['closed_at']): ?><div><label class="text-xs text-gray-400">Закрыта</label><p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['closed_at'])) ?></p></div><?php endif; ?>
+
+                    <!-- Затраченное время -->
+                    <div class="border-t pt-4">
+                        <label class="text-xs text-gray-400">Затраченное время</label>
+                        <?php if ($canEditTime): ?>
+                            <div class="mt-1 flex items-center gap-2" data-task-id="<?= (int) $task['id'] ?>">
+                                <input type="number" step="0.5" min="0.5" max="999.5"
+                                       name="time_spent"
+                                       value="<?= $time_spent !== null ? e($time_spent) : '' ?>"
+                                       placeholder="0.5"
+                                       class="w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
+                                <span class="text-xs text-gray-400">ч</span>
+                                <button type="button" class="js-save-time px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Сохранить</button>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
+                        <?php endif; ?>
+                        <?php if (count($children) > 0): ?>
+                            <div class="mt-2">
+                                <label class="text-xs text-gray-400">Суммарное время</label>
+                                <p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <!-- История -->
                 <div x-show="tab === 'history'"><?php include BASE_PATH . '/views/components/activity-log.php'; ?></div>

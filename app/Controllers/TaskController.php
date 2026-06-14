@@ -19,6 +19,7 @@ use Middleware\ProjectAccessMiddleware;
 use Models\Task;
 use Models\Project;
 use Services\TaskTreeService;
+use Services\TimeTrackingService;
 use Services\NotificationService;
 use Services\ActivityLogService;
 
@@ -27,6 +28,7 @@ class TaskController extends Controller
     private Task $taskModel;
     private Project $projectModel;
     private TaskTreeService $treeService;
+    private TimeTrackingService $timeTrackingService;
     private NotificationService $notificationService;
     private ActivityLogService $activityLogService;
 
@@ -35,6 +37,7 @@ class TaskController extends Controller
         $this->taskModel = new Task();
         $this->projectModel = new Project();
         $this->treeService = new TaskTreeService();
+        $this->timeTrackingService = new TimeTrackingService();
         $this->notificationService = new NotificationService();
         $this->activityLogService = new ActivityLogService();
     }
@@ -241,6 +244,11 @@ class TaskController extends Controller
         // Проверка: можно ли закрыть
         $canClose = $this->treeService->canClose($taskId);
 
+        // Данные о затраченном времени
+        $timeSpent = $task['time_spent'] ?? null;
+        $totalTime = $this->timeTrackingService->getTotalTime($taskId);
+        $canEditTime = $this->timeTrackingService->canEditTime($task, Auth::id())['allowed'];
+
         $this->view('tasks/show', [
             'title' => e($task['title']) . ' — Traking',
             'task' => $task,
@@ -253,6 +261,9 @@ class TaskController extends Controller
             'projectUsers' => $projectUsers,
             'canClose' => $canClose,
             'activityLog' => $activityLog,
+            'time_spent' => $timeSpent,
+            'total_time' => $totalTime,
+            'canEditTime' => $canEditTime,
         ]);
     }
 

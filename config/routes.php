@@ -117,6 +117,9 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/tasks/{id}/reassign', [\Controllers\TaskController::class, 'reassign']);
     $router->post('/tasks/{id}/delete', [\Controllers\TaskController::class, 'delete']);
 
+    // Учёт времени
+    $router->post('/tasks/{id}/time', [\Controllers\TimeTrackingController::class, 'store']);
+
     // AJAX-эндпоинты для задач
     $router->get('/ajax/tasks/{id}/tree', [\Controllers\TaskController::class, 'ajaxTree']);
 

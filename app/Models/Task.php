@@ -29,6 +29,7 @@ class Task extends Model
         'created_by',
         'assigned_to',
         'closed_at',
+        'time_spent',
     ];
 
     /**
@@ -290,5 +291,43 @@ class Task extends Model
         $sql .= " ORDER BY t.created_at DESC";
 
         return $this->db()->fetchAll($sql, $params);
+    }
+
+    /**
+     * Получить текущее значение затраченного времени для задачи
+     *
+     * @param int $taskId ID задачи
+     * @return float|null Значение time_spent или null если не задано
+     */
+    public function getTimeSpent(int $taskId): ?float
+    {
+        $sql = "SELECT time_spent FROM tasks WHERE id = ? LIMIT 1";
+        $result = $this->db()->fetch($sql, [$taskId]);
+
+        if ($result === null || $result['time_spent'] === null) {
+            return null;
+        }
+
+        return (float) $result['time_spent'];
+    }
+
+    /**
+     * Получить суммарное затраченное время по задаче и всем её дочерним задачам
+     *
+     * Суммирует time_spent самой задачи и всех прямых дочерних задач (доработок).
+     * NULL-значения трактуются как 0.
+     *
+     * @param int $taskId ID задачи
+     * @return float Суммарное время (0.0 если ни у одной задачи не задано время)
+     */
+    public function getTotalTimeWithChildren(int $taskId): float
+    {
+        $sql = "SELECT COALESCE(SUM(time_spent), 0) as total_time
+                FROM tasks
+                WHERE id = ? OR parent_id = ?";
+
+        $result = $this->db()->fetch($sql, [$taskId, $taskId]);
+
+        return (float) ($result['total_time'] ?? 0);
     }
 }
