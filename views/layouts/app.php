@@ -75,7 +75,7 @@ if ($currentUser) {
                     </div>
                 </div>
 
-                <!-- Правая часть: помощь + настройки + пользователь + выход -->
+                <!-- Правая часть: помощь + настройки + уведомления + пользователь + выход -->
                 <div class="hidden md:flex items-center gap-4">
                     <!-- Помощь -->
                     <a href="<?= url('/help') ?>" class="text-gray-400 hover:text-gray-600 p-1 relative" title="Помощь">
@@ -92,20 +92,14 @@ if ($currentUser) {
                         </svg>
                     </a>
 
+                    <!-- Колокольчик уведомлений (десктоп) -->
                     <?php
-                    // Получаем количество непрочитанных уведомлений (для мобильной навигации)
                     $_dndSettings = \Helpers\Database::getInstance()->fetch(
                         "SELECT dnd_enabled FROM user_settings WHERE user_id = ?", [\Helpers\Auth::id()]
                     );
                     $GLOBALS['_user_dnd'] = (int) ($_dndSettings['dnd_enabled'] ?? 0);
-                    $_unreadCount = 0;
-                    try {
-                        $_unreadRow = \Helpers\Database::getInstance()->fetch(
-                            "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0", [\Helpers\Auth::id()]
-                        );
-                        $_unreadCount = (int) ($_unreadRow['cnt'] ?? 0);
-                    } catch (\Throwable $e) {}
                     ?>
+                    <?php include BASE_PATH . '/views/components/notification-bell.php'; ?>
 
                     <span class="text-sm text-gray-600">
                         <?= e($currentUser['name'] ?? $currentUser['login'] ?? '') ?>
@@ -122,9 +116,10 @@ if ($currentUser) {
                     </a>
                 </div>
 
-                <!-- Мобильный хедер: имя + выход -->
+                <!-- Мобильный хедер: имя + роль + выход -->
                 <div class="md:hidden flex items-center gap-2">
                     <span class="text-xs text-gray-500"><?= e($currentUser['name'] ?? '') ?></span>
+                    <span class="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded"><?= $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '' ?></span>
                     <a href="<?= url('/logout') ?>" class="text-xs text-red-500">Выйти</a>
                 </div>
             </div>
