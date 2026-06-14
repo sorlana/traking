@@ -117,8 +117,61 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
-            <!-- Task_Board: три колонки с карточками задач -->
-            <div class="flex flex-col md:flex-row gap-4">
+            <!-- Task_Board: десктоп — три колонки, мобильный — вкладки -->
+
+            <!-- Мобильные вкладки (md:hidden) -->
+            <div class="md:hidden" x-data="{ boardTab: 'in_progress' }">
+                <!-- Переключатель вкладок -->
+                <div class="flex bg-white rounded-lg shadow-sm border mb-3">
+                    <button @click="boardTab = 'in_progress'"
+                            :class="boardTab === 'in_progress' ? 'text-amber-700 border-b-2 border-amber-500 bg-amber-50' : 'text-gray-500'"
+                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                        В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
+                    </button>
+                    <button @click="boardTab = 'revision'"
+                            :class="boardTab === 'revision' ? 'text-orange-700 border-b-2 border-orange-500 bg-orange-50' : 'text-gray-500'"
+                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                        Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
+                    </button>
+                    <button @click="boardTab = 'done'"
+                            :class="boardTab === 'done' ? 'text-green-700 border-b-2 border-green-500 bg-green-50' : 'text-gray-500'"
+                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                        Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
+                    </button>
+                </div>
+
+                <!-- Содержимое вкладок -->
+                <div class="space-y-2">
+                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : currentBoard.done)" :key="task.id">
+                        <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                            <div class="flex items-start gap-2">
+                                <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                      :class="{
+                                          'bg-red-500': task.priority === 'urgent',
+                                          'bg-orange-500': task.priority === 'high',
+                                          'bg-yellow-400': task.priority === 'medium',
+                                          'bg-green-500': task.priority === 'low'
+                                      }"></span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                    <div class="mt-1 flex items-center gap-2 flex-wrap">
+                                        <template x-if="task.deadline">
+                                            <span class="text-xs text-gray-500" x-text="task.deadline"></span>
+                                        </template>
+                                        <span class="text-xs text-gray-400" x-text="task.assigned_name || 'Не назначен'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </template>
+                    <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : currentBoard.done).length === 0">
+                        <p class="text-sm text-gray-400 text-center py-4">Нет задач</p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Десктоп: три колонки (hidden на мобильном) -->
+            <div class="hidden md:flex gap-4">
 
                 <!-- Колонка «В работе» -->
                 <div class="flex-1 min-w-0">
@@ -126,10 +179,8 @@ $layout = 'layouts/app';
                         <h3 class="text-sm font-medium text-amber-800 mb-3">В работе</h3>
                         <div class="space-y-2">
                             <template x-for="task in currentBoard.in_progress" :key="task.id">
-                                <!-- Task_Card -->
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
-                                        <!-- Индикатор приоритета -->
                                         <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="{
                                                   'bg-red-500': task.priority === 'urgent',
@@ -159,7 +210,6 @@ $layout = 'layouts/app';
                         <h3 class="text-sm font-medium text-orange-800 mb-3">Доработки</h3>
                         <div class="space-y-2">
                             <template x-for="task in currentBoard.revision" :key="task.id">
-                                <!-- Task_Card -->
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
                                         <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
@@ -191,7 +241,6 @@ $layout = 'layouts/app';
                         <h3 class="text-sm font-medium text-green-800 mb-3">Готово</h3>
                         <div class="space-y-2">
                             <template x-for="task in currentBoard.done" :key="task.id">
-                                <!-- Task_Card -->
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
                                         <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
