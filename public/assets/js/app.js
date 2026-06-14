@@ -213,6 +213,13 @@ document.addEventListener('click', async function (e) {
             body: JSON.stringify({ time_spent: timeSpent }),
         });
 
+        // Проверяем, что ответ — JSON (сервер может вернуть HTML при ошибке)
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            showToast('Ошибка сервера. Возможно, не выполнена миграция БД.', 'error');
+            return;
+        }
+
         const data = await response.json();
 
         if (response.ok && data.success) {
