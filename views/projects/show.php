@@ -228,9 +228,9 @@ $layout = 'layouts/app';
                         </select>
                         <input type="text" name="external_url" placeholder="Ссылка" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div class="flex gap-3">
+                    <div class="flex flex-col sm:flex-row gap-3">
                         <input type="file" name="document_file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">Загрузить</button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition w-full sm:w-auto">Загрузить</button>
                     </div>
                 </form>
             </div>
