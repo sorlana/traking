@@ -32,7 +32,8 @@ if ($currentUser) {
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#1e40af">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/icons/icon-192x192.svg') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/icons/icon-192x192.png') ?>">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
