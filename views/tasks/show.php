@@ -54,6 +54,12 @@ $isRevision = ($task['status_code'] === 'revision');
 $isClosed = ($task['status_code'] === 'closed');
 ?>
 
+<style>
+    /* Страница задачи: чат на всю высоту, без прокрутки body */
+    body { height: 100vh; overflow: hidden; }
+    main { overflow: hidden; height: calc(100vh - 4rem - 2rem); }
+</style>
+
 <div class="flex flex-col h-full" x-data="{ modal: null, tab: 'subtasks', reassignOpen: false }">
 
     <!-- ===== Панель кнопок над чатом ===== -->

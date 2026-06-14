@@ -9,11 +9,6 @@ $layout = 'layouts/app';
 $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empty($filters['executor']) || !empty($filters['deadline']);
 ?>
 
-<style>
-    body { overflow: auto !important; height: auto !important; min-height: 100vh; }
-    main { overflow: visible !important; }
-</style>
-
 <div x-data="{ showFilters: false }">
 
     <!-- Заголовок + Создать + Фильтры -->

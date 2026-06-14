@@ -13,12 +13,6 @@
 $layout = 'layouts/app';
 ?>
 
-<style>
-    /* Разрешаем прокрутку страницы на дашборде */
-    body { overflow: auto !important; height: auto !important; min-height: 100vh; }
-    main { overflow: visible !important; }
-</style>
-
 <div x-data="dashboard" class="space-y-4">
 
     <!-- Сообщение при отсутствии проектов -->

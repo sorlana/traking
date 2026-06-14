@@ -38,7 +38,7 @@ if ($currentUser) {
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>">
 </head>
-<body class="h-screen bg-gray-100 flex flex-col overflow-hidden">
+<body class="min-h-screen bg-gray-100 flex flex-col">
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b sticky top-0 z-50" x-data="{ mobileOpen: false }">
@@ -194,7 +194,7 @@ if ($currentUser) {
     <?php endif; ?>
 
     <!-- Основное содержимое (без прокрутки — прокрутка внутри чата и боковой панели) -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 overflow-hidden">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4">
         <?= $content ?>
     </main>
 

@@ -26,11 +26,6 @@ $statusColors = [
 $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !empty($filters['assigned_to']) || !empty($filters['deadline']) || !empty($filters['project_id']);
 ?>
 
-<style>
-    body { overflow: auto !important; height: auto !important; min-height: 100vh; }
-    main { overflow: visible !important; }
-</style>
-
 <div class="space-y-4" x-data="{ showFilters: false }">
     <!-- Заголовок + Создать + Фильтры -->
     <div class="flex items-center justify-between gap-4">
