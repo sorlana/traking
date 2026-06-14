@@ -43,9 +43,8 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
-            <!-- Stats_Panel: три карточки статистики + диаграмма прогресса -->
-            <!-- Stats_Panel: три карточки статистики -->
-            <div class="grid grid-cols-3 gap-2 md:gap-4">
+            <!-- Stats_Panel: три карточки статистики + прогресс и время в 4-м столбце -->
+            <div class="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
@@ -64,69 +63,59 @@ $layout = 'layouts/app';
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-            </div>
-
-            <!-- Прогресс-бар -->
-            <div class="bg-white rounded-lg shadow-sm border p-3">
-                <div class="flex items-center gap-3">
-                    <span class="text-xs text-gray-500">Прогресс</span>
-                    <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
-                        <div class="h-full bg-green-500 transition-all duration-300"
-                             :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
-                        <div class="h-full bg-orange-400 transition-all duration-300"
-                             :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
-                        <div class="h-full bg-amber-400 transition-all duration-300"
-                             :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
-                    </div>
-                    <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
-                </div>
-            </div>
-
-            <!-- Диаграмма: Расчётное vs Фактическое время -->
-            <template x-if="currentTimeData.estimated > 0 || currentTimeData.actual > 0">
-                <div class="bg-white rounded-lg shadow-sm border p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">Время (часы)</h3>
-                        <div class="flex items-center gap-4 text-xs text-gray-500">
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-400 inline-block"></span> План</span>
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"></span> Факт</span>
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        <!-- План -->
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs text-gray-500 w-12">План</span>
-                            <div class="flex-1 h-6 bg-gray-100 rounded relative overflow-hidden">
-                                <div class="h-full bg-blue-400 rounded transition-all duration-300"
-                                     :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                <!-- 4-й столбец: Прогресс + Время (только десктоп в ряд, на мобиле полная ширина) -->
+                <div class="col-span-3 md:col-span-1 space-y-2">
+                    <!-- Прогресс-бар -->
+                    <div class="bg-white rounded-lg shadow-sm border p-2 md:p-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500">Прогресс</span>
+                            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-green-500 transition-all duration-300"
+                                     :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
+                                <div class="h-full bg-orange-400 transition-all duration-300"
+                                     :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
+                                <div class="h-full bg-amber-400 transition-all duration-300"
+                                     :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                             </div>
-                            <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
-                        </div>
-                        <!-- Факт -->
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs text-gray-500 w-12">Факт</span>
-                            <div class="flex-1 h-6 bg-gray-100 rounded relative overflow-hidden">
-                                <div class="h-full rounded transition-all duration-300"
-                                     :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"
-                                     :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div>
-                            </div>
-                            <span class="text-sm font-medium w-16 text-right"
-                                  :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'"
-                                  x-text="currentTimeData.actual + ' ч'"></span>
+                            <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
                         </div>
                     </div>
-                    <!-- Процент использования -->
-                    <template x-if="currentTimeData.estimated > 0">
-                        <div class="mt-3 pt-3 border-t text-center">
-                            <span class="text-xs text-gray-500">Использовано </span>
-                            <span class="text-sm font-bold"
-                                  :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'"
-                                  x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
-                            <span class="text-xs text-gray-500"> от плана</span>
+                    <!-- Время: план vs факт (компактный вид) -->
+                    <template x-if="currentTimeData.estimated > 0 || currentTimeData.actual > 0">
+                        <div class="bg-white rounded-lg shadow-sm border p-2 md:p-3">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500 w-10">План</span>
+                                    <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                                        <div class="h-full bg-blue-400 rounded transition-all duration-300"
+                                             :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-700 w-12 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500 w-10">Факт</span>
+                                    <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                                        <div class="h-full rounded transition-all duration-300"
+                                             :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"
+                                             :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                    </div>
+                                    <span class="text-xs font-medium w-12 text-right"
+                                          :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'"
+                                          x-text="currentTimeData.actual + ' ч'"></span>
+                                </div>
+                                <template x-if="currentTimeData.estimated > 0">
+                                    <div class="text-center pt-1 border-t">
+                                        <span class="text-xs font-bold"
+                                              :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'"
+                                              x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
+                                        <span class="text-xs text-gray-400"> от плана</span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </template>
                 </div>
-            </template>
+            </div>
 
             <!-- Task_Board: три колонки с карточками задач -->
             <div class="flex flex-col md:flex-row gap-4">
