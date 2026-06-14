@@ -205,19 +205,19 @@ $layout = 'layouts/app';
             <!-- Мобильные вкладки (md:hidden) -->
             <div class="md:hidden" x-data="{ boardTab: 'in_progress' }">
                 <!-- Переключатель вкладок -->
-                <div class="flex bg-white rounded-lg shadow-sm border mb-3">
+                <div class="flex border-b mb-3">
                     <button @click="boardTab = 'in_progress'"
-                            :class="boardTab === 'in_progress' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
+                            :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
                     </button>
                     <button @click="boardTab = 'revision'"
-                            :class="boardTab === 'revision' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
+                            :class="boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
                     </button>
                     <button @click="boardTab = 'done'"
-                            :class="boardTab === 'done' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
+                            :class="boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
                     </button>
