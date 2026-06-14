@@ -1,11 +1,12 @@
 <?php
 /**
- * Генерация PNG-иконок для PWA из SVG
+ * Генерация PNG-иконок для PWA из фавиконки
+ * Дизайн: синий квадрат с закруглёнными углами + белая стилизованная "A"
+ *
  * Запустите один раз: https://unique-style.ru/traking/generate-icons.php
  * После генерации файл можно удалить.
  */
 
-// Проверяем наличие GD
 if (!extension_loaded('gd')) {
     die('Расширение GD не установлено на сервере');
 }
@@ -14,62 +15,46 @@ $sizes = [192, 512];
 $outputDir = __DIR__ . '/icons/';
 
 foreach ($sizes as $size) {
-    // Создаём изображение
     $img = imagecreatetruecolor($size, $size);
     imagesavealpha($img, true);
+    imagealphablending($img, true);
 
-    // Фон — синий цвет (#5B7FE8) с закруглением (рисуем как прямоугольник, закругление в manifest)
-    $bg = imagecolorallocate($img, 91, 127, 232);
+    // Цвета
+    $blue = imagecolorallocate($img, 91, 127, 232);   // #5B7FE8
     $white = imagecolorallocate($img, 255, 255, 255);
 
-    // Заполняем фон
-    imagefill($img, 0, 0, $bg);
+    // Заполняем синим фоном
+    imagefill($img, 0, 0, $blue);
 
-    // Рисуем букву "T" по центру
-    $fontSize = (int) ($size * 0.55);
-    $fontFile = null;
+    // Масштабный коэффициент (SVG viewBox 32x32 → $size x $size)
+    $scale = $size / 32;
 
-    // Попытка найти системный шрифт
-    $fontPaths = [
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-        '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
-        'C:/Windows/Fonts/arial.ttf',
-        '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+    // Рисуем белую букву "A" (треугольник: M16,4 → L8,28 → L24,28)
+    // Координаты из SVG: d="M16 4L8 28h3.5l4.5-12 4.5 12H24L16 4z"
+    $points_a = [
+        16 * $scale, 4 * $scale,    // верх
+        8 * $scale, 28 * $scale,    // лево низ
+        11.5 * $scale, 28 * $scale, // лево низ внутренний
+        16 * $scale, 16 * $scale,   // центр
+        20.5 * $scale, 28 * $scale, // право низ внутренний
+        24 * $scale, 28 * $scale,   // право низ
     ];
+    imagefilledpolygon($img, $points_a, 6, $white);
 
-    foreach ($fontPaths as $path) {
-        if (file_exists($path)) {
-            $fontFile = $path;
-            break;
-        }
-    }
+    // Внутренняя вырезка (синяя полоса по центру): d="M16 4L14.5 28h3L16 4z"
+    $points_cut = [
+        16 * $scale, 4 * $scale,     // верх
+        14.5 * $scale, 28 * $scale,  // лево низ
+        17.5 * $scale, 28 * $scale,  // право низ
+    ];
+    imagefilledpolygon($img, $points_cut, 3, $blue);
 
-    if ($fontFile) {
-        // С TTF-шрифтом
-        $bbox = imagettfbbox($fontSize, 0, $fontFile, 'T');
-        $textWidth = $bbox[2] - $bbox[0];
-        $textHeight = $bbox[1] - $bbox[7];
-        $x = (int) (($size - $textWidth) / 2) - $bbox[0];
-        $y = (int) (($size - $textHeight) / 2) + $textHeight - $bbox[1];
-        imagettftext($img, $fontSize, 0, $x, $y, $white, $fontFile, 'T');
-    } else {
-        // Без TTF — рисуем простую "T" линиями
-        $thick = (int) ($size * 0.12);
-        $margin = (int) ($size * 0.2);
-
-        // Горизонтальная часть T
-        imagefilledrectangle($img, $margin, $margin, $size - $margin, $margin + $thick, $white);
-        // Вертикальная часть T
-        $cx = (int) ($size / 2);
-        imagefilledrectangle($img, $cx - (int)($thick/2), $margin, $cx + (int)($thick/2), $size - $margin, $white);
-    }
-
-    // Сохраняем
+    // Сохраняем PNG
     $filename = $outputDir . "icon-{$size}x{$size}.png";
-    imagepng($img, $filename);
+    imagepng($img, $filename, 9);
     imagedestroy($img);
 
-    echo "Создан: {$filename} ({$size}x{$size})<br>";
+    echo "Создан: icon-{$size}x{$size}.png<br>";
 }
 
-echo "<br>Готово! Теперь удалите этот файл: generate-icons.php";
+echo "<br><strong>Готово!</strong> Иконки сгенерированы. Удалите этот файл.";
