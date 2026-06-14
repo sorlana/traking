@@ -89,14 +89,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="openModal(file)"
+                                         @click="openModal(file, msg.user_id)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-white/80"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
-                                           @click="openModal(file)"
+                                           @click="openModal(file, msg.user_id)"
                                            controls preload="metadata"
                                            class="max-w-full max-h-56 rounded-lg shadow-sm cursor-pointer">
                                     </video>
@@ -156,14 +156,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="openModal(file)"
+                                         @click="openModal(file, msg.user_id)"
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-gray-200"
                                          :alt="file.file_name">
                                 </template>
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
-                                           @click="openModal(file)"
+                                           @click="openModal(file, msg.user_id)"
                                            controls preload="metadata"
                                            class="max-w-full max-h-56 rounded-lg shadow-sm border border-gray-200 cursor-pointer">
                                     </video>
@@ -248,8 +248,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <div class="flex items-center justify-between px-4 py-2 bg-black bg-opacity-50">
             <span class="text-white text-sm truncate" x-text="modalFile ? modalFile.file_name : ''"></span>
             <div class="flex items-center gap-2">
-                <!-- Редактировать (только изображения) -->
-                <button x-show="modalFile && isImage(modalFile.file_type)"
+                <!-- Редактировать (только изображения, только свои) -->
+                <button x-show="modalFile && isImage(modalFile.file_type) && modalFileOwnerId == currentUserId"
                         @click="$dispatch('open-editor', {file: modalFile}); modalFile = null; modalZoom = 1;"
                         class="text-white hover:text-green-300 p-2 rounded transition" title="Редактировать">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,6 +430,7 @@ function taskChat() {
         attachedFile: null,
         editBeforeSend: false,
         modalFile: null,
+        modalFileOwnerId: null,
         modalZoom: 1,
         sending: false,
         errorMessage: '',
@@ -996,8 +997,9 @@ function taskChat() {
         /**
          * Открыть модальное окно для просмотра изображения
          */
-        openModal(file) {
+        openModal(file, ownerId) {
             this.modalFile = file;
+            this.modalFileOwnerId = ownerId || null;
             this.modalZoom = 1;
         },
     };
