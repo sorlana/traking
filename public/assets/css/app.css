@@ -96,3 +96,54 @@
     main { padding: 0 !important; }
     body { background: #fff !important; }
 }
+
+/* ============================================================ */
+/* Мобильный: увеличенные шрифты для читаемости */
+/* ============================================================ */
+@media (max-width: 768px) {
+    /* Базовый размер шрифта для body */
+    html {
+        font-size: 17px;
+    }
+
+    /* Текст в карточках задач */
+    .text-sm {
+        font-size: 0.9375rem !important; /* 15px вместо 14px */
+        line-height: 1.4 !important;
+    }
+
+    .text-xs {
+        font-size: 0.8125rem !important; /* 13px вместо 12px */
+        line-height: 1.3 !important;
+    }
+
+    /* Заголовки */
+    h1, .text-xl {
+        font-size: 1.375rem !important; /* 22px */
+    }
+
+    h2, .text-lg {
+        font-size: 1.125rem !important; /* 18px */
+    }
+
+    /* Кнопки и интерактивные элементы */
+    button, a, input, select, textarea {
+        font-size: inherit;
+    }
+
+    /* Навигация */
+    nav .text-sm {
+        font-size: 0.9375rem !important;
+    }
+
+    /* Поля ввода */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important; /* предотвращает зум на iOS */
+    }
+}
