@@ -96,8 +96,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
+                                           @click="openModal(file)"
                                            controls preload="metadata"
-                                           class="max-w-full max-h-56 rounded-lg shadow-sm">
+                                           class="max-w-full max-h-56 rounded-lg shadow-sm cursor-pointer">
                                     </video>
                                 </template>
                                 <!-- Остальные файлы — иконка + имя -->
@@ -162,8 +163,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
+                                           @click="openModal(file)"
                                            controls preload="metadata"
-                                           class="max-w-full max-h-56 rounded-lg shadow-sm border border-gray-200">
+                                           class="max-w-full max-h-56 rounded-lg shadow-sm border border-gray-200 cursor-pointer">
                                     </video>
                                 </template>
                                 <!-- Остальные файлы — иконка + имя -->
@@ -246,8 +248,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <div class="flex items-center justify-between px-4 py-2 bg-black bg-opacity-50">
             <span class="text-white text-sm truncate" x-text="modalFile ? modalFile.file_name : ''"></span>
             <div class="flex items-center gap-2">
-                <!-- Редактировать -->
-                <button @click="$dispatch('open-editor', {file: modalFile}); modalFile = null; modalZoom = 1;"
+                <!-- Редактировать (только изображения) -->
+                <button x-show="modalFile && isImage(modalFile.file_type)"
+                        @click="$dispatch('open-editor', {file: modalFile}); modalFile = null; modalZoom = 1;"
                         class="text-white hover:text-green-300 p-2 rounded transition" title="Редактировать">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -271,15 +274,23 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 </button>
             </div>
         </div>
-        <!-- Область изображения (на всё окно) -->
+        <!-- Область медиа (изображение или видео) -->
         <div class="flex-1 overflow-auto flex items-center justify-center" @click.self="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());">
-            <img :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download?t=' + (modalFile.updated || modalFile.id) : ''"
+            <!-- Изображение -->
+            <img x-show="modalFile && isImage(modalFile.file_type)"
+                 :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download?t=' + (modalFile.updated || modalFile.id) : ''"
                  :style="'transform: scale(' + modalZoom + '); transition: transform 0.2s;'"
                  class="max-w-full max-h-full object-contain"
                  :alt="modalFile ? modalFile.file_name : ''">
+            <!-- Видео -->
+            <video x-show="modalFile && isVideo(modalFile.file_type)"
+                   :src="modalFile && isVideo(modalFile.file_type) ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
+                   controls autoplay
+                   class="max-w-full max-h-full object-contain">
+            </video>
         </div>
-        <!-- Ползунок зума внизу -->
-        <div class="px-4 py-3 bg-black bg-opacity-50 flex items-center gap-3">
+        <!-- Ползунок зума внизу (только для изображений) -->
+        <div x-show="modalFile && isImage(modalFile.file_type)" class="px-4 py-3 bg-black bg-opacity-50 flex items-center gap-3">
             <button @click="modalZoom = Math.max(0.25, modalZoom - 0.25)" class="text-white hover:text-blue-300">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
