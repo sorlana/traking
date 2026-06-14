@@ -2,12 +2,9 @@
 /**
  * Карточка задачи — views/tasks/show.php
  *
- * Новая структура layout:
- * 1. Breadcrumb
- * 2. Шапка: Заголовок + Switch (Доработки/Готово) + кнопки действий
- * 3. Двухколоночная сетка:
- *    - Левая (2/3): Описание + Чат задачи
- *    - Правая (1/3): Вкладки (Доработки, Информация, История)
+ * Новая структура:
+ * 1. Панель кнопок сверху чата (название задачи, вкладки в модалках, действия)
+ * 2. Чат на всю оставшуюся высоту страницы
  */
 $layout = 'layouts/app';
 
@@ -46,7 +43,6 @@ $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['mediu
 $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
 
 $canEdit = can('create_task', (int) $task['project_id']);
-// Исполнитель может менять статус своей задачи
 $canChangeStatus = $canEdit || ((int)($task['assigned_to'] ?? 0) === \Helpers\Auth::id());
 $isExecutor = \Helpers\Auth::isExecutor();
 
@@ -62,11 +58,12 @@ $isRevision = ($task['status_code'] === 'revision');
 $isClosed = ($task['status_code'] === 'closed');
 ?>
 
-<div class="flex flex-col h-full gap-4">
+<div class="flex flex-col h-full" x-data="{ modal: null, reassignOpen: false }">
 
-    <!-- ===== Шапка: Breadcrumb + Заголовок + Кнопки действий ===== -->
-    <div class="bg-white rounded-lg shadow-sm border p-4">
-        <!-- Breadcrumb + ссылка «Все задачи» -->
+    <!-- ===== Верхняя панель: название + кнопки модалок + действия ===== -->
+    <div class="bg-white rounded-lg shadow-sm border p-3 mb-3">
+
+        <!-- Первая строка: breadcrumb + ссылка -->
         <div class="flex items-center justify-between mb-2">
             <nav class="flex items-center gap-1.5 text-xs text-gray-400">
                 <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500">
@@ -82,169 +79,141 @@ $isClosed = ($task['status_code'] === 'closed');
             <a href="<?= url('/tasks') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все задачи</a>
         </div>
 
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Вторая строка: заголовок + статус + просрочка -->
+        <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-lg font-bold text-gray-800 truncate"><?= e($task['title']) ?></h1>
+            <span class="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
+                <?= e($task['status_name'] ?? '') ?>
+            </span>
+            <?php if ($isOverdue): ?>
+                <span class="flex-shrink-0 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">⚠ Просрочена</span>
+            <?php endif; ?>
+        </div>
 
-            <!-- Заголовок + бейдж просрочки -->
-            <div class="flex items-center gap-3 min-w-0">
-                <h1 class="text-xl font-bold text-gray-800 truncate"><?= e($task['title']) ?></h1>
-                <?php if ($isOverdue): ?>
-                    <span class="flex-shrink-0 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
-                        ⚠ Просрочена
-                    </span>
+        <!-- Третья строка: кнопки модалок + кнопки действий -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Кнопки открытия модальных окон -->
+            <button @click="modal = 'subtasks'"
+                    class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100 transition">
+                Доработки <span class="text-xs opacity-70"><?= count($children) ?></span>
+            </button>
+            <button @click="modal = 'info'"
+                    class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100 transition">
+                Информация
+            </button>
+            <button @click="modal = 'history'"
+                    class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100 transition">
+                История
+            </button>
+
+            <!-- Разделитель -->
+            <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+            <!-- Кнопки действий -->
+            <?php if ($canEdit): ?>
+                <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>"
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                    Редактировать
+                </a>
+            <?php endif; ?>
+
+            <?php if (!$isClosed): ?>
+                <?php if ($isExecutor && $canChangeStatus && !$isDone): ?>
+                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
+                        <button type="submit"
+                                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                            Готово
+                        </button>
+                    </form>
+                <?php elseif (!$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
+                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
+                        <button type="submit"
+                                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                            Доработать
+                        </button>
+                    </form>
                 <?php endif; ?>
-            </div>
+            <?php endif; ?>
 
-            <!-- Статус + Кнопки действий -->
-            <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
-
-                <!-- Бейдж текущего статуса -->
-                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
-                    <?= e($task['status_name'] ?? '') ?>
-                </span>
-
-                <!-- Кнопки действий -->
-                <div class="flex items-center gap-2" x-data="{ reassignOpen: false }">
-                    <?php if ($canEdit): ?>
-                        <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>"
-                           class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
-                            Редактировать
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if (!$isClosed): ?>
-                        <?php if ($isExecutor && $canChangeStatus && !$isDone): ?>
-                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
+            <?php if ($canEdit && !$isClosed): ?>
+                <div class="relative">
+                    <button @click="reassignOpen = !reassignOpen"
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                        Переназначить
+                    </button>
+                    <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition
+                         class="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50"
+                         style="display: none;">
+                        <?php foreach ($projectUsers as $pu): ?>
+                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
                                 <?= csrf_field() ?>
-                                <input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
+                                <input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>">
                                 <button type="submit"
-                                        class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
-                                    Готово
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 <?= (int)($task['assigned_to'] ?? 0) === (int)$pu['id'] ? 'text-blue-600 font-medium' : 'text-gray-700' ?>">
+                                    <?= e($pu['name']) ?>
+                                    <span class="text-xs text-gray-400"><?= $pu['project_role'] === 'manager' ? 'рук.' : 'исп.' ?></span>
+                                    <?php if ((int)($task['assigned_to'] ?? 0) === (int)$pu['id']): ?>
+                                        <span class="text-xs text-blue-500 ml-auto">✓</span>
+                                    <?php endif; ?>
                                 </button>
                             </form>
-                        <?php elseif (!$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
-                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
-                                <button type="submit"
-                                        class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
-                                    Доработать
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <?php if ($canEdit && !$isClosed): ?>
-                        <!-- Переназначить (dropdown) -->
-                        <div class="relative">
-                            <button @click="reassignOpen = !reassignOpen"
-                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
-                                Переназначить
-                            </button>
-                            <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition
-                                 class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50"
-                                 style="display: none;">
-                                <?php foreach ($projectUsers as $pu): ?>
-                                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>">
-                                        <button type="submit"
-                                                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 <?= (int)($task['assigned_to'] ?? 0) === (int)$pu['id'] ? 'text-blue-600 font-medium' : 'text-gray-700' ?>">
-                                            <?= e($pu['name']) ?>
-                                            <span class="text-xs text-gray-400"><?= $pu['project_role'] === 'manager' ? 'рук.' : 'исп.' ?></span>
-                                            <?php if ((int)($task['assigned_to'] ?? 0) === (int)$pu['id']): ?>
-                                                <span class="text-xs text-blue-500 ml-auto">✓</span>
-                                            <?php endif; ?>
-                                        </button>
-                                    </form>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
-                              onsubmit="return confirm('Закрыть задачу и перевести в архив?')" class="inline">
-                            <?= csrf_field() ?>
-                            <button type="submit"
-                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition"
-                                    <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>
-                                Закрыть задачу
-                            </button>
-                        </form>
-                    <?php endif; ?>
-
-                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
-                              onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все доработки? Это действие нельзя отменить!')" class="inline">
-                            <?= csrf_field() ?>
-                            <button type="submit"
-                                    class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
-                                Удалить
-                            </button>
-                        </form>
-                    <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
+
+            <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>"
+                      onsubmit="return confirm('Закрыть задачу и перевести в архив?')" class="inline">
+                    <?= csrf_field() ?>
+                    <button type="submit"
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition"
+                            <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>
+                        Закрыть задачу
+                    </button>
+                </form>
+            <?php endif; ?>
+
+            <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>"
+                      onsubmit="return confirm('Удалить задачу «<?= e($task['title']) ?>» и все доработки? Это действие нельзя отменить!')" class="inline">
+                    <?= csrf_field() ?>
+                    <button type="submit"
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+                        Удалить
+                    </button>
+                </form>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!-- ===== Двухколоночная сетка (на всю оставшуюся высоту) ===== -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
+    <!-- ===== Чат задачи (на всю оставшуюся высоту) ===== -->
+    <div class="flex-1 min-h-0 flex flex-col">
+        <?php include BASE_PATH . '/views/components/task-chat.php'; ?>
+    </div>
 
-        <!-- ===== Левая колонка (2/3): Описание + Чат ===== -->
-        <div class="lg:col-span-2 flex flex-col min-h-0">
+    <!-- Редактор изображений (полноэкранный оверлей) -->
+    <?php include BASE_PATH . '/views/components/image-editor.php'; ?>
 
-            <!-- Описание -->
-            <?php if (!empty($task['description'])): ?>
-            <div class="bg-white rounded-lg shadow-sm border p-4 mb-4">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Описание</h3>
-                <div class="text-gray-700 text-sm whitespace-pre-wrap"><?= e($task['description']) ?></div>
+    <!-- ===== Модальное окно: Доработки ===== -->
+    <div x-show="modal === 'subtasks'" x-transition.opacity
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         @click.self="modal = null" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col" @click.stop>
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">Доработки</h2>
+                <button @click="modal = null" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
-            <?php endif; ?>
-
-            <!-- Чат задачи (занимает всё оставшееся пространство) -->
-            <?php include BASE_PATH . '/views/components/task-chat.php'; ?>
-
-            <!-- Редактор изображений (полноэкранный оверлей) -->
-            <?php include BASE_PATH . '/views/components/image-editor.php'; ?>
-        </div>
-
-        <!-- ===== Правая колонка (1/3): Вкладки ===== -->
-        <div class="flex flex-col min-h-0" x-data="{ tab: 'subtasks' }">
-
-            <!-- Навигация вкладок -->
-            <div class="bg-white rounded-t-lg shadow-sm border border-b-0">
-                <nav class="flex -mb-px">
-                    <button @click="tab = 'subtasks'"
-                            :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">
-                        Доработки
-                        <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full"><?= count($children) ?></span>
-                    </button>
-                    <button @click="tab = 'info'"
-                            :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">
-                        Информация
-                    </button>
-                    <button @click="tab = 'history'"
-                            :class="tab === 'history' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">
-                        История
-                    </button>
-                </nav>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- Вкладка: Доработки -->
-            <!-- ============================================================ -->
-            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
-                <!-- Кнопка/форма добавления доработки -->
+            <div class="p-4 overflow-y-auto flex-1" x-data="{ showAddForm: false }">
+                <!-- Кнопка добавления -->
                 <?php if ($canEdit): ?>
                     <div class="mb-3">
                         <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())"
                                 class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
-
-                        <!-- Inline-форма создания доработки -->
                         <form x-show="showAddForm" x-transition
                               method="POST" action="<?= url('/tasks/create') ?>"
                               class="flex gap-2" style="display: none;">
@@ -257,9 +226,7 @@ $isClosed = ($task['status_code'] === 'closed');
                                    placeholder="Название доработки..."
                                    class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
                             <button type="submit"
-                                    class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">
-                                Создать
-                            </button>
+                                    class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Создать</button>
                             <button type="button" @click="showAddForm = false"
                                     class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm">✕</button>
                         </form>
@@ -295,25 +262,35 @@ $isClosed = ($task['status_code'] === 'closed');
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+    </div>
 
-            <!-- ============================================================ -->
-            <!-- Вкладка: Информация -->
-            <!-- ============================================================ -->
-            <div x-show="tab === 'info'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
+    <!-- ===== Модальное окно: Информация ===== -->
+    <div x-show="modal === 'info'" x-transition.opacity
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         @click.self="modal = null" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md" @click.stop>
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">Информация</h2>
+                <button @click="modal = null" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <?php if (!empty($task['description'])): ?>
+                <div>
+                    <label class="text-xs text-gray-400">Описание</label>
+                    <p class="text-sm text-gray-700 mt-1 whitespace-pre-wrap"><?= e($task['description']) ?></p>
+                </div>
+                <?php endif; ?>
 
-                <!-- Приоритет (показываем если не medium) -->
                 <?php if (($task['priority'] ?? 'medium') !== 'medium'): ?>
                 <div>
                     <label class="text-xs text-gray-400">Приоритет</label>
                     <div class="mt-1">
-                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium <?= $prio['class'] ?>">
-                            <?= $prio['label'] ?>
-                        </span>
+                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium <?= $prio['class'] ?>"><?= $prio['label'] ?></span>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <!-- Исполнитель (показываем если назначен) -->
                 <?php if (!empty($task['assigned_name'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Исполнитель</label>
@@ -321,7 +298,6 @@ $isClosed = ($task['status_code'] === 'closed');
                 </div>
                 <?php endif; ?>
 
-                <!-- Автор -->
                 <?php if (!empty($task['creator_name'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Автор</label>
@@ -329,7 +305,6 @@ $isClosed = ($task['status_code'] === 'closed');
                 </div>
                 <?php endif; ?>
 
-                <!-- Срок (показываем если установлен) -->
                 <?php if (!empty($task['deadline'])): ?>
                 <div>
                     <label class="text-xs text-gray-400">Срок</label>
@@ -339,7 +314,6 @@ $isClosed = ($task['status_code'] === 'closed');
                 </div>
                 <?php endif; ?>
 
-                <!-- Создана -->
                 <div>
                     <label class="text-xs text-gray-400">Создана</label>
                     <p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['created_at'])) ?></p>
@@ -351,16 +325,23 @@ $isClosed = ($task['status_code'] === 'closed');
                     <p class="text-sm text-gray-600 mt-1"><?= date('d.m.Y H:i', strtotime($task['closed_at'])) ?></p>
                 </div>
                 <?php endif; ?>
-
             </div>
-
-            <!-- ============================================================ -->
-            <!-- Вкладка: История -->
-            <!-- ============================================================ -->
-            <div x-show="tab === 'history'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto">
-                <?php include BASE_PATH . '/views/components/activity-log.php'; ?>
-            </div>
-
         </div>
     </div>
+
+    <!-- ===== Модальное окно: История ===== -->
+    <div x-show="modal === 'history'" x-transition.opacity
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         @click.self="modal = null" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col" @click.stop>
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">История</h2>
+                <button @click="modal = null" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1">
+                <?php include BASE_PATH . '/views/components/activity-log.php'; ?>
+            </div>
+        </div>
+    </div>
+
 </div>
