@@ -28,14 +28,14 @@ $layout = 'layouts/app';
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border">
                 <div class="overflow-x-auto">
-                    <div class="flex gap-1 p-2 min-w-max">
+                    <div class="flex gap-4 p-3 min-w-max">
                         <template x-for="project in projects" :key="project.id">
                             <button
                                 x-on:click="selectProject(project.id)"
                                 :class="activeProjectId === project.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                                class="px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+                                    ? 'text-blue-600 font-semibold border-b-2 border-blue-600'
+                                    : 'text-gray-600 hover:text-blue-600'"
+                                class="pb-1 text-sm whitespace-nowrap transition-colors"
                                 x-text="project.title"
                             ></button>
                         </template>
@@ -44,7 +44,8 @@ $layout = 'layouts/app';
             </div>
 
             <!-- Stats_Panel: три карточки статистики -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Stats_Panel: три карточки статистики + диаграмма прогресса -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
@@ -59,6 +60,21 @@ $layout = 'layouts/app';
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
+                </div>
+                <!-- Прогресс — сводная диаграмма -->
+                <div class="bg-white rounded-lg shadow-sm border p-4 flex flex-col justify-center">
+                    <div class="text-xs text-gray-500 mb-2">Прогресс</div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                            <div class="h-full bg-green-500 transition-all duration-300"
+                                 :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
+                            <div class="h-full bg-orange-400 transition-all duration-300"
+                                 :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
+                            <div class="h-full bg-amber-400 transition-all duration-300"
+                                 :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
+                    </div>
                 </div>
             </div>
 
@@ -188,10 +204,14 @@ document.addEventListener('alpine:init', () => {
 
         get currentStats() {
             const board = this.currentBoard;
+            const inProgress = board.in_progress.length;
+            const revision = board.revision.length;
+            const done = board.done.length;
             return {
-                in_progress: board.in_progress.length,
-                revision: board.revision.length,
-                done: board.done.length,
+                in_progress: inProgress,
+                revision: revision,
+                done: done,
+                total: inProgress + revision + done,
             };
         },
 

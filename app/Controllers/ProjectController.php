@@ -317,7 +317,7 @@ class ProjectController extends Controller
         ];
 
         // Валидация
-        $errors = $this->validateProjectData($data);
+        $errors = $this->validateProjectData($data, (int) $id);
 
         if (!empty($errors)) {
             Session::flash('errors', $errors);
@@ -613,7 +613,14 @@ class ProjectController extends Controller
      * @param array $data Данные формы
      * @return array Массив ошибок
      */
-    private function validateProjectData(array $data): array
+    /**
+     * Валидация данных проекта
+     *
+     * @param array $data Данные формы
+     * @param int|null $excludeId ID проекта для исключения при проверке уникальности (при редактировании)
+     * @return array Массив ошибок
+     */
+    private function validateProjectData(array $data, ?int $excludeId = null): array
     {
         $errors = [];
 
@@ -621,6 +628,21 @@ class ProjectController extends Controller
             $errors['title'][] = 'Поле «Название» обязательно для заполнения';
         } elseif (mb_strlen($data['title']) > 255) {
             $errors['title'][] = 'Название не должно превышать 255 символов';
+        } else {
+            // Проверка уникальности названия проекта
+            $db = Database::getInstance();
+            $sql = "SELECT id FROM projects WHERE title = ?";
+            $params = [$data['title']];
+
+            if ($excludeId !== null) {
+                $sql .= " AND id != ?";
+                $params[] = $excludeId;
+            }
+
+            $existing = $db->fetch($sql, $params);
+            if ($existing) {
+                $errors['title'][] = 'Проект с таким названием уже существует';
+            }
         }
 
         if ($data['status_id'] === '' || $data['status_id'] === '0') {

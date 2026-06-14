@@ -242,7 +242,7 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php if ($canEdit): ?>
                     <div class="mb-3">
                         <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())"
-                                class="text-sm text-blue-600 hover:text-blue-800 font-medium">+ Добавить</button>
+                                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
 
                         <!-- Inline-форма создания подзадачи -->
                         <form x-show="showAddForm" x-transition

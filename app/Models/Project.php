@@ -133,6 +133,7 @@ class Project extends Model
                 FROM projects p
                 JOIN project_statuses ps ON p.status_id = ps.id
                 JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
+                GROUP BY p.id
                 ORDER BY p.created_at DESC";
 
         return $this->db()->fetchAll($sql, [$userId]);
