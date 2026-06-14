@@ -27,7 +27,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
 ?>
 
 <div class="space-y-4" x-data="{ showFilters: false }">
-    <!-- Заголовок + Создать + Фильтры -->
+    <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
     <div class="flex items-center justify-between gap-4">
         <h1 class="text-xl font-bold text-gray-800">
             <?php if ($project ?? null): ?>
@@ -45,11 +45,72 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                 </a>
             <?php endif; ?>
             <button @click="showFilters = true"
-                    class="px-4 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
+                    class="lg:hidden px-4 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
         </div>
     </div>
+
+    <!-- Десктопные фильтры (lg+) -->
+    <form method="GET" action="<?= url('/tasks') ?>" class="hidden lg:block bg-white rounded-lg shadow-sm border p-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
+                <select name="status" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">Все</option>
+                    <?php foreach ($statuses as $s): ?>
+                        <option value="<?= e($s['code']) ?>" <?= ($filters['status'] ?? '') === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
+                <select name="priority" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">Все</option>
+                    <option value="low" <?= ($filters['priority'] ?? '') === 'low' ? 'selected' : '' ?>>Низкий</option>
+                    <option value="medium" <?= ($filters['priority'] ?? '') === 'medium' ? 'selected' : '' ?>>Средний</option>
+                    <option value="high" <?= ($filters['priority'] ?? '') === 'high' ? 'selected' : '' ?>>Высокий</option>
+                    <option value="urgent" <?= ($filters['priority'] ?? '') === 'urgent' ? 'selected' : '' ?>>Срочный</option>
+                </select>
+            </div>
+            <?php if ($roleId <= 2): ?>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
+                <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">Все</option>
+                    <?php foreach ($executors as $exec): ?>
+                        <option value="<?= (int) $exec['id'] ?>" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'selected' : '' ?>><?= e($exec['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
+                <select name="deadline" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">Все</option>
+                    <option value="today" <?= ($filters['deadline'] ?? '') === 'today' ? 'selected' : '' ?>>Сегодня</option>
+                    <option value="week" <?= ($filters['deadline'] ?? '') === 'week' ? 'selected' : '' ?>>На этой неделе</option>
+                    <option value="overdue" <?= ($filters['deadline'] ?? '') === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
+                </select>
+            </div>
+            <?php if (!($project ?? null) && !empty($projects)): ?>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
+                <select name="project_id" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">Все проекты</option>
+                    <?php foreach ($projects as $p): ?>
+                        <option value="<?= (int) $p['id'] ?>" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= e($p['title']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Фильтр</button>
+                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+            </div>
+        </div>
+        <?php if ($project ?? null): ?><input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>"><?php endif; ?>
+    </form>
 
     <!-- Таблица задач -->
     <?php if (empty($tasks)): ?>

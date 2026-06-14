@@ -1,33 +1,53 @@
 <?php
 /**
  * Шаблон карточки проекта
- * Кнопка «Проект» открывает модалку с названием и действиями.
- * Вкладки: Информация, Участники, Документы, Задачи
+ * Десктоп: шапка видна + вкладки
+ * Мобильные: кнопка «Проект» → модалка + вкладки
  */
 $layout = 'layouts/app';
 ?>
 
 <div x-data="{ tab: 'info', showProject: false }">
 
-    <!-- Верхняя панель: кнопка Проект + вкладки -->
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
-        <button @click="showProject = true"
-                class="px-3 py-1.5 bg-white border rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition">
-            Проект
-        </button>
-        <nav class="flex gap-3 overflow-x-auto">
+    <!-- ДЕСКТОП: Шапка проекта (lg+) -->
+    <div class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div class="flex items-center justify-between mb-3">
+            <h1 class="text-xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
+            <a href="<?= url('/projects') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все проекты</a>
+        </div>
+        <?php if (can('edit_project', (int) $project['id'])): ?>
+            <div class="flex items-center gap-2">
+                <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Редактировать</a>
+                <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
+                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все задачи?')" class="inline">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Удалить</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- МОБИЛЬНЫЕ: кнопка «Проект» (<lg) -->
+    <div class="lg:hidden flex items-center gap-3 mb-4 flex-wrap">
+        <button @click="showProject = true" class="px-3 py-1.5 bg-white border rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition">Проект</button>
+    </div>
+
+    <!-- Навигация вкладок (общая) -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="flex gap-4 -mb-px overflow-x-auto">
             <button @click="tab = 'info'"
-                    :class="tab === 'info' ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'"
-                    class="text-sm whitespace-nowrap transition-colors">Информация</button>
+                    :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Информация</button>
             <button @click="tab = 'users'"
-                    :class="tab === 'users' ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'"
-                    class="text-sm whitespace-nowrap transition-colors">Участники <span class="text-xs opacity-70"><?= count($users) ?></span></button>
+                    :class="tab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Участники <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= count($users) ?></span></button>
             <button @click="tab = 'documents'"
-                    :class="tab === 'documents' ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'"
-                    class="text-sm whitespace-nowrap transition-colors">Документы <span class="text-xs opacity-70"><?= count($documents) ?></span></button>
+                    :class="tab === 'documents' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Документы <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= count($documents) ?></span></button>
             <button @click="tab = 'tasks'"
-                    :class="tab === 'tasks' ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'"
-                    class="text-sm whitespace-nowrap transition-colors">Задачи <span class="text-xs opacity-70"><?= $taskStats['total'] ?></span></button>
+                    :class="tab === 'tasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Задачи <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= $taskStats['total'] ?></span></button>
         </nav>
     </div>
 

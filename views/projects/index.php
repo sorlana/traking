@@ -23,11 +23,48 @@ $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empt
                 </a>
             <?php endif; ?>
             <button @click="showFilters = true"
-                    class="px-4 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
+                    class="lg:hidden px-4 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
         </div>
     </div>
+
+    <!-- Десктопные фильтры (lg+) -->
+    <form method="GET" action="<?= url('/projects') ?>" class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div class="grid grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
+                <select name="status" class="w-full border-gray-300 rounded-md text-sm">
+                    <option value="">Все статусы</option>
+                    <?php foreach ($statuses as $s): ?>
+                        <option value="<?= e($s['code']) ?>" <?= $filters['status'] === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Руководитель</label>
+                <select name="manager" class="w-full border-gray-300 rounded-md text-sm">
+                    <option value="">Все</option>
+                    <?php foreach ($managers as $m): ?>
+                        <option value="<?= e($m['id']) ?>" <?= $filters['manager'] == $m['id'] ? 'selected' : '' ?>><?= e($m['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
+                <select name="executor" class="w-full border-gray-300 rounded-md text-sm">
+                    <option value="">Все</option>
+                    <?php foreach ($executors as $ex): ?>
+                        <option value="<?= e($ex['id']) ?>" <?= $filters['executor'] == $ex['id'] ? 'selected' : '' ?>><?= e($ex['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Применить</button>
+                <a href="<?= url('/projects') ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+            </div>
+        </div>
+    </form>
 
     <!-- Сетка проектов -->
     <?php if (empty($projects)): ?>
