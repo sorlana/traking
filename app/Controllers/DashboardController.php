@@ -32,10 +32,10 @@ class DashboardController extends Controller
                 $this->renderAdmin($db, $activityLog);
                 break;
             case 2: // Руководитель
-                $this->renderManager($db, $activityLog, $user);
+                $this->renderUnified($user);
                 break;
             case 3: // Исполнитель
-                $this->renderExecutor($db, $user);
+                $this->renderUnified($user);
                 break;
             default:
                 $this->redirect('/login');
@@ -84,7 +84,28 @@ class DashboardController extends Controller
     }
 
     /**
+     * Единый дашборд для Manager и Executor
+     * Использует DashboardService для формирования данных канбан-доски
+     */
+    private function renderUnified(array $user): void
+    {
+        $userId = (int) $user['id'];
+        $roleId = (int) $user['role_id'];
+
+        $dashboardService = new \Services\DashboardService();
+        $data = $dashboardService->getBoardData($userId, $roleId);
+
+        $this->view('dashboard/unified', [
+            'title'     => 'Дашборд — Traking',
+            'projects'  => $data['projects'],
+            'boardData' => $data['boardData'],
+            'roleId'    => $roleId,
+        ]);
+    }
+
+    /**
      * Дашборд руководителя
+     * @deprecated Заменён на renderUnified(), оставлен для возможного отката
      */
     private function renderManager(Database $db, ActivityLog $activityLog, array $user): void
     {
@@ -155,6 +176,7 @@ class DashboardController extends Controller
 
     /**
      * Дашборд исполнителя
+     * @deprecated Заменён на renderUnified(), оставлен для возможного отката
      */
     private function renderExecutor(Database $db, array $user): void
     {
