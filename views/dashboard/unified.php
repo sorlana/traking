@@ -33,9 +33,9 @@ $layout = 'layouts/app';
                             <button
                                 x-on:click="selectProject(project.id)"
                                 :class="activeProjectId === project.id
-                                    ? 'text-blue-600 font-semibold border-b-2 border-blue-600'
+                                    ? 'text-blue-600 font-semibold'
                                     : 'text-gray-600 hover:text-blue-600'"
-                                class="pb-1 text-sm whitespace-nowrap transition-colors"
+                                class="text-sm whitespace-nowrap transition-colors"
                                 x-text="project.title"
                             ></button>
                         </template>
@@ -43,29 +43,28 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
-            <!-- Stats_Panel: три карточки статистики -->
             <!-- Stats_Panel: три карточки статистики + диаграмма прогресса -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-4 gap-2 md:gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
-                    <div class="text-2xl font-bold text-gray-800" x-text="currentStats.in_progress"></div>
+                    <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.in_progress"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Доработки — оранжевая рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-orange-500 p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-orange-500 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
-                    <div class="text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
+                    <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Готово — зелёная рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
-                    <div class="text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
+                    <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
                 <!-- Прогресс — сводная диаграмма -->
-                <div class="bg-white rounded-lg shadow-sm border p-4 flex flex-col justify-center">
+                <div class="bg-white rounded-lg shadow-sm border p-2 md:p-4 flex flex-col justify-center">
                     <div class="text-xs text-gray-500 mb-2">Прогресс</div>
                     <div class="flex items-center gap-2">
                         <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
@@ -76,7 +75,7 @@ $layout = 'layouts/app';
                             <div class="h-full bg-amber-400 transition-all duration-300"
                                  :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                         </div>
-                        <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
+                        <span class="text-xs md:text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
                     </div>
                 </div>
             </div>
