@@ -62,8 +62,13 @@ if ($currentUser) {
                             </a>
 
                             <a href="<?= url('/tasks/last') ?>"
-                               class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') || str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Задачи
+                            </a>
+
+                            <a href="<?= url('/projects') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Проекты
                             </a>
                         <?php endif; ?>
                     </div>
@@ -131,6 +136,10 @@ if ($currentUser) {
 
                         <a href="<?= url('/tasks/last') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Задачи
+                        </a>
+
+                        <a href="<?= url('/projects') ?>" class="block px-3 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Проекты
                         </a>
                     <?php endif; ?>
 
