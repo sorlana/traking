@@ -59,8 +59,8 @@ $isClosed = ($task['status_code'] === 'closed');
     <!-- ===== Панель кнопок над чатом ===== -->
     <div class="flex items-center gap-2 mb-3">
         <button @click="modal = 'task'"
-                class="px-3 py-1.5 bg-white border rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition truncate max-w-[60%]">
-            <?= e($task['title']) ?>
+                class="px-3 py-1.5 bg-white border rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition">
+            Задача
         </button>
         <span class="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
             <?= e($task['status_name'] ?? '') ?>
