@@ -184,7 +184,7 @@ document.addEventListener('click', async function (e) {
     if (!container) return;
 
     const taskId = container.dataset.taskId;
-    const input = container.querySelector('input[name="time_spent"]');
+    const input = container.querySelector('.js-time-input');
     if (!input) return;
 
     const rawValue = input.value.trim();
@@ -216,10 +216,11 @@ document.addEventListener('click', async function (e) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Обновляем значение в поле ввода (если сервер вернул скорректированное)
-            if (data.time_spent !== undefined) {
-                input.value = data.time_spent;
-            }
+            const savedValue = data.time_spent !== undefined ? data.time_spent : timeSpent;
+            input.value = savedValue;
+
+            // Переключаем в режим просмотра
+            switchToViewMode(container, savedValue);
             showToast('Время сохранено', 'success');
         } else {
             // Ошибка от сервера
@@ -234,3 +235,67 @@ document.addEventListener('click', async function (e) {
         btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 });
+
+/**
+ * Обработчик кнопки «Редактировать» — переключает в режим ввода
+ */
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-edit-time');
+    if (!btn) return;
+
+    const container = btn.closest('[data-task-id]');
+    if (!container) return;
+
+    switchToEditMode(container);
+});
+
+/**
+ * Переключить контейнер времени в режим просмотра
+ * @param {HTMLElement} container
+ * @param {number} value — сохранённое значение
+ */
+function switchToViewMode(container, value) {
+    const display = container.querySelector('.js-time-display');
+    const input = container.querySelector('.js-time-input');
+    const unit = container.querySelector('.js-time-unit');
+    const saveBtn = container.querySelector('.js-save-time');
+    const editBtn = container.querySelector('.js-edit-time');
+
+    // Обновляем текст отображения
+    display.textContent = value + ' ч';
+    display.style.display = '';
+
+    // Скрываем поле ввода и кнопку сохранения
+    input.classList.add('hidden');
+    unit.classList.add('hidden');
+    saveBtn.classList.add('hidden');
+
+    // Показываем кнопку редактирования
+    editBtn.classList.remove('hidden');
+}
+
+/**
+ * Переключить контейнер времени в режим редактирования
+ * @param {HTMLElement} container
+ */
+function switchToEditMode(container) {
+    const display = container.querySelector('.js-time-display');
+    const input = container.querySelector('.js-time-input');
+    const unit = container.querySelector('.js-time-unit');
+    const saveBtn = container.querySelector('.js-save-time');
+    const editBtn = container.querySelector('.js-edit-time');
+
+    // Скрываем текст
+    display.style.display = 'none';
+
+    // Показываем поле ввода и кнопку сохранения
+    input.classList.remove('hidden');
+    unit.classList.remove('hidden');
+    saveBtn.classList.remove('hidden');
+
+    // Скрываем кнопку редактирования
+    editBtn.classList.add('hidden');
+
+    // Фокус на поле ввода
+    input.focus();
+}

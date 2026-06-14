@@ -198,14 +198,24 @@ $isClosed = ($task['status_code'] === 'closed');
                 <div class="border-t pt-4">
                     <label class="text-xs text-gray-400">Затраченное время</label>
                     <?php if ($canEditTime): ?>
-                        <div class="mt-1 flex items-center gap-2" data-task-id="<?= (int) $task['id'] ?>">
+                        <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>">
+                            <!-- Режим просмотра -->
+                            <span class="js-time-display text-sm text-gray-800 <?= $time_spent === null ? '' : '' ?>" <?= $time_spent !== null ? '' : 'style="display:none"' ?>><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></span>
+                            <!-- Режим редактирования (скрыт если уже есть значение) -->
                             <input type="number" step="0.5" min="0.5" max="999.5"
                                    name="time_spent"
                                    value="<?= $time_spent !== null ? e($time_spent) : '' ?>"
                                    placeholder="0.5"
-                                   class="w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                            <span class="text-xs text-gray-400">ч</span>
-                            <button type="button" class="js-save-time px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Сохранить</button>
+                                   class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $time_spent !== null ? 'hidden' : '' ?>">
+                            <span class="js-time-unit text-xs text-gray-400 <?= $time_spent !== null ? 'hidden' : '' ?>">ч</span>
+                            <!-- Кнопка Сохранить (дискета) — видна в режиме редактирования -->
+                            <button type="button" class="js-save-time p-1.5 text-blue-600 hover:text-blue-800 transition <?= $time_spent !== null ? 'hidden' : '' ?>" title="Сохранить">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <!-- Кнопка Редактировать (карандаш) — видна в режиме просмотра -->
+                            <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-blue-600 transition <?= $time_spent === null ? 'hidden' : '' ?>" title="Редактировать">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            </button>
                         </div>
                     <?php else: ?>
                         <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
@@ -344,14 +354,24 @@ $isClosed = ($task['status_code'] === 'closed');
                     <div class="border-t pt-4">
                         <label class="text-xs text-gray-400">Затраченное время</label>
                         <?php if ($canEditTime): ?>
-                            <div class="mt-1 flex items-center gap-2" data-task-id="<?= (int) $task['id'] ?>">
+                            <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>">
+                                <!-- Режим просмотра -->
+                                <span class="js-time-display text-sm text-gray-800" <?= $time_spent !== null ? '' : 'style="display:none"' ?>><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></span>
+                                <!-- Режим редактирования -->
                                 <input type="number" step="0.5" min="0.5" max="999.5"
                                        name="time_spent"
                                        value="<?= $time_spent !== null ? e($time_spent) : '' ?>"
                                        placeholder="0.5"
-                                       class="w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                                <span class="text-xs text-gray-400">ч</span>
-                                <button type="button" class="js-save-time px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Сохранить</button>
+                                       class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $time_spent !== null ? 'hidden' : '' ?>">
+                                <span class="js-time-unit text-xs text-gray-400 <?= $time_spent !== null ? 'hidden' : '' ?>">ч</span>
+                                <!-- Кнопка Сохранить (галочка) -->
+                                <button type="button" class="js-save-time p-1.5 text-blue-600 hover:text-blue-800 transition <?= $time_spent !== null ? 'hidden' : '' ?>" title="Сохранить">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </button>
+                                <!-- Кнопка Редактировать (карандаш) -->
+                                <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-blue-600 transition <?= $time_spent === null ? 'hidden' : '' ?>" title="Редактировать">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
                             </div>
                         <?php else: ?>
                             <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
