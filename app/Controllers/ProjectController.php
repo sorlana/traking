@@ -219,6 +219,7 @@ class ProjectController extends Controller
             'title' => trim($_POST['title'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'deadline' => $_POST['deadline'] ?? null,
+            'estimated_hours' => $_POST['estimated_hours'] ?? null,
             'status_id' => $_POST['status_id'] ?? '',
         ];
 
@@ -243,6 +244,13 @@ class ProjectController extends Controller
         // Пустое описание -> null
         if ($data['description'] === '') {
             $data['description'] = null;
+        }
+
+        // estimated_hours: пустое -> null, иначе float
+        if (empty($data['estimated_hours'])) {
+            $data['estimated_hours'] = null;
+        } else {
+            $data['estimated_hours'] = (float) $data['estimated_hours'];
         }
 
         // Создаём проект
@@ -313,6 +321,7 @@ class ProjectController extends Controller
             'title' => trim($_POST['title'] ?? ''),
             'description' => trim($_POST['description'] ?? ''),
             'deadline' => $_POST['deadline'] ?? null,
+            'estimated_hours' => $_POST['estimated_hours'] ?? null,
             'status_id' => $_POST['status_id'] ?? '',
         ];
 
@@ -334,6 +343,13 @@ class ProjectController extends Controller
         // Пустое описание -> null
         if ($data['description'] === '') {
             $data['description'] = null;
+        }
+
+        // estimated_hours: пустое -> null, иначе float
+        if (empty($data['estimated_hours'])) {
+            $data['estimated_hours'] = null;
+        } else {
+            $data['estimated_hours'] = (float) $data['estimated_hours'];
         }
 
         $this->projectModel->update((int) $id, $data);

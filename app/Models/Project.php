@@ -17,7 +17,7 @@ class Project extends Model
     protected string $table = 'projects';
 
     /** @var array Поля, разрешённые для массового заполнения */
-    protected array $fillable = ['title', 'description', 'deadline', 'status_id', 'created_by', 'closed_at'];
+    protected array $fillable = ['title', 'description', 'deadline', 'estimated_hours', 'status_id', 'created_by', 'closed_at'];
 
     /**
      * Получить участников проекта

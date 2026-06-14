@@ -212,7 +212,6 @@ $layout = 'layouts/app';
             <div>
                 <h4 class="font-medium text-gray-800 mb-2">Настройки профиля</h4>
                 <ul class="space-y-1">
-                    <li>• Смена пароля</li>
                     <li>• Включение/отключение push-уведомлений</li>
                     <li>• Режим «Не беспокоить»</li>
                     <li>• Настройка звуков</li>

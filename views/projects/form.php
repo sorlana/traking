@@ -10,6 +10,7 @@ $action = $isEdit ? url('/projects/' . (int) $project['id'] . '/edit') : url('/p
 $fieldTitle = $old['title'] ?? ($project['title'] ?? '');
 $fieldDescription = $old['description'] ?? ($project['description'] ?? '');
 $fieldDeadline = $old['deadline'] ?? ($project['deadline'] ?? '');
+$fieldEstimatedHours = $old['estimated_hours'] ?? ($project['estimated_hours'] ?? '');
 $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
 ?>
 
@@ -79,6 +80,17 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
             </div>
             <?php endif; ?>
 
+            <!-- Расчётное время (показываем если заполнено) -->
+            <?php if (!empty($fieldEstimatedHours)): ?>
+            <div class="mb-4">
+                <label for="estimated_hours" class="block text-sm font-medium text-gray-700 mb-1">Расчётное время (часы)</label>
+                <input type="number" id="estimated_hours" name="estimated_hours" step="0.5" min="0.5"
+                       value="<?= e($fieldEstimatedHours) ?>"
+                       placeholder="Планируемое кол-во часов"
+                       class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <?php endif; ?>
+
             <!-- Статус (показываем если выбран) -->
             <?php if (!empty($fieldStatusId)): ?>
             <div class="mb-4">
@@ -120,6 +132,15 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 <div>
                     <label for="deadline_extra" class="block text-sm font-medium text-gray-700 mb-1">Срок сдачи</label>
                     <input type="date" name="deadline" id="deadline_extra"
+                           class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <?php endif; ?>
+
+                <?php if (empty($fieldEstimatedHours)): ?>
+                <div>
+                    <label for="estimated_hours_extra" class="block text-sm font-medium text-gray-700 mb-1">Расчётное время (часы)</label>
+                    <input type="number" name="estimated_hours" id="estimated_hours_extra" step="0.5" min="0.5"
+                           placeholder="Планируемое кол-во часов"
                            class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <?php endif; ?>

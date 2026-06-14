@@ -19,7 +19,7 @@ class DashboardService
      *
      * @param int $userId ID текущего пользователя
      * @param int $roleId Роль пользователя (2 = Manager, 3 = Executor)
-     * @return array Структура: ['projects' => [...], 'boardData' => [...]]
+     * @return array Структура: ['projects' => [...], 'boardData' => [...], 'timeData' => [...]]
      */
     public function getBoardData(int $userId, int $roleId): array
     {
@@ -27,15 +27,30 @@ class DashboardService
         $projects = $projectModel->getUserProjects($userId, $roleId);
 
         $boardData = [];
+        $timeData = [];
+        $db = Database::getInstance();
+
         foreach ($projects as $project) {
             $boardData[$project['id']] = $this->getProjectBoardTasks(
                 (int) $project['id'], $userId, $roleId
             );
+
+            // Расчёт фактического времени по проекту (сумма time_spent всех задач)
+            $actualTime = $db->fetch(
+                "SELECT COALESCE(SUM(time_spent), 0) as total FROM tasks WHERE project_id = ?",
+                [(int) $project['id']]
+            );
+
+            $timeData[$project['id']] = [
+                'estimated' => (float) ($project['estimated_hours'] ?? 0),
+                'actual' => (float) ($actualTime['total'] ?? 0),
+            ];
         }
 
         return [
             'projects' => $projects,
             'boardData' => $boardData,
+            'timeData' => $timeData,
         ];
     }
 

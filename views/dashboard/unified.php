@@ -82,6 +82,52 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
+            <!-- Диаграмма: Расчётное vs Фактическое время -->
+            <template x-if="currentTimeData.estimated > 0 || currentTimeData.actual > 0">
+                <div class="bg-white rounded-lg shadow-sm border p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-700">Время (часы)</h3>
+                        <div class="flex items-center gap-4 text-xs text-gray-500">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-400 inline-block"></span> План</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded inline-block" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"></span> Факт</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <!-- План -->
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-500 w-12">План</span>
+                            <div class="flex-1 h-6 bg-gray-100 rounded relative overflow-hidden">
+                                <div class="h-full bg-blue-400 rounded transition-all duration-300"
+                                     :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
+                        </div>
+                        <!-- Факт -->
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-500 w-12">Факт</span>
+                            <div class="flex-1 h-6 bg-gray-100 rounded relative overflow-hidden">
+                                <div class="h-full rounded transition-all duration-300"
+                                     :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"
+                                     :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                            </div>
+                            <span class="text-sm font-medium w-16 text-right"
+                                  :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'"
+                                  x-text="currentTimeData.actual + ' ч'"></span>
+                        </div>
+                    </div>
+                    <!-- Процент использования -->
+                    <template x-if="currentTimeData.estimated > 0">
+                        <div class="mt-3 pt-3 border-t text-center">
+                            <span class="text-xs text-gray-500">Использовано </span>
+                            <span class="text-sm font-bold"
+                                  :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'"
+                                  x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
+                            <span class="text-xs text-gray-500"> от плана</span>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
             <!-- Task_Board: три колонки с карточками задач -->
             <div class="flex flex-col md:flex-row gap-4">
 
@@ -194,6 +240,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('dashboard', () => ({
         projects: <?= json_encode($projects ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         boardData: <?= json_encode($boardData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+        timeData: <?= json_encode($timeData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         activeProjectId: null,
 
         init() {
@@ -217,6 +264,12 @@ document.addEventListener('alpine:init', () => {
                 done: done,
                 total: inProgress + revision + done,
             };
+        },
+
+        get currentTimeData() {
+            const data = this.timeData[this.activeProjectId] || { estimated: 0, actual: 0 };
+            const maxHours = Math.max(data.estimated, data.actual, 1);
+            return { ...data, maxHours };
         },
 
         selectProject(projectId) {

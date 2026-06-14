@@ -99,6 +99,7 @@ class DashboardController extends Controller
             'title'     => 'Дашборд — Traking',
             'projects'  => $data['projects'],
             'boardData' => $data['boardData'],
+            'timeData'  => $data['timeData'],
             'roleId'    => $roleId,
         ]);
     }
