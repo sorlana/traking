@@ -598,13 +598,23 @@ class TaskController extends Controller
         // Логируем смену статуса
         $db2 = Database::getInstance();
         $oldStatus = $db2->fetch("SELECT name FROM task_statuses WHERE id = ?", [(int) $task['status_id']]);
+
+        // Если статус «Готово» — фиксируем затраченное время рядом со статусом
+        $newValue = $status['name'];
+        if ($status['code'] === 'done') {
+            $timeSpent = $this->timeTrackingService->getTotalTime($taskId);
+            if ($timeSpent > 0) {
+                $newValue = $status['name'] . ' (' . $timeSpent . ' ч)';
+            }
+        }
+
         $this->activityLogService->log(
             Auth::id(),
             (int) $task['project_id'],
             $taskId,
             'status_changed',
             $oldStatus['name'] ?? null,
-            $status['name']
+            $newValue
         );
 
         // Уведомляем участников

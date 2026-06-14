@@ -151,27 +151,13 @@ class TimeTrackingService
             ];
         }
 
-        // 4. Получаем старое значение для логирования
+        // 4. Получаем старое значение
         $oldValue = $this->taskModel->getTimeSpent($taskId);
 
         // 5. Обновляем time_spent в базе данных
         $this->taskModel->update($taskId, ['time_spent' => $timeSpent]);
 
-        // 6. Определяем тип действия и записываем в activity_log
-        $actionType = ($oldValue === null) ? 'time_logged' : 'time_updated';
-        $oldValueStr = ($oldValue !== null) ? (string) $oldValue : null;
-        $newValueStr = (string) $timeSpent;
-
-        $this->activityLogService->log(
-            $userId,
-            (int) $task['project_id'],
-            $taskId,
-            $actionType,
-            $oldValueStr,
-            $newValueStr
-        );
-
-        // 7. Получаем суммарное время по дереву задач
+        // 6. Получаем суммарное время по дереву задач
         $totalTime = $this->getTotalTime($taskId);
 
         return [

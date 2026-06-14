@@ -23,9 +23,11 @@ $actionLabels = [
     'comment_added' => ['label' => 'Добавил(а) комментарий', 'color' => 'bg-green-500'],
     'file_uploaded' => ['label' => 'Загрузил(а) файл', 'color' => 'bg-purple-500'],
     'task_updated' => ['label' => 'Обновил(а) задачу', 'color' => 'bg-orange-500'],
-    'time_logged' => ['label' => 'внёс(ла) время', 'color' => 'bg-teal-500'],
-    'time_updated' => ['label' => 'изменил(а) время', 'color' => 'bg-teal-500'],
 ];
+
+// Скрываем записи time_logged/time_updated (устаревшие, время теперь фиксируется при смене статуса)
+$activityLog = array_filter($activityLog, fn($e) => !in_array($e['action_type'], ['time_logged', 'time_updated']));
+$activityLog = array_values($activityLog);
 ?>
 
 <div class="bg-white rounded-lg shadow-sm border p-5">
@@ -53,21 +55,7 @@ $actionLabels = [
                             <span class="text-gray-500"><?= e($meta['label']) ?></span>
                         </p>
 
-                        <?php if ($entry['action_type'] === 'time_logged' && !empty($entry['new_value'])): ?>
-                            <!-- Первый ввод времени: «X ч» -->
-                            <p class="text-xs text-gray-400 mt-0.5">
-                                <span class="text-green-600"><?= e($entry['new_value']) ?> ч</span>
-                            </p>
-                        <?php elseif ($entry['action_type'] === 'time_updated' && !empty($entry['new_value'])): ?>
-                            <!-- Изменение времени: «X ч → Y ч» -->
-                            <p class="text-xs text-gray-400 mt-0.5">
-                                <?php if (!empty($entry['old_value'])): ?>
-                                    <span class="line-through text-red-400"><?= e($entry['old_value']) ?> ч</span>
-                                    →
-                                <?php endif; ?>
-                                <span class="text-green-600"><?= e($entry['new_value']) ?> ч</span>
-                            </p>
-                        <?php elseif (!empty($entry['old_value']) || !empty($entry['new_value'])): ?>
+                        <?php if (!empty($entry['old_value']) || !empty($entry['new_value'])): ?>
                             <p class="text-xs text-gray-400 mt-0.5">
                                 <?php if (!empty($entry['old_value']) && !empty($entry['new_value'])): ?>
                                     <span class="line-through text-red-400"><?= e($entry['old_value']) ?></span>
