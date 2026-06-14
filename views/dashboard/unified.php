@@ -48,13 +48,19 @@ $layout = 'layouts/app';
             </div>
 
             <!-- Модалка со статистикой (мобильная) -->
-            <div x-show="showInfoModal" x-transition.opacity
+            <div x-show="showInfoModal"
                  @click.self="showInfoModal = false"
-                 class="md:hidden fixed inset-0 z-[80] bg-black bg-opacity-50 flex items-end"
-                 style="display: none;">
-                <div class="bg-white w-full rounded-t-2xl p-4 pb-8 space-y-3 max-h-[70vh] overflow-y-auto"
-                     @click.stop x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
+                 class="md:hidden fixed inset-0 z-[80] bg-black/50 flex items-end"
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+                <div class="bg-white w-full rounded-t-2xl p-4 pb-8 space-y-3 max-h-[70vh] overflow-y-auto transform transition-transform duration-200"
+                     :class="showInfoModal ? 'translate-y-0' : 'translate-y-full'"
+                     @click.stop>
                     <!-- Заголовок модалки -->
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-sm font-medium text-gray-700">Статистика проекта</h3>
@@ -201,17 +207,17 @@ $layout = 'layouts/app';
                 <!-- Переключатель вкладок -->
                 <div class="flex bg-white rounded-lg shadow-sm border mb-3">
                     <button @click="boardTab = 'in_progress'"
-                            :class="boardTab === 'in_progress' ? 'text-amber-700 border-b-2 border-amber-500 bg-amber-50' : 'text-gray-500'"
+                            :class="boardTab === 'in_progress' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
                     </button>
                     <button @click="boardTab = 'revision'"
-                            :class="boardTab === 'revision' ? 'text-orange-700 border-b-2 border-orange-500 bg-orange-50' : 'text-gray-500'"
+                            :class="boardTab === 'revision' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
                     </button>
                     <button @click="boardTab = 'done'"
-                            :class="boardTab === 'done' ? 'text-green-700 border-b-2 border-green-500 bg-green-50' : 'text-gray-500'"
+                            :class="boardTab === 'done' ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
                     </button>
