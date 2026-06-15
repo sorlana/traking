@@ -180,3 +180,12 @@ a[class*="px-5"] {
         padding-right: 0.5rem !important;
     }
 }
+
+/* Предотвращаем дёрганье fixed-элементов при прокрутке на мобильных */
+nav.fixed,
+nav[class*="fixed"] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
