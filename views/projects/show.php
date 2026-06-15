@@ -29,14 +29,44 @@ $layout = 'layouts/app';
     </div>
 
     <!-- МОБИЛЬНЫЕ: заголовок проекта + ссылка «Все проекты» (<lg) -->
-    <div class="lg:hidden flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-            <button @click="showProject = true" class="text-lg font-bold text-gray-800"><?= e($project['title']) ?></button>
+    <div class="lg:hidden mb-4">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-lg font-bold text-gray-800 truncate"><?= e($project['title']) ?></h1>
+            <a href="<?= url('/projects') ?>" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 flex-shrink-0">
+                Все проекты
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
         </div>
-        <a href="<?= url('/projects') ?>" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 flex-shrink-0">
-            Все проекты
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
+        <!-- Статус + Действия -->
+        <div class="flex items-center gap-2">
+            <?php
+            $statusColors = $statusColors ?? [
+                'new' => 'bg-blue-100 text-blue-700',
+                'active' => 'bg-green-100 text-green-700',
+                'on_hold' => 'bg-yellow-100 text-yellow-700',
+                'closed' => 'bg-gray-100 text-gray-600',
+            ];
+            $mobileStatusClass = $statusColors[$status['code'] ?? ''] ?? 'bg-gray-100 text-gray-600';
+            ?>
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full <?= $mobileStatusClass ?>"><?= e($status['name'] ?? '') ?></span>
+            <div class="flex-1"></div>
+            <?php if (can('edit_project', (int) $project['id'])): ?>
+            <div class="relative" x-data="{ projActions: false }">
+                <button @click="projActions = !projActions" class="px-3 py-1 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50 shadow-sm">Действия</button>
+                <div x-show="projActions" @click.outside="projActions = false" x-cloak x-transition
+                     class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
+                    <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
+                        <div class="border-t my-1"></div>
+                        <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" onsubmit="return confirm('Удалить проект?')">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- Навигация вкладок (общая) -->
