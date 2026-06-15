@@ -160,20 +160,13 @@
 /* ============================================================ */
 /* Кнопки: одинаковая высота с полями ввода */
 /* ============================================================ */
-button[type="submit"],
-form button,
-.btn,
-button.px-3,
-button.px-4,
-button.px-5,
-a.px-3,
-a.px-4,
-a.px-5 {
-    min-height: 2.375rem !important; /* 38px — высота inputs от Tailwind Forms */
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
+button,
+[type="submit"],
+[type="button"],
+a[class*="px-3"],
+a[class*="px-4"],
+a[class*="px-5"] {
+    min-height: 2.375rem !important;
 }
 
 /* Бейджи статуса — компактный шрифт чтобы текст влезал */
