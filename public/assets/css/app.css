@@ -9,15 +9,13 @@
 .scrollbar-hidden::-webkit-scrollbar { display: none; }
 .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Скрытие скроллбара для всех горизонтальных overflow-x элементов на мобильных */
-@media (max-width: 768px) {
-    .overflow-x-auto::-webkit-scrollbar { display: none; }
-    .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
-    nav .overflow-x-auto::-webkit-scrollbar { display: none; }
-    nav .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
-    /* Вкладки навигации без скроллбара */
-    nav.-mb-px::-webkit-scrollbar { display: none; }
-    nav.-mb-px { overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+/* Глобальное скрытие горизонтального скроллбара на overflow-x-auto */
+.overflow-x-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.overflow-x-auto::-webkit-scrollbar {
+    display: none;
 }
 
 /* Дерево задач — базовые стили для узлов */

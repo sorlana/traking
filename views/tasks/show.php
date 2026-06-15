@@ -309,8 +309,37 @@ $isClosed = ($task['status_code'] === 'closed');
         <div class="flex-1"></div>
         <?php if (!$isClosed && $isExecutor && $canChangeStatus && !$isDone): ?>
             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $doneStatusId ?>"><button type="submit" class="px-3 py-1 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50 shadow-sm">Готово</button></form>
-        <?php elseif (!$isClosed && !$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
-            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $revisionStatusId ?>"><button type="submit" class="px-3 py-1 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50 shadow-sm">Доработать</button></form>
+        <?php elseif ($canEdit): ?>
+            <!-- Кнопка Действия для руководителя -->
+            <div class="relative" x-data="{ actionsOpen: false }">
+                <button @click="actionsOpen = !actionsOpen" class="px-3 py-1 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50 shadow-sm">Действия</button>
+                <div x-show="actionsOpen" @click.outside="actionsOpen = false" x-cloak x-transition
+                     class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
+                    <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
+                    <?php if (!$isClosed && !$isRevision && $task['status_code'] !== 'closed'): ?>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $revisionStatusId ?>"><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Доработать</button></form>
+                    <?php endif; ?>
+                    <?php if (!$isClosed): ?>
+                        <div class="border-t my-1"></div>
+                        <div x-data="{ reassignOpen2: false }">
+                            <button @click="reassignOpen2 = !reassignOpen2" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Переназначить</button>
+                            <div x-show="reassignOpen2" class="px-2 pb-1">
+                                <?php foreach ($projectUsers as $pu): ?>
+                                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>"><?= csrf_field() ?><input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>"><button type="submit" class="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 <?= (int)($task['assigned_to'] ?? 0) === (int)$pu['id'] ? 'text-blue-600 font-medium' : 'text-gray-600' ?>"><?= e($pu['name']) ?></button></form>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($task['status_code'] === 'done'): ?>
+                        <div class="border-t my-1"></div>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" <?= !$canClose['can'] ? 'disabled' : '' ?>>Закрыть</button></form>
+                    <?php endif; ?>
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                        <div class="border-t my-1"></div>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" onsubmit="return confirm('Удалить задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button></form>
+                    <?php endif; ?>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 
