@@ -339,7 +339,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
     <!-- Поле ввода -->
     <div class="border-t p-3">
-        <div class="flex items-end gap-2">
+        <div class="flex items-center gap-2">
             <!-- Кнопка прикрепить файл -->
             <label class="cursor-pointer text-gray-400 hover:text-gray-600 p-1 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +374,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       x-ref="messageInput"
                       @keydown.enter.prevent="if (!$event.shiftKey) sendMessage()"
                       @input="autoResize($event)"
-                      placeholder="Написать сообщение..."
+                      placeholder="Написать..."
                       rows="1"
                       maxlength="5000"
                       class="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
