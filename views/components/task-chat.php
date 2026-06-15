@@ -329,7 +329,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </div>
 
     <!-- Блок «Ответ на...» или «Редактирование» -->
-    <div x-show="replyTo || editingMsg" x-cloak class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between">
+    <div x-show="replyTo || editingMsg" x-cloak class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between" style="display:none">>
         <div class="text-xs text-blue-700">
             <span x-show="replyTo">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
             <span x-show="editingMsg">✏️ Редактирование</span>
@@ -341,7 +341,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     <div class="border-t p-3">
         <div class="flex items-end gap-2">
             <!-- Кнопка прикрепить файл -->
-            <label class="cursor-pointer text-gray-400 hover:text-gray-600 p-1 flex-shrink-0 self-end">
+            <label class="cursor-pointer text-gray-400 hover:text-gray-600 flex-shrink-0 w-8 h-8 flex items-center justify-center">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
@@ -353,7 +353,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             <!-- Кнопка эмодзи -->
             <div class="relative flex-shrink-0 self-end">
                 <button @click="emojiOpen = !emojiOpen" type="button"
-                        class="text-gray-400 hover:text-gray-600 p-1">
+                        class="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>

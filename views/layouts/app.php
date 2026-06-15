@@ -28,6 +28,7 @@ if ($currentUser) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title ?? 'Traking') ?></title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>[x-cloak]{display:none!important}</style>
     <script>
     tailwind.config = {
         theme: {
