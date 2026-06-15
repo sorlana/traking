@@ -241,7 +241,7 @@ if ($currentUser) {
     <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=2"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=3"></script>
 
     <!-- Мигающая фавиконка (inline для гарантированной работы) -->
     <script>
