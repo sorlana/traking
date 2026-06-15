@@ -96,7 +96,7 @@ $layout = 'layouts/app';
                 <div class="space-y-4">
                     <div>
                         <span class="text-xs font-medium text-gray-500 uppercase">Статус</span>
-                        <div class="mt-1 flex items-center gap-3">
+                        <div class="mt-1">
                             <?php
                             $statusColors = [
                                 'new' => 'bg-blue-100 text-blue-700',
@@ -110,7 +110,7 @@ $layout = 'layouts/app';
                                 <?= e($status['name'] ?? 'Не указан') ?>
                             </span>
                             <?php if (can('edit_project', (int) $project['id'])): ?>
-                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/status') ?>" class="flex items-center gap-2">
+                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/status') ?>" class="flex items-center gap-2 mt-2">
                                     <?= csrf_field() ?>
                                     <select name="status_id" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                         <?php foreach ($statuses as $s): ?>
