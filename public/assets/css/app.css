@@ -5,9 +5,20 @@
  * Пользовательские стили для компонентов: tree-view, переходы, скролл, печать.
  */
 
-/* Скрытие скроллбара для мобильных меню */
+/* Скрытие скроллбара для мобильных меню и вкладок */
 .scrollbar-hidden::-webkit-scrollbar { display: none; }
 .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Скрытие скроллбара для всех горизонтальных overflow-x элементов на мобильных */
+@media (max-width: 768px) {
+    .overflow-x-auto::-webkit-scrollbar { display: none; }
+    .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+    nav .overflow-x-auto::-webkit-scrollbar { display: none; }
+    nav .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Вкладки навигации без скроллбара */
+    nav.-mb-px::-webkit-scrollbar { display: none; }
+    nav.-mb-px { overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+}
 
 /* Дерево задач — базовые стили для узлов */
 .tree-node {

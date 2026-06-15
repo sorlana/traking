@@ -45,7 +45,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                 </a>
             <?php endif; ?>
             <button @click="showFilters = true"
-                    class="lg:hidden px-4 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
+                    class="lg:hidden px-3 py-1.5 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
         </div>
