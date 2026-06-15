@@ -94,15 +94,25 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
             <!-- Статус (показываем если выбран) -->
             <?php if (!empty($fieldStatusId)): ?>
             <div class="mb-4">
-                <label for="status_id" class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-                <select id="status_id" name="status_id"
-                        class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
-                    <?php foreach ($statuses as $s): ?>
-                        <option value="<?= e($s['id']) ?>" <?= (string)$fieldStatusId === (string)$s['id'] ? 'selected' : '' ?>>
-                            <?= e($s['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+                <div x-data="{ open: false, selected: '<?= e($fieldStatusId) ?>', selectedName: '<?= e(array_column(array_filter($statuses, fn($s) => (string)$s['id'] === (string)$fieldStatusId), 'name')[0] ?? '') ?>' }" class="relative">
+                    <input type="hidden" name="status_id" :value="selected">
+                    <button type="button" @click="open = !open"
+                            class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between">
+                        <span x-text="selectedName || 'Выберите статус...'"></span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-transition x-cloak
+                         class="absolute z-20 mt-1 w-full bg-white border rounded-md shadow-lg py-1 max-h-60 overflow-y-auto" style="display:none">
+                        <?php foreach ($statuses as $s): ?>
+                            <button type="button" @click="selected = '<?= e($s['id']) ?>'; selectedName = '<?= e($s['name']) ?>'; open = false"
+                                    class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition"
+                                    :class="selected === '<?= e($s['id']) ?>' ? 'text-blue-600 font-medium bg-blue-50' : 'text-gray-700'">
+                                <?= e($s['name']) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
             <?php endif; ?>
 
@@ -147,14 +157,25 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
 
                 <?php if (empty($fieldStatusId)): ?>
                 <div>
-                    <label for="status_id_extra" class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-                    <select name="status_id" id="status_id_extra"
-                            class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Выберите статус...</option>
-                        <?php foreach ($statuses as $s): ?>
-                            <option value="<?= e($s['id']) ?>"><?= e($s['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+                    <div x-data="{ open: false, selected: '', selectedName: '' }" class="relative">
+                        <input type="hidden" name="status_id" :value="selected">
+                        <button type="button" @click="open = !open"
+                                class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between">
+                            <span x-text="selectedName || 'Выберите статус...'" class="text-gray-500" :class="selectedName ? 'text-gray-900' : ''"></span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-transition x-cloak
+                             class="absolute z-20 mt-1 w-full bg-white border rounded-md shadow-lg py-1 max-h-60 overflow-y-auto" style="display:none">
+                            <?php foreach ($statuses as $s): ?>
+                                <button type="button" @click="selected = '<?= e($s['id']) ?>'; selectedName = '<?= e($s['name']) ?>'; open = false"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition"
+                                        :class="selected === '<?= e($s['id']) ?>' ? 'text-blue-600 font-medium bg-blue-50' : 'text-gray-700'">
+                                    <?= e($s['name']) ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
                 <?php endif; ?>
             </div>
