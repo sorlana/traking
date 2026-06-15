@@ -30,6 +30,7 @@ class Task extends Model
         'assigned_to',
         'closed_at',
         'time_spent',
+        'manager_time_spent',
     ];
 
     /**

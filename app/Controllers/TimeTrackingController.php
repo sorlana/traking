@@ -63,20 +63,34 @@ class TimeTrackingController extends Controller
         $timeSpent = (float) $input['time_spent'];
 
         try {
-            // Вызываем сервис для сохранения времени
-            $result = $this->timeTrackingService->saveTime($taskId, $userId, $timeSpent);
+            // Определяем тип: исполнитель или руководитель
+            $type = $input['type'] ?? 'executor';
 
-            // Обработка результата
-            if ($result['success']) {
-                $this->json([
-                    'success' => true,
-                    'time_spent' => $result['time_spent'],
-                    'total_time' => $result['total_time'],
-                ]);
+            if ($type === 'manager') {
+                // Сохраняем время руководителя
+                $result = $this->timeTrackingService->saveManagerTime($taskId, $userId, $timeSpent);
+                if ($result['success']) {
+                    $this->json([
+                        'success' => true,
+                        'manager_time_spent' => $result['manager_time_spent'],
+                    ]);
+                } else {
+                    $httpCode = $this->resolveErrorCode($result['error']);
+                    $this->json(['error' => $result['error']], $httpCode);
+                }
             } else {
-                // Определяем HTTP-код по типу ошибки
-                $httpCode = $this->resolveErrorCode($result['error']);
-                $this->json(['error' => $result['error']], $httpCode);
+                // Сохраняем время исполнителя
+                $result = $this->timeTrackingService->saveTime($taskId, $userId, $timeSpent);
+                if ($result['success']) {
+                    $this->json([
+                        'success' => true,
+                        'time_spent' => $result['time_spent'],
+                        'total_time' => $result['total_time'],
+                    ]);
+                } else {
+                    $httpCode = $this->resolveErrorCode($result['error']);
+                    $this->json(['error' => $result['error']], $httpCode);
+                }
             }
         } catch (\Throwable $e) {
             $this->json(['error' => 'Ошибка сервера: ' . $e->getMessage()], 500);

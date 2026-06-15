@@ -249,6 +249,15 @@ class TaskController extends Controller
         $totalTime = $this->timeTrackingService->getTotalTime($taskId);
         $canEditTime = $this->timeTrackingService->canEditTime($task, Auth::id())['allowed'];
 
+        // Время руководителя
+        $managerTimeSpent = $task['manager_time_spent'] ?? null;
+        $managerTotalTime = $this->timeTrackingService->getManagerTotalTime($taskId);
+        $canManagerEditTime = false;
+        $user = Auth::user();
+        if ((int) ($user['role_id'] ?? 0) === 2) {
+            $canManagerEditTime = $this->timeTrackingService->canManagerEditTime($task, Auth::id())['allowed'];
+        }
+
         $this->view('tasks/show', [
             'title' => e($task['title']) . ' — Traking',
             'task' => $task,
@@ -264,6 +273,9 @@ class TaskController extends Controller
             'time_spent' => $timeSpent,
             'total_time' => $totalTime,
             'canEditTime' => $canEditTime,
+            'manager_time_spent' => $managerTimeSpent,
+            'manager_total_time' => $managerTotalTime,
+            'canManagerEditTime' => $canManagerEditTime,
         ]);
     }
 

@@ -41,9 +41,16 @@ class DashboardService
                 [(int) $project['id']]
             );
 
+            // Время руководителя по проекту
+            $managerTime = $db->fetch(
+                "SELECT COALESCE(SUM(manager_time_spent), 0) as total FROM tasks WHERE project_id = ?",
+                [(int) $project['id']]
+            );
+
             $timeData[$project['id']] = [
                 'estimated' => (float) ($project['estimated_hours'] ?? 0),
                 'actual' => (float) ($actualTime['total'] ?? 0),
+                'manager' => (float) ($managerTime['total'] ?? 0),
             ];
         }
 

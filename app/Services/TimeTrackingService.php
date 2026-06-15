@@ -202,4 +202,80 @@ class TimeTrackingService
 
         return ($parent['status_code'] ?? '') === 'closed';
     }
+
+    /**
+     * Проверка: может ли руководитель вносить время
+     * Условия: пользователь — менеджер проекта, задача не closed
+     *
+     * @param array $task Данные задачи
+     * @param int $userId ID пользователя
+     * @return array ['allowed' => bool, 'reason' => string|null]
+     */
+    public function canManagerEditTime(array $task, int $userId): array
+    {
+        // Проверка: задача не должна быть закрыта
+        $statusCode = $task['status_code'] ?? '';
+        if ($statusCode === 'closed') {
+            return ['allowed' => false, 'reason' => 'Задача закрыта'];
+        }
+
+        // Проверка: родительская задача не закрыта
+        if (!empty($task['id']) && $this->isParentClosed((int) $task['id'])) {
+            return ['allowed' => false, 'reason' => 'Родительская задача закрыта'];
+        }
+
+        return ['allowed' => true, 'reason' => null];
+    }
+
+    /**
+     * Сохранить время руководителя
+     *
+     * @param int $taskId ID задачи
+     * @param int $userId ID руководителя
+     * @param float $timeSpent Значение времени
+     * @return array
+     */
+    public function saveManagerTime(int $taskId, int $userId, float $timeSpent): array
+    {
+        // Валидация
+        $errors = $this->validateTimeValue($timeSpent);
+        if (!empty($errors)) {
+            return ['success' => false, 'error' => $errors[0], 'manager_time_spent' => null];
+        }
+
+        // Получаем задачу
+        $db = Database::getInstance();
+        $task = $db->fetch(
+            "SELECT t.*, ts.code as status_code FROM tasks t JOIN task_statuses ts ON t.status_id = ts.id WHERE t.id = ?",
+            [$taskId]
+        );
+
+        if (!$task) {
+            return ['success' => false, 'error' => 'Задача не найдена', 'manager_time_spent' => null];
+        }
+
+        // Проверка доступа
+        $accessCheck = $this->canManagerEditTime($task, $userId);
+        if (!$accessCheck['allowed']) {
+            return ['success' => false, 'error' => $accessCheck['reason'], 'manager_time_spent' => null];
+        }
+
+        // Сохраняем
+        $this->taskModel->update($taskId, ['manager_time_spent' => $timeSpent]);
+
+        return ['success' => true, 'error' => null, 'manager_time_spent' => $timeSpent];
+    }
+
+    /**
+     * Получить суммарное время руководителя по задаче и дочерним
+     */
+    public function getManagerTotalTime(int $taskId): float
+    {
+        $db = Database::getInstance();
+        $result = $db->fetch(
+            "SELECT COALESCE(SUM(manager_time_spent), 0) as total FROM tasks WHERE id = ? OR parent_id = ?",
+            [$taskId, $taskId]
+        );
+        return (float) ($result['total'] ?? 0);
+    }
 }
