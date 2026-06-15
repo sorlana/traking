@@ -310,7 +310,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </div>
 
     <!-- Превью прикреплённого файла -->
-    <div x-show="attachedFile" class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2">
+    <div x-show="attachedFile" x-cloak class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2" style="display:none">>
         <span class="text-xs text-gray-600">📎</span>
         <span class="text-xs text-gray-700 truncate flex-1" x-text="attachedFile ? attachedFile.name : ''"></span>
         <!-- Toggle Редактировать (только для изображений) -->
