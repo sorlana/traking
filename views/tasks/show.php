@@ -79,9 +79,9 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php endif; ?>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
-                <?php if ($canEditTime): ?>
+                <?php if ($canEditTime || $canManagerEditTime): ?>
                 <!-- Таймер учёта времени -->
-                <div class="flex items-center gap-1.5" x-data="taskTimer(<?= (int) $task['id'] ?>)">
+                <div class="flex items-center gap-1.5" x-data="taskTimer(<?= (int) $task['id'] ?>, '<?= $canManagerEditTime && !$canEditTime ? 'manager' : 'executor' ?>')">
                     <!-- Кнопка запуска таймера -->
                     <button x-show="!running && !paused" @click="start()" class="p-1 text-gray-400 hover:text-blue-600 transition" title="Запустить таймер">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -312,9 +312,9 @@ $isClosed = ($task['status_code'] === 'closed');
         <?php else: ?>
             <span class="px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>"><?= e($task['status_name'] ?? '') ?></span>
         <?php endif; ?>
-        <?php if ($canEditTime): ?>
+        <?php if ($canEditTime || $canManagerEditTime): ?>
         <!-- Таймер -->
-        <div class="flex items-center gap-1" x-data="taskTimer(<?= (int) $task['id'] ?>)">
+        <div class="flex items-center gap-1" x-data="taskTimer(<?= (int) $task['id'] ?>, '<?= $canManagerEditTime && !$canEditTime ? 'manager' : 'executor' ?>')">
             <button x-show="!running && !paused" @click="start()" class="p-0.5 text-gray-400 hover:text-blue-600" title="Таймер">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </button>

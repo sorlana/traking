@@ -320,8 +320,9 @@ function switchToEditMode(container) {
  * - localStorage: сохраняет состояние таймера при закрытии страницы
  */
 document.addEventListener('alpine:init', () => {
-    Alpine.data('taskTimer', (taskId) => ({
+    Alpine.data('taskTimer', (taskId, timeType) => ({
         taskId: taskId,
+        timeType: timeType || 'executor',
         running: false,
         paused: false,
         seconds: 0,          // Текущая сессия: накопленные секунды
@@ -400,7 +401,10 @@ document.addEventListener('alpine:init', () => {
             const timeToSave = Math.max(rounded, 0.5); // Минимум 0.5 ч
 
             // Суммируем с текущим значением из поля ввода
-            const container = document.querySelector(`.js-time-container[data-task-id="${this.taskId}"]`);
+            const selector = this.timeType === 'manager'
+                ? `.js-time-container[data-task-id="${this.taskId}"][data-time-type="manager"]`
+                : `.js-time-container[data-task-id="${this.taskId}"]:not([data-time-type="manager"])`;
+            const container = document.querySelector(selector);
             let existingValue = 0;
             if (container) {
                 const input = container.querySelector('.js-time-input');
@@ -426,7 +430,7 @@ document.addEventListener('alpine:init', () => {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
-                    body: JSON.stringify({ time_spent: finalTime }),
+                    body: JSON.stringify({ time_spent: finalTime, type: this.timeType }),
                 });
 
                 const contentType = response.headers.get('content-type') || '';

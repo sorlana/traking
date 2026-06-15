@@ -195,6 +195,15 @@ $layout = 'layouts/app';
                                           :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'"
                                           x-text="currentTimeData.actual + ' ч'"></span>
                                 </div>
+                                <template x-if="currentTimeData.manager > 0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500 w-10">Рук.</span>
+                                        <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                                            <div class="h-full rounded bg-purple-400 transition-all duration-300" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.manager / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                        </div>
+                                        <span class="text-xs font-medium text-purple-600 w-12 text-right" x-text="currentTimeData.manager + ' ч'"></span>
+                                    </div>
+                                </template>
                                 <template x-if="currentTimeData.estimated > 0">
                                     <div class="text-center pt-1 border-t">
                                         <span class="text-xs font-bold"
