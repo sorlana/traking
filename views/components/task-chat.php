@@ -329,7 +329,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </div>
 
     <!-- Блок «Ответ на...» или «Редактирование» -->
-    <div x-show="replyTo || editingMsg" x-cloak class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between" style="display:none">>
+    <div x-show="replyTo || editingMsg" class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between" style="display:none !important" :style="(replyTo || editingMsg) ? 'display:flex!important' : 'display:none!important'">>
         <div class="text-xs text-blue-700">
             <span x-show="replyTo">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
             <span x-show="editingMsg">✏️ Редактирование</span>
