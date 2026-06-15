@@ -87,17 +87,17 @@ $isClosed = ($task['status_code'] === 'closed');
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>
                     <!-- Отсчёт времени -->
-                    <span x-show="running || paused" class="text-xs font-mono text-gray-700 tabular-nums" x-text="display"></span>
+                    <span x-show="running || paused" x-cloak class="text-xs font-mono text-gray-700 tabular-nums" x-text="display"></span>
                     <!-- Пауза -->
-                    <button x-show="running" @click="pause()" class="p-1 text-yellow-500 hover:text-yellow-600 transition" title="Пауза">
+                    <button x-show="running" x-cloak @click="pause()" class="p-1 text-yellow-500 hover:text-yellow-600 transition" title="Пауза">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>
                     <!-- Продолжить -->
-                    <button x-show="paused" @click="resume()" class="p-1 text-green-500 hover:text-green-600 transition" title="Продолжить">
+                    <button x-show="paused" x-cloak @click="resume()" class="p-1 text-green-500 hover:text-green-600 transition" title="Продолжить">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </button>
                     <!-- Стоп -->
-                    <button x-show="running || paused" @click="stop()" class="p-1 text-red-500 hover:text-red-600 transition" title="Стоп — сохранить время">
+                    <button x-show="running || paused" x-cloak @click="stop()" class="p-1 text-red-500 hover:text-red-600 transition" title="Стоп — сохранить время">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
                     </button>
                 </div>
@@ -294,14 +294,14 @@ $isClosed = ($task['status_code'] === 'closed');
             <button x-show="!running && !paused" @click="start()" class="p-0.5 text-gray-400 hover:text-blue-600" title="Таймер">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </button>
-            <span x-show="running || paused" class="text-xs font-mono text-gray-700" x-text="display"></span>
-            <button x-show="running" @click="pause()" class="p-0.5 text-yellow-500" title="Пауза">
+            <span x-show="running || paused" x-cloak class="text-xs font-mono text-gray-700" x-text="display"></span>
+            <button x-show="running" x-cloak @click="pause()" class="p-0.5 text-yellow-500" title="Пауза">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </button>
-            <button x-show="paused" @click="resume()" class="p-0.5 text-green-500" title="Продолжить">
+            <button x-show="paused" x-cloak @click="resume()" class="p-0.5 text-green-500" title="Продолжить">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </button>
-            <button x-show="running || paused" @click="stop()" class="p-0.5 text-red-500" title="Стоп">
+            <button x-show="running || paused" x-cloak @click="stop()" class="p-0.5 text-red-500" title="Стоп">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
             </button>
         </div>
