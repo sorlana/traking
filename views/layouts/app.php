@@ -48,9 +48,9 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=4">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=5">
 </head>
-<body class="min-h-screen bg-gray-100 flex flex-col">
+<body class="min-h-screen bg-gray-100 flex flex-col overflow-hidden">
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">
@@ -229,7 +229,7 @@ if ($currentUser) {
     <?php endif; ?>
 
     <!-- Основное содержимое -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-20 md:pb-4 pt-14 md:pt-20">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-20 md:pb-4 pt-14 md:pt-20 overflow-y-auto">
         <?= $content ?>
     </main>
 
