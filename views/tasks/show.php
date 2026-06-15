@@ -277,7 +277,7 @@ $isClosed = ($task['status_code'] === 'closed');
 <div class="lg:hidden flex flex-col h-full" x-data="{ tab: 'chat', reassignOpen: false }">
 
     <!-- Заголовок задачи -->
-    <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center justify-between mb-2 px-4">
         <h1 class="text-lg font-bold text-gray-800 truncate"><?= e($task['title']) ?></h1>
         <a href="<?= url('/tasks') ?>" class="flex-shrink-0 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
             Все задачи
@@ -286,7 +286,7 @@ $isClosed = ($task['status_code'] === 'closed');
     </div>
 
     <!-- Строка статусов и действий -->
-    <div class="flex items-center gap-2 mb-2 flex-wrap">
+    <div class="flex items-center gap-2 mb-2 flex-wrap px-4">
         <?php if ($isRevision): ?>
             <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-medium">Доработки</span>
         <?php else: ?>
@@ -348,7 +348,7 @@ $isClosed = ($task['status_code'] === 'closed');
     </div>
 
     <!-- Вкладки -->
-    <div class="border-b border-gray-200 mb-2">
+    <div class="border-b border-gray-200 mb-2 px-4">
         <nav class="flex gap-4 -mb-px overflow-x-auto">
             <button @click="tab = 'chat'"
                     :class="tab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
