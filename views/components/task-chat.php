@@ -16,14 +16,14 @@ $currentUser = \Helpers\Auth::user();
 $roleId = (int) ($currentUser['role_id'] ?? 0);
 ?>
 
-<div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0" x-data="taskChat()">
+<div class="bg-white flex flex-col flex-1 min-h-0" x-data="taskChat()">
 
     <!-- Закреплённые сообщения -->
     <template x-if="messages.filter(m => m.is_pinned).length > 0">
         <div class="border-b bg-blue-50 px-3 py-2 flex-shrink-0" x-data="{ pinsOpen: false }">
             <!-- Одна строка: иконка + счётчик/текст + стрелка (фиксированная справа) -->
             <div class="flex items-center gap-2 cursor-pointer" @click="pinsOpen = !pinsOpen">
-                <span class="text-blue-500 text-sm flex-shrink-0">📌</span>
+                <span class="text-blue-500 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></span>
                 <span class="text-xs font-medium text-blue-700 flex-shrink-0"
                       x-text="messages.filter(m => m.is_pinned).length"></span>
                 <span class="text-xs text-blue-600 truncate flex-1"
