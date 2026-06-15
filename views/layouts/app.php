@@ -51,7 +51,7 @@ if ($currentUser) {
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=7">
 </head>
-<body class="min-h-screen bg-white flex flex-col">
+<body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">

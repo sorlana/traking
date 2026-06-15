@@ -16,7 +16,7 @@ $currentUser = \Helpers\Auth::user();
 $roleId = (int) ($currentUser['role_id'] ?? 0);
 ?>
 
-<div class="bg-white flex flex-col flex-1 min-h-0" x-data="taskChat()">
+<div class="bg-white lg:rounded-lg lg:shadow-sm lg:border flex flex-col flex-1 min-h-0" x-data="taskChat()">
 
     <!-- Закреплённые сообщения -->
     <template x-if="messages.filter(m => m.is_pinned).length > 0">
