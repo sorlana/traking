@@ -110,13 +110,27 @@ $layout = 'layouts/app';
                                 <?= e($status['name'] ?? 'Не указан') ?>
                             </span>
                             <?php if (can('edit_project', (int) $project['id'])): ?>
-                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/status') ?>" class="flex items-center gap-2 mt-2">
+                                <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/status') ?>" class="flex items-center gap-2 mt-2"
+                                      x-data="{ open: false, selected: '<?= (int)$project['status_id'] ?>', selectedName: '<?= e($status['name'] ?? '') ?>' }">
                                     <?= csrf_field() ?>
-                                    <select name="status_id" class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                        <?php foreach ($statuses as $s): ?>
-                                            <option value="<?= e($s['id']) ?>" <?= (int)$project['status_id'] === (int)$s['id'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <input type="hidden" name="status_id" :value="selected">
+                                    <div class="relative flex-1">
+                                        <button type="button" @click="open = !open"
+                                                class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white flex items-center justify-between">
+                                            <span x-text="selectedName"></span>
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                        </button>
+                                        <div x-show="open" @click.outside="open = false" x-transition x-cloak
+                                             class="absolute z-20 mt-1 w-full bg-white border rounded-md shadow-lg py-1" style="display:none">
+                                            <?php foreach ($statuses as $s): ?>
+                                                <button type="button" @click="selected = '<?= e($s['id']) ?>'; selectedName = '<?= e($s['name']) ?>'; open = false"
+                                                        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition"
+                                                        :class="selected === '<?= e($s['id']) ?>' ? 'text-blue-600 font-medium bg-blue-50' : 'text-gray-700'">
+                                                    <?= e($s['name']) ?>
+                                                </button>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
                                     <button type="submit" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition">Изменить</button>
                                 </form>
                             <?php endif; ?>
