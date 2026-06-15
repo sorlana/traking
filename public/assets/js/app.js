@@ -210,7 +210,7 @@ document.addEventListener('click', async function (e) {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
             },
-            body: JSON.stringify({ time_spent: timeSpent }),
+            body: JSON.stringify({ time_spent: timeSpent, type: container.dataset.timeType || 'executor' }),
         });
 
         // Проверяем, что ответ — JSON (сервер может вернуть HTML при ошибке)

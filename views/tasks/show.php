@@ -421,6 +421,26 @@ $isClosed = ($task['status_code'] === 'closed');
                 <div class="mt-2"><label class="text-xs text-gray-400">Суммарное время</label><p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p></div>
             <?php endif; ?>
         </div>
+        <!-- Время руководителя -->
+        <?php if ($canManagerEditTime || $manager_time_spent !== null): ?>
+        <div class="border-t pt-4">
+            <label class="text-xs text-gray-400">Время руководителя</label>
+            <?php if ($canManagerEditTime): ?>
+                <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>" data-time-type="manager">
+                    <span class="js-time-display text-sm text-gray-800" <?= $manager_time_spent !== null ? '' : 'style="display:none"' ?>><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></span>
+                    <input type="number" step="0.5" min="0.5" max="999.5" name="time_spent" value="<?= $manager_time_spent !== null ? e($manager_time_spent) : '' ?>" placeholder="0.5" class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">
+                    <span class="js-time-unit text-xs text-gray-400 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">ч</span>
+                    <button type="button" class="js-save-time p-1.5 text-purple-600 hover:text-purple-800 transition <?= $manager_time_spent !== null ? 'hidden' : '' ?>" title="Сохранить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
+                    <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-purple-600 transition <?= $manager_time_spent === null ? 'hidden' : '' ?>" title="Редактировать"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                </div>
+            <?php else: ?>
+                <p class="text-sm text-gray-800 mt-1"><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></p>
+            <?php endif; ?>
+            <?php if (count($children) > 0): ?>
+                <div class="mt-2"><label class="text-xs text-gray-400">Суммарное (рук.)</label><p class="text-sm text-gray-800 mt-0.5"><?= $manager_total_time > 0 ? e($manager_total_time) . ' ч' : '—' ?></p></div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- История -->
