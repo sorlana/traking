@@ -316,15 +316,15 @@ $isClosed = ($task['status_code'] === 'closed');
 
     <!-- Вкладки -->
     <div class="border-b border-gray-200 mb-2">
-        <nav class="flex gap-4 -mb-px">
+        <nav class="flex gap-4 -mb-px overflow-x-auto">
+            <button @click="tab = 'chat'"
+                    :class="tab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Чат</button>
             <?php if (count($children) > 0): ?>
             <button @click="tab = 'subtasks'"
                     :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
                     class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Доработки <?= count($children) ?></button>
             <?php endif; ?>
-            <button @click="tab = 'chat'"
-                    :class="tab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Чат</button>
             <button @click="tab = 'info'"
                     :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
                     class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Информация</button>
@@ -337,7 +337,7 @@ $isClosed = ($task['status_code'] === 'closed');
     <!-- Содержимое вкладок -->
 
     <!-- Доработки -->
-    <div x-show="tab === 'subtasks'" class="flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
+    <div x-show="tab === 'subtasks'" x-cloak class="flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
         <?php if ($canEdit): ?>
         <div class="mb-3">
             <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.mobileSubtaskInput.focus())" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
@@ -362,7 +362,7 @@ $isClosed = ($task['status_code'] === 'closed');
     <?php include BASE_PATH . '/views/components/image-editor.php'; ?>
 
     <!-- Информация -->
-    <div x-show="tab === 'info'" class="flex-1 min-h-0 overflow-y-auto space-y-4 py-2">
+    <div x-show="tab === 'info'" x-cloak class="flex-1 min-h-0 overflow-y-auto space-y-4 py-2">
         <?php if (!empty($task['description'])): ?><div><label class="text-xs text-gray-400">Описание</label><p class="text-sm text-gray-700 mt-1 whitespace-pre-wrap"><?= e($task['description']) ?></p></div><?php endif; ?>
         <?php if (!empty($task['assigned_name'])): ?><div><label class="text-xs text-gray-400">Исполнитель</label><p class="text-sm text-gray-800 mt-1"><?= e($task['assigned_name']) ?></p></div><?php endif; ?>
         <?php if (!empty($task['creator_name'])): ?><div><label class="text-xs text-gray-400">Автор</label><p class="text-sm text-gray-800 mt-1"><?= e($task['creator_name']) ?></p></div><?php endif; ?>
@@ -408,7 +408,7 @@ $isClosed = ($task['status_code'] === 'closed');
     </div>
 
     <!-- История -->
-    <div x-show="tab === 'history'" class="flex-1 min-h-0 overflow-y-auto py-2">
+    <div x-show="tab === 'history'" x-cloak class="flex-1 min-h-0 overflow-y-auto py-2">
         <?php include BASE_PATH . '/views/components/activity-log.php'; ?>
     </div>
 </div>
