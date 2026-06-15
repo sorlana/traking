@@ -218,8 +218,7 @@ nav[class*="fixed"] {
 /* Мобильные: кнопки с белым фоном и border → светло-серый фон */
 @media (max-width: 768px) {
     button.bg-white[class*="border"],
-    a.bg-white[class*="border"],
-    [class*="bg-white"][class*="border"][class*="rounded"] {
+    a.bg-white[class*="border"] {
         background-color: #f3f4f6 !important; /* bg-gray-100 */
     }
 }
