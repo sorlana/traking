@@ -169,11 +169,11 @@ button.px-5,
 a.px-3,
 a.px-4,
 a.px-5 {
-    min-height: 2.375rem; /* 38px — высота inputs от Tailwind Forms */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
+    min-height: 2.375rem !important; /* 38px — высота inputs от Tailwind Forms */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
 }
 
 /* Бейджи статуса — компактный шрифт чтобы текст влезал */
