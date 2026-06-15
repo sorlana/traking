@@ -156,3 +156,18 @@
         font-size: 16px !important; /* предотвращает зум на iOS */
     }
 }
+
+/* ============================================================ */
+/* Кнопки: одинаковая высота с полями ввода */
+/* ============================================================ */
+button[type="submit"],
+form button,
+a.px-3,
+a.px-4,
+a.px-5,
+.btn {
+    min-height: 2.5rem; /* 40px — стандартная высота Tailwind Forms inputs */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
