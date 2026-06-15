@@ -162,12 +162,28 @@
 /* ============================================================ */
 button[type="submit"],
 form button,
+.btn,
+button.px-3,
+button.px-4,
+button.px-5,
 a.px-3,
 a.px-4,
-a.px-5,
-.btn {
-    min-height: 2.5rem; /* 40px — стандартная высота Tailwind Forms inputs */
+a.px-5 {
+    min-height: 2.375rem; /* 38px — высота inputs от Tailwind Forms */
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+}
+
+/* Бейджи статуса — компактный шрифт чтобы текст влезал */
+.rounded-full {
+    white-space: nowrap;
+}
+@media (max-width: 768px) {
+    span.rounded-full {
+        font-size: 0.7rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
 }
