@@ -270,7 +270,7 @@ $isClosed = ($task['status_code'] === 'closed');
     }
     @media (max-width: 1023px) {
         body { height: 100vh; overflow: hidden; }
-        main { overflow: hidden; height: calc(100vh - 2.5rem - 1rem); padding-bottom: 3.5rem !important; }
+        main { overflow: hidden; height: calc(100vh - 2.5rem - 1rem); padding-bottom: 3.5rem !important; padding-left: 0 !important; padding-right: 0 !important; }
     }
 </style>
 
