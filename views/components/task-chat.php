@@ -339,7 +339,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
     <!-- Поле ввода -->
     <div class="border-t p-3">
-        <div class="flex items-center gap-2">
+        <div class="flex items-end gap-2">
             <!-- Кнопка прикрепить файл -->
             <label class="cursor-pointer text-gray-400 hover:text-gray-600 p-1 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,8 +377,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       placeholder="Написать..."
                       rows="1"
                       maxlength="5000"
-                      class="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                      style="max-height: 80px; overflow-y: auto;"></textarea>
+                      class="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none overflow-hidden"
+                      style="max-height: 150px;"></textarea>
 
             <!-- Кнопка отправить -->
             <button @click="sendMessage()"
@@ -924,7 +924,7 @@ function taskChat() {
         autoResize(event) {
             const el = event.target;
             el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+            el.style.height = Math.min(el.scrollHeight, 150) + 'px';
         },
 
         /**
