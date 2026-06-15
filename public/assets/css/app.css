@@ -145,7 +145,7 @@
         font-size: 1rem !important;
     }
 
-    /* Поля ввода */
+    /* Поля ввода — единый стиль */
     input[type="text"],
     input[type="number"],
     input[type="date"],
@@ -154,6 +154,16 @@
     textarea,
     select {
         font-size: 16px !important; /* предотвращает зум на iOS */
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 0.375rem !important;
+        border-color: #d1d5db !important;
+    }
+
+    /* Кнопки в формах — единый размер */
+    form button[type="submit"],
+    form .btn {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 1rem !important;
     }
 }
 
