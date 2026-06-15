@@ -421,23 +421,6 @@ $isClosed = ($task['status_code'] === 'closed');
                 <div class="mt-2"><label class="text-xs text-gray-400">Суммарное время</label><p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p></div>
             <?php endif; ?>
         </div>
-        <!-- Действия -->
-        <div class="border-t pt-4 flex flex-wrap gap-2">
-            <?php if ($canEdit): ?><a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200">Редактировать</a><?php endif; ?>
-            <?php if ($canEdit && !$isClosed): ?>
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200">Переназначить</button>
-                    <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50" style="display: none;">
-                        <?php foreach ($projectUsers as $pu): ?>
-                            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>"><?= csrf_field() ?><input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>"><button type="submit" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 <?= (int)($task['assigned_to'] ?? 0) === (int)$pu['id'] ? 'text-blue-600 font-medium' : 'text-gray-700' ?>"><?= e($pu['name']) ?></button></form>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
-                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть задачу?')" class="inline"><?= csrf_field() ?><button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200" <?= !$canClose['can'] ? 'disabled' : '' ?>>Закрыть</button></form>
-            <?php endif; ?>
-        </div>
     </div>
 
     <!-- История -->

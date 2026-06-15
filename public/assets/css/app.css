@@ -214,3 +214,12 @@ nav[class*="fixed"] {
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* Мобильные: кнопки с белым фоном и border → светло-серый фон */
+@media (max-width: 768px) {
+    button.bg-white[class*="border"],
+    a.bg-white[class*="border"],
+    [class*="bg-white"][class*="border"][class*="rounded"] {
+        background-color: #f3f4f6 !important; /* bg-gray-100 */
+    }
+}
