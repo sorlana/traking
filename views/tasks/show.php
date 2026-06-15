@@ -263,7 +263,11 @@ $isClosed = ($task['status_code'] === 'closed');
 <!-- МОБИЛЬНАЯ/ПЛАНШЕТНАЯ ВЕРСИЯ (<lg) -->
 <!-- ============================================================ -->
 <style>
-    /* Страница задачи: фиксированная высота, без прокрутки body */
+    /* Страница задачи: фиксированная высота для чата */
+    @media (min-width: 1024px) {
+        body { height: 100vh; overflow: hidden; }
+        main { overflow: hidden; height: calc(100vh - 5rem); }
+    }
     @media (max-width: 1023px) {
         body { height: 100vh; overflow: hidden; }
         main { overflow: hidden; height: calc(100vh - 2.5rem - 1rem); padding-bottom: 3.5rem !important; }
