@@ -40,6 +40,13 @@ if ($currentUser) {
         }
     }
     </script>
+    <script>
+    try {
+        if (sessionStorage.getItem('flowtaskLoaderSeen') === '1') {
+            document.documentElement.classList.add('app-loader-seen');
+        }
+    } catch (e) {}
+    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="manifest" href="<?= url('/manifest.json') ?>?v=3">
     <meta name="theme-color" content="#1e40af">
@@ -49,7 +56,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=17">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=18">
 </head>
 <body class="app-loading-active min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
@@ -257,7 +264,7 @@ if ($currentUser) {
     <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=6"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=7"></script>
 
     <!-- Мигающая фавиконка (inline для гарантированной работы) -->
     <script>

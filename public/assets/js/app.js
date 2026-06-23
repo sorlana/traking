@@ -18,12 +18,27 @@ function initAppLoadingScreen() {
     const loader = document.getElementById('app-loading-screen');
     if (!loader || !document.body.classList.contains('app-loading-active')) return;
 
+    let loaderSeen = false;
+    try {
+        loaderSeen = sessionStorage.getItem('flowtaskLoaderSeen') === '1';
+    } catch (e) {}
+
+    if (loaderSeen) {
+        loader.remove();
+        document.body.classList.remove('app-loading-active', 'app-loading-done');
+        return;
+    }
+
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
     if (!isMobile) {
         loader.remove();
         document.body.classList.remove('app-loading-active');
         return;
     }
+
+    try {
+        sessionStorage.setItem('flowtaskLoaderSeen', '1');
+    } catch (e) {}
 
     const startedAt = performance.now();
     const minVisibleMs = 1450;

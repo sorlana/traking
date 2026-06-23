@@ -53,6 +53,10 @@
     display: none;
 }
 
+.app-loader-seen .app-loading-screen {
+    display: none !important;
+}
+
 @media (max-width: 768px) {
     body.app-loading-active .app-loading-screen {
         --loader-navy: #0E1B34;
