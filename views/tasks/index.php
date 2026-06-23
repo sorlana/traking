@@ -192,94 +192,103 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                 <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
                 <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
-            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-5">
-                <fieldset>
-                    <legend class="block text-xs font-medium text-gray-500 mb-2">Статус</legend>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="status" value="" class="sr-only peer" <?= empty($filters['status']) ? 'checked' : '' ?>>
-                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все</span>
-                        </label>
-                        <?php foreach ($statuses as $s): ?>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="status" value="<?= e($s['code']) ?>" class="sr-only peer" <?= ($filters['status'] ?? '') === $s['code'] ? 'checked' : '' ?>>
-                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($s['name']) ?></span>
-                            </label>
+            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-4">
+                <?php
+                $statusOptions = ['' => 'Все'];
+                foreach ($statuses as $s) {
+                    $statusOptions[$s['code']] = $s['name'];
+                }
+                $priorityOptions = [
+                    '' => 'Все',
+                    'low' => 'Низкий',
+                    'medium' => 'Средний',
+                    'high' => 'Высокий',
+                    'urgent' => 'Срочный',
+                ];
+                $deadlineOptions = [
+                    '' => 'Все',
+                    'today' => 'Сегодня',
+                    'week' => 'На этой неделе',
+                    'overdue' => 'Просроченные',
+                ];
+                $executorOptions = ['' => 'Все'];
+                foreach ($executors as $exec) {
+                    $executorOptions[(string) $exec['id']] = $exec['name'];
+                }
+                $projectOptions = ['' => 'Все проекты'];
+                foreach ($projects ?? [] as $p) {
+                    $projectOptions[(string) $p['id']] = $p['title'];
+                }
+                $jsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+                ?>
+                <div class="relative" x-data="{ open: false, label: <?= json_encode($statusOptions[$filters['status'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
+                    <input x-ref="input" type="hidden" name="status" value="<?= e($filters['status'] ?? '') ?>">
+                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
+                        <span class="truncate" x-text="label"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                        <?php foreach ($statusOptions as $value => $label): ?>
+                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['status'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
                         <?php endforeach; ?>
                     </div>
-                </fieldset>
-                <fieldset>
-                    <legend class="block text-xs font-medium text-gray-500 mb-2">Приоритет</legend>
-                    <div class="grid grid-cols-2 gap-2">
-                        <?php
-                        $priorityOptions = [
-                            '' => 'Все',
-                            'low' => 'Низкий',
-                            'medium' => 'Средний',
-                            'high' => 'Высокий',
-                            'urgent' => 'Срочный',
-                        ];
-                        ?>
+                </div>
+                <div class="relative" x-data="{ open: false, label: <?= json_encode($priorityOptions[$filters['priority'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
+                    <input x-ref="input" type="hidden" name="priority" value="<?= e($filters['priority'] ?? '') ?>">
+                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
+                        <span class="truncate" x-text="label"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                         <?php foreach ($priorityOptions as $value => $label): ?>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="priority" value="<?= e($value) ?>" class="sr-only peer" <?= ($filters['priority'] ?? '') === $value ? 'checked' : '' ?>>
-                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($label) ?></span>
-                            </label>
+                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['priority'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
                         <?php endforeach; ?>
                     </div>
-                </fieldset>
+                </div>
                 <?php if ($roleId <= 2): ?>
-                <fieldset>
-                    <legend class="block text-xs font-medium text-gray-500 mb-2">Исполнитель</legend>
-                    <div class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="assigned_to" value="" class="sr-only peer" <?= empty($filters['assigned_to']) ? 'checked' : '' ?>>
-                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все</span>
-                        </label>
-                        <?php foreach ($executors as $exec): ?>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="assigned_to" value="<?= (int) $exec['id'] ?>" class="sr-only peer" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'checked' : '' ?>>
-                                <span class="block truncate rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($exec['name']) ?></span>
-                            </label>
+                <div class="relative" x-data="{ open: false, label: <?= json_encode($executorOptions[(string) ($filters['assigned_to'] ?? '')] ?? 'Все', $jsonFlags) ?> }">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
+                    <input x-ref="input" type="hidden" name="assigned_to" value="<?= e($filters['assigned_to'] ?? '') ?>">
+                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
+                        <span class="truncate" x-text="label"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                        <?php foreach ($executorOptions as $value => $label): ?>
+                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full truncate px-3 py-2 text-left text-sm hover:bg-blue-50 <?= (string) ($filters['assigned_to'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
                         <?php endforeach; ?>
                     </div>
-                </fieldset>
+                </div>
                 <?php endif; ?>
-                <fieldset>
-                    <legend class="block text-xs font-medium text-gray-500 mb-2">Срок</legend>
-                    <div class="grid grid-cols-2 gap-2">
-                        <?php
-                        $deadlineOptions = [
-                            '' => 'Все',
-                            'today' => 'Сегодня',
-                            'week' => 'Эта неделя',
-                            'overdue' => 'Просроченные',
-                        ];
-                        ?>
+                <div class="relative" x-data="{ open: false, label: <?= json_encode($deadlineOptions[$filters['deadline'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
+                    <input x-ref="input" type="hidden" name="deadline" value="<?= e($filters['deadline'] ?? '') ?>">
+                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
+                        <span class="truncate" x-text="label"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                         <?php foreach ($deadlineOptions as $value => $label): ?>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="deadline" value="<?= e($value) ?>" class="sr-only peer" <?= ($filters['deadline'] ?? '') === $value ? 'checked' : '' ?>>
-                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($label) ?></span>
-                            </label>
+                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['deadline'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
                         <?php endforeach; ?>
                     </div>
-                </fieldset>
+                </div>
                 <?php if (!($project ?? null) && !empty($projects)): ?>
-                <fieldset>
-                    <legend class="block text-xs font-medium text-gray-500 mb-2">Проект</legend>
-                    <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="project_id" value="" class="sr-only peer" <?= empty($filters['project_id']) ? 'checked' : '' ?>>
-                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все проекты</span>
-                        </label>
-                        <?php foreach ($projects as $p): ?>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="project_id" value="<?= (int) $p['id'] ?>" class="sr-only peer" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'checked' : '' ?>>
-                                <span class="block truncate rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($p['title']) ?></span>
-                            </label>
+                <div class="relative" x-data="{ open: false, label: <?= json_encode($projectOptions[(string) ($filters['project_id'] ?? '')] ?? 'Все проекты', $jsonFlags) ?> }">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
+                    <input x-ref="input" type="hidden" name="project_id" value="<?= e($filters['project_id'] ?? '') ?>">
+                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
+                        <span class="truncate" x-text="label"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                        <?php foreach ($projectOptions as $value => $label): ?>
+                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full truncate px-3 py-2 text-left text-sm hover:bg-blue-50 <?= (string) ($filters['project_id'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
                         <?php endforeach; ?>
                     </div>
-                </fieldset>
+                </div>
                 <?php endif; ?>
                 <?php if ($project ?? null): ?>
                     <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
