@@ -12,7 +12,7 @@ $title = 'Пользователи — Traking';
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Пользователи</h1>
         <a href="<?= url('/admin/users/create') ?>"
-           class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+           class="ui-btn ui-btn-primary">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -27,7 +27,7 @@ $title = 'Пользователи — Traking';
             <div>
                 <label for="filter-role" class="block text-xs font-medium text-gray-500 mb-1">Роль</label>
                 <select id="filter-role" name="role"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="ui-control">
                     <option value="">Все роли</option>
                     <?php foreach ($roles as $role): ?>
                         <option value="<?= e($role['code']) ?>"
@@ -42,7 +42,7 @@ $title = 'Пользователи — Traking';
             <div>
                 <label for="filter-status" class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
                 <select id="filter-status" name="status"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="ui-control">
                     <option value="">Все</option>
                     <option value="active" <?= ($filters['status'] ?? '') === 'active' ? 'selected' : '' ?>>Активные</option>
                     <option value="inactive" <?= ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Неактивные</option>
@@ -55,17 +55,17 @@ $title = 'Пользователи — Traking';
                 <input type="text" id="filter-search" name="search"
                        value="<?= e($filters['search'] ?? '') ?>"
                        placeholder="Имя, email или логин"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="ui-control">
             </div>
 
             <!-- Кнопки -->
             <div class="flex items-end gap-2">
                 <button type="submit"
-                        class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition">
+                        class="ui-btn ui-btn-dark">
                     Фильтровать
                 </button>
                 <a href="<?= url('/admin/users') ?>"
-                   class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
+                   class="ui-btn ui-btn-secondary">
                     Сбросить
                 </a>
             </div>

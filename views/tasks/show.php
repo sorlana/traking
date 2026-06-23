@@ -105,24 +105,24 @@ $isClosed = ($task['status_code'] === 'closed');
                 <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>"><?= e($task['status_name'] ?? '') ?></span>
                 <div class="flex items-center gap-2" x-data="{ reassignOpen: false }">
                     <?php if ($canEdit): ?>
-                        <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Редактировать</a>
+                        <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="ui-btn ui-btn-secondary">Редактировать</a>
                     <?php endif; ?>
                     <?php if (!$isClosed): ?>
                         <?php if ($isExecutor && $canChangeStatus && !$isDone): ?>
                             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                 <?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $doneStatusId ?>">
-                                <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Готово</button>
+                                <button type="submit" class="ui-btn ui-btn-secondary">Готово</button>
                             </form>
                         <?php elseif (!$isExecutor && $canEdit && !$isRevision && $task['status_code'] !== 'closed'): ?>
                             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline">
                                 <?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $revisionStatusId ?>">
-                                <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Доработать</button>
+                                <button type="submit" class="ui-btn ui-btn-secondary">Доработать</button>
                             </form>
                         <?php endif; ?>
                     <?php endif; ?>
                     <?php if ($canEdit && !$isClosed): ?>
                         <div class="relative">
-                            <button @click="reassignOpen = !reassignOpen" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Переназначить</button>
+                            <button @click="reassignOpen = !reassignOpen" class="ui-btn ui-btn-secondary">Переназначить</button>
                             <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50" style="display: none;">
                                 <?php foreach ($projectUsers as $pu): ?>
                                     <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
@@ -139,13 +139,13 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть задачу?')" class="inline">
                             <?= csrf_field() ?>
-                            <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition" <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>Закрыть задачу</button>
+                            <button type="submit" class="ui-btn ui-btn-secondary" <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>Закрыть задачу</button>
                         </form>
                     <?php endif; ?>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" onsubmit="return confirm('Удалить задачу и все доработки?')" class="inline">
                             <?= csrf_field() ?>
-                            <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Удалить</button>
+                            <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -179,7 +179,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
                 <?php if ($canEdit): ?>
                 <div class="mb-3">
-                    <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
+                    <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
                     <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
                         <?= csrf_field() ?>
                         <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
@@ -187,7 +187,7 @@ $isClosed = ($task['status_code'] === 'closed');
                         <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
                         <input type="hidden" name="priority" value="medium">
                         <input type="text" name="title" x-ref="subtaskInput" required placeholder="Название доработки..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                        <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">Создать</button>
+                        <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
                         <button type="button" @click="showAddForm = false" class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm">✕</button>
                     </form>
                 </div>
@@ -332,11 +332,11 @@ $isClosed = ($task['status_code'] === 'closed');
         <?php endif; ?>
         <div class="flex-1"></div>
         <?php if (!$isClosed && $isExecutor && $canChangeStatus && !$isDone): ?>
-            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $doneStatusId ?>"><button type="submit" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">Готово</button></form>
+            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>" class="inline"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $doneStatusId ?>"><button type="submit" class="ui-btn ui-btn-light">Готово</button></form>
         <?php elseif ($canEdit): ?>
             <!-- Кнопка Действия для руководителя -->
             <div class="relative" x-data="{ actionsOpen: false }">
-                <button @click="actionsOpen = !actionsOpen" class="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">Действия</button>
+                <button @click="actionsOpen = !actionsOpen" class="ui-btn ui-btn-light">Действия</button>
                 <div x-show="actionsOpen" @click.outside="actionsOpen = false" x-cloak x-transition
                      class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
                     <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
@@ -393,11 +393,11 @@ $isClosed = ($task['status_code'] === 'closed');
     <div x-show="tab === 'subtasks'" x-cloak class="flex-1 min-h-0 overflow-y-auto px-4" x-data="{ showAddForm: false }">
         <?php if ($canEdit): ?>
         <div class="mb-3">
-            <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.mobileSubtaskInput.focus())" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">+ Добавить</button>
+            <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.mobileSubtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
             <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
                 <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>"><input type="hidden" name="priority" value="medium">
                 <input type="text" name="title" x-ref="mobileSubtaskInput" required placeholder="Название..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700">Создать</button>
+                <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
                 <button type="button" @click="showAddForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
             </form>
         </div>

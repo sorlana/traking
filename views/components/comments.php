@@ -52,15 +52,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <!-- Режим редактирования -->
                 <div x-show="comment.editing" class="mt-1">
                     <textarea x-model="comment.editText"
-                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              class="ui-control"
                               rows="3"></textarea>
                     <div class="flex gap-2 mt-2">
                         <button @click="saveEdit(comment)"
-                                class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                class="ui-btn ui-btn-primary">
                             Сохранить
                         </button>
                         <button @click="cancelEdit(comment)"
-                                class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300">
+                                class="ui-btn ui-btn-secondary">
                             Отмена
                         </button>
                     </div>
@@ -77,7 +77,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <form @submit.prevent="addComment()">
             <textarea x-model="newComment"
                       placeholder="Написать комментарий..."
-                      class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 resize-y"
+                      class="ui-control resize-y"
                       rows="3"
                       maxlength="5000"></textarea>
             <div class="flex items-center justify-between mt-2">
@@ -85,7 +85,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       class="text-xs text-red-500"></span>
                 <button type="submit"
                         :disabled="sending || newComment.trim() === ''"
-                        class="px-4 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="ui-btn ui-btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                     <span x-show="!sending">Отправить</span>
                     <span x-show="sending">Отправка...</span>
                 </button>

@@ -51,13 +51,13 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
                     <label class="text-xs text-gray-500 block mb-1">С</label>
                     <input type="time" name="schedule_start"
                            value="<?= e(substr($settings['schedule_start'] ?? '09:00:00', 0, 5)) ?>"
-                           class="w-full border-gray-300 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="ui-control">
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">До</label>
                     <input type="time" name="schedule_end"
                            value="<?= e(substr($settings['schedule_end'] ?? '18:00:00', 0, 5)) ?>"
-                           class="w-full border-gray-300 rounded-md text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="ui-control">
                 </div>
             </div>
 
@@ -78,7 +78,7 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
 
         <div class="pt-4 border-t">
             <button type="submit"
-                    class="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    class="ui-btn ui-btn-primary">
                 Сохранить
             </button>
         </div>

@@ -41,7 +41,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                    value="<?= e($old['name'] ?? $user['name'] ?? '') ?>"
                    required
                    placeholder="ФИО пользователя"
-                   class="w-full px-4 py-2.5 border <?= !empty($errors['name']) ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-300' ?> rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                   class="ui-control <?= !empty($errors['name']) ? 'border-red-300 ring-1 ring-red-300' : '' ?>">
             <?php if (!empty($errors['name'])): ?>
                 <p class="mt-1 text-xs text-red-600"><?= e($errors['name'][0]) ?></p>
             <?php endif; ?>
@@ -56,7 +56,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                    value="<?= e($old['email'] ?? $user['email'] ?? '') ?>"
                    required
                    placeholder="user@example.com"
-                   class="w-full px-4 py-2.5 border <?= !empty($errors['email']) ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-300' ?> rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                   class="ui-control <?= !empty($errors['email']) ? 'border-red-300 ring-1 ring-red-300' : '' ?>">
             <?php if (!empty($errors['email'])): ?>
                 <p class="mt-1 text-xs text-red-600"><?= e($errors['email'][0]) ?></p>
             <?php endif; ?>
@@ -71,7 +71,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                    value="<?= e($old['login'] ?? $user['login'] ?? '') ?>"
                    required
                    placeholder="username"
-                   class="w-full px-4 py-2.5 border <?= !empty($errors['login']) ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-300' ?> rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                   class="ui-control <?= !empty($errors['login']) ? 'border-red-300 ring-1 ring-red-300' : '' ?>">
             <?php if (!empty($errors['login'])): ?>
                 <p class="mt-1 text-xs text-red-600"><?= e($errors['login'][0]) ?></p>
             <?php endif; ?>
@@ -83,7 +83,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                 Роль <span class="text-red-500">*</span>
             </label>
             <select id="role_id" name="role_id" required
-                    class="w-full px-4 py-2.5 border <?= !empty($errors['role_id']) ? 'border-red-300 ring-1 ring-red-300' : 'border-gray-300' ?> rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    class="ui-control <?= !empty($errors['role_id']) ? 'border-red-300 ring-1 ring-red-300' : '' ?>">
                 <option value="">— Выберите роль —</option>
                 <?php foreach ($roles as $role): ?>
                     <option value="<?= (int)$role['id'] ?>"
@@ -103,7 +103,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                 Статус
             </label>
             <select id="status" name="status"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    class="ui-control">
                 <option value="active" <?= ($old['status'] ?? $user['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>
                     Активен
                 </option>
@@ -129,11 +129,11 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
         <div class="flex items-center justify-between pt-4 border-t">
             <div class="flex items-center gap-3">
                 <button type="submit"
-                        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        class="ui-btn ui-btn-primary">
                     Сохранить
                 </button>
                 <a href="<?= url('/admin/users') ?>"
-                   class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
+                   class="ui-btn ui-btn-secondary">
                     Отмена
                 </a>
             </div>
@@ -143,7 +143,7 @@ $title = ($isEdit ? 'Редактирование пользователя' : '�
                 <form method="POST" action="<?= url('/admin/users/' . (int)$user['id'] . '/reset-password') ?>" class="inline">
                     <?= csrf_field() ?>
                     <button type="submit"
-                            class="px-4 py-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-sm font-medium rounded-lg border border-yellow-200 transition"
+                            class="ui-btn bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
                             onclick="return confirm('Сбросить пароль? Новый пароль будет показан в уведомлении.')">
                         <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

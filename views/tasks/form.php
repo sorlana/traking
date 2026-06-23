@@ -67,7 +67,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                         Проект <span class="text-red-500">*</span>
                     </label>
                     <select name="project_id" id="project_id" required
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            class="ui-control">
                         <option value="">Выберите проект</option>
                         <?php foreach ($projects as $p): ?>
                             <option value="<?= (int) $p['id'] ?>" <?= (int) $fieldProjectId === (int) $p['id'] ? 'selected' : '' ?>>
@@ -92,7 +92,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 </label>
                 <input type="text" name="title" id="title" value="<?= e($fieldTitle) ?>" required
                        maxlength="255" placeholder="Название задачи"
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                       class="ui-control">
             </div>
 
             <!-- Описание (показываем если заполнено) -->
@@ -100,7 +100,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <div class="mb-4">
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
                 <textarea name="description" id="description" rows="3"
-                          class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><?= e($fieldDescription) ?></textarea>
+                          class="ui-control"><?= e($fieldDescription) ?></textarea>
             </div>
             <?php endif; ?>
 
@@ -109,7 +109,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <div class="mb-4">
                 <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
                 <select name="assigned_to" id="assigned_to"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="ui-control">
                     <option value="">Не назначен</option>
                     <?php foreach ($projectUsers as $pu): ?>
                         <option value="<?= (int) $pu['id'] ?>" <?= (int) $fieldAssignedTo === (int) $pu['id'] ? 'selected' : '' ?>>
@@ -125,7 +125,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <div class="mb-4">
                 <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Срок выполнения</label>
                 <input type="date" name="deadline" id="deadline" value="<?= e($fieldDeadline) ?>"
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                       class="ui-control">
             </div>
             <?php endif; ?>
 
@@ -134,7 +134,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <div class="mb-4">
                 <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
                 <select name="priority" id="priority"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="ui-control">
                     <option value="low" <?= $fieldPriority === 'low' ? 'selected' : '' ?>>Низкий</option>
                     <option value="medium" <?= $fieldPriority === 'medium' ? 'selected' : '' ?>>Средний</option>
                     <option value="high" <?= $fieldPriority === 'high' ? 'selected' : '' ?>>Высокий</option>
@@ -162,7 +162,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 <div>
                     <label for="description_extra" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
                     <textarea name="description" id="description_extra" rows="3" placeholder="Описание задачи"
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><?= e($fieldDescription) ?></textarea>
+                              class="ui-control"><?= e($fieldDescription) ?></textarea>
                 </div>
                 <?php endif; ?>
 
@@ -171,7 +171,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 <div>
                     <label for="assigned_to_extra" class="block text-sm font-medium text-gray-700 mb-1">Исполнитель</label>
                     <select name="assigned_to" id="assigned_to_extra"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            class="ui-control">
                         <option value="">Не назначен</option>
                         <?php foreach ($projectUsers as $pu): ?>
                             <option value="<?= (int) $pu['id'] ?>" <?= (int) $fieldAssignedTo === (int) $pu['id'] ? 'selected' : '' ?>>
@@ -187,7 +187,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 <div>
                     <label for="deadline_extra" class="block text-sm font-medium text-gray-700 mb-1">Срок выполнения</label>
                     <input type="date" name="deadline" id="deadline_extra"
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="ui-control">
                 </div>
                 <?php endif; ?>
 
@@ -196,7 +196,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 <div>
                     <label for="priority_extra" class="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
                     <select name="priority" id="priority_extra"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            class="ui-control">
                         <option value="low">Низкий</option>
                         <option value="medium" selected>Средний</option>
                         <option value="high">Высокий</option>
@@ -210,7 +210,7 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
                 <div>
                     <label for="status_id" class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
                     <select name="status_id" id="status_id"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            class="ui-control">
                         <option value="">Автоматически (В работе)</option>
                         <?php foreach ($statuses as $s): ?>
                             <option value="<?= (int) $s['id'] ?>" <?= (int) $fieldStatusId === (int) $s['id'] ? 'selected' : '' ?>>
@@ -225,11 +225,11 @@ $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_i
             <!-- Кнопки -->
             <div class="flex items-center gap-3 pt-4 border-t">
                 <button type="submit"
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                        class="ui-btn ui-btn-primary">
                     <?= $isEdit ? 'Сохранить изменения' : 'Создать задачу' ?>
                 </button>
                 <a href="<?= $isEdit ? url('/tasks/' . (int) $task['id']) : url('/tasks') ?>"
-                   class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                   class="ui-btn ui-btn-secondary">
                     Отмена
                 </a>
             </div>

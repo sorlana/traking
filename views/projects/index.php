@@ -58,12 +58,12 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
             <?php if (can('create_project')): ?>
                 <button type="button"
                         @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createProjectTitle?.focus())"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                        class="ui-btn ui-btn-primary">
                     Создать
                 </button>
             <?php endif; ?>
             <button type="button" @click="showFilters = true; showCreate = false"
-                    class="lg:hidden px-3 py-1.5 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
+                    class="lg:hidden ui-btn ui-btn-light <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
         </div>
@@ -74,7 +74,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
         <div class="grid grid-cols-5 gap-4">
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                <select name="status" class="w-full border-gray-300 rounded-md text-sm">
+                <select name="status" class="ui-control">
                     <option value="">Все статусы</option>
                     <?php foreach ($statuses as $s): ?>
                         <option value="<?= e($s['code']) ?>" <?= $filters['status'] === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
@@ -83,7 +83,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Руководитель</label>
-                <select name="manager" class="w-full border-gray-300 rounded-md text-sm">
+                <select name="manager" class="ui-control">
                     <option value="">Все</option>
                     <?php foreach ($managers as $m): ?>
                         <option value="<?= e($m['id']) ?>" <?= $filters['manager'] == $m['id'] ? 'selected' : '' ?>><?= e($m['name']) ?></option>
@@ -92,7 +92,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                <select name="executor" class="w-full border-gray-300 rounded-md text-sm">
+                <select name="executor" class="ui-control">
                     <option value="">Все</option>
                     <?php foreach ($executors as $ex): ?>
                         <option value="<?= e($ex['id']) ?>" <?= $filters['executor'] == $ex['id'] ? 'selected' : '' ?>><?= e($ex['name']) ?></option>
@@ -101,15 +101,15 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                <select name="deadline" class="w-full border-gray-300 rounded-md text-sm">
+                <select name="deadline" class="ui-control">
                     <option value="">Все</option>
                     <option value="overdue" <?= $filters['deadline'] === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
                     <option value="week" <?= $filters['deadline'] === 'week' ? 'selected' : '' ?>>На этой неделе</option>
                 </select>
             </div>
             <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Применить</button>
-                <a href="<?= url('/projects') ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+                <button type="submit" class="ui-btn ui-btn-dark">Применить</button>
+                <a href="<?= url('/projects') ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
             </div>
         </div>
     </form>
@@ -199,27 +199,27 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                     <label for="create_project_title" class="block text-xs font-medium text-gray-500 mb-1">Название проекта <span class="text-red-500">*</span></label>
                     <input type="text" name="title" id="create_project_title" x-ref="createProjectTitle" required maxlength="255"
                            placeholder="Введите название проекта"
-                           class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="ui-control">
                 </div>
 
                 <div>
                     <label for="create_project_description" class="block text-xs font-medium text-gray-500 mb-1">Описание</label>
                     <textarea name="description" id="create_project_description" rows="3" placeholder="Описание проекта"
-                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                              class="ui-control"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label for="create_project_deadline" class="block text-xs font-medium text-gray-500 mb-1">Срок сдачи</label>
                         <input type="date" name="deadline" id="create_project_deadline"
-                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                               class="ui-control">
                     </div>
 
                     <div>
                         <label for="create_project_estimated_hours" class="block text-xs font-medium text-gray-500 mb-1">Расчётное время</label>
                         <input type="number" name="estimated_hours" id="create_project_estimated_hours" step="0.5" min="0.5"
                                placeholder="Часы"
-                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                               class="ui-control">
                     </div>
                 </div>
 
@@ -240,8 +240,8 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                 </div>
 
                 <div class="flex gap-2 pt-2 border-t">
-                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Создать</button>
-                    <button type="button" @click="showCreate = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Отмена</button>
+                    <button type="submit" class="ui-btn ui-btn-dark">Создать</button>
+                    <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
         </div>
@@ -322,8 +322,8 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                 </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Применить</button>
-                    <a href="<?= url('/projects') ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+                    <button type="submit" class="ui-btn ui-btn-dark">Применить</button>
+                    <a href="<?= url('/projects') ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
                 </div>
             </form>
         </div>

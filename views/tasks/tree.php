@@ -92,7 +92,7 @@ function renderTreeNode(array $node, array $statusDots, array $statusColors, int
 
         <div class="flex gap-2">
             <a href="<?= url('/tasks') ?><?= !empty($project) ? '?project_id=' . (int) $project['id'] : '' ?>"
-               class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">
+               class="ui-btn ui-btn-secondary">
                 Список
             </a>
         </div>

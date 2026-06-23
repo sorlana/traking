@@ -59,7 +59,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 </label>
                 <input type="text" id="title" name="title" value="<?= e($fieldTitle) ?>" required
                        placeholder="Введите название проекта"
-                       class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                       class="ui-control">
             </div>
 
             <!-- Описание (показываем если заполнено) -->
@@ -67,7 +67,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
             <div class="mb-4">
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
                 <textarea id="description" name="description" rows="3"
-                          class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500"><?= e($fieldDescription) ?></textarea>
+                          class="ui-control"><?= e($fieldDescription) ?></textarea>
             </div>
             <?php endif; ?>
 
@@ -76,7 +76,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
             <div class="mb-4">
                 <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Срок сдачи</label>
                 <input type="date" id="deadline" name="deadline" value="<?= e($fieldDeadline) ?>"
-                       class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                       class="ui-control">
             </div>
             <?php endif; ?>
 
@@ -87,7 +87,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 <input type="number" id="estimated_hours" name="estimated_hours" step="0.5" min="0.5"
                        value="<?= e($fieldEstimatedHours) ?>"
                        placeholder="Планируемое кол-во часов"
-                       class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                       class="ui-control">
             </div>
             <?php endif; ?>
 
@@ -98,7 +98,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 <div x-data="{ open: false, selected: '<?= e($fieldStatusId) ?>', selectedName: '<?= e(array_column(array_filter($statuses, fn($s) => (string)$s['id'] === (string)$fieldStatusId), 'name')[0] ?? '') ?>' }" class="relative">
                     <input type="hidden" name="status_id" :value="selected">
                     <button type="button" @click="open = !open"
-                            class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between">
+                            class="ui-control flex items-center justify-between text-left">
                         <span x-text="selectedName || 'Выберите статус...'"></span>
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
@@ -134,7 +134,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 <div>
                     <label for="description_extra" class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
                     <textarea name="description" id="description_extra" rows="3" placeholder="Описание проекта"
-                              class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                              class="ui-control"></textarea>
                 </div>
                 <?php endif; ?>
 
@@ -142,7 +142,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                 <div>
                     <label for="deadline_extra" class="block text-sm font-medium text-gray-700 mb-1">Срок сдачи</label>
                     <input type="date" name="deadline" id="deadline_extra"
-                           class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="ui-control">
                 </div>
                 <?php endif; ?>
 
@@ -151,7 +151,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                     <label for="estimated_hours_extra" class="block text-sm font-medium text-gray-700 mb-1">Расчётное время (часы)</label>
                     <input type="number" name="estimated_hours" id="estimated_hours_extra" step="0.5" min="0.5"
                            placeholder="Планируемое кол-во часов"
-                           class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                           class="ui-control">
                 </div>
                 <?php endif; ?>
 
@@ -161,7 +161,7 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
                     <div x-data="{ open: false, selected: '', selectedName: '' }" class="relative">
                         <input type="hidden" name="status_id" :value="selected">
                         <button type="button" @click="open = !open"
-                                class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between">
+                                class="ui-control flex items-center justify-between text-left">
                             <span x-text="selectedName || 'Выберите статус...'" class="text-gray-500" :class="selectedName ? 'text-gray-900' : ''"></span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
@@ -183,11 +183,11 @@ $fieldStatusId = $old['status_id'] ?? ($project['status_id'] ?? '');
             <!-- Кнопки -->
             <div class="flex items-center gap-3 pt-4 border-t">
                 <button type="submit"
-                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                        class="ui-btn ui-btn-primary">
                     <?= $isEdit ? 'Сохранить изменения' : 'Создать проект' ?>
                 </button>
                 <a href="<?= $isEdit ? url('/projects/' . (int) $project['id']) : url('/projects') ?>"
-                   class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm">
+                   class="ui-btn ui-btn-secondary">
                     Отмена
                 </a>
             </div>

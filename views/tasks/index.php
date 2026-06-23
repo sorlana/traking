@@ -70,12 +70,12 @@ foreach ($executors ?? [] as $exec) {
             <?php if (can('create_task', $project['id'] ?? null)): ?>
                 <button type="button"
                         @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createTaskTitle?.focus())"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                        class="ui-btn ui-btn-primary">
                     Создать
                 </button>
             <?php endif; ?>
             <button type="button" @click="showFilters = true; showCreate = false"
-                    class="lg:hidden px-3 py-1.5 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
+                    class="lg:hidden ui-btn ui-btn-light <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
         </div>
@@ -86,7 +86,7 @@ foreach ($executors ?? [] as $exec) {
         <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                <select name="status" class="w-full rounded-md border-gray-300 text-sm">
+                <select name="status" class="ui-control">
                     <option value="">Все</option>
                     <?php foreach ($statuses as $s): ?>
                         <option value="<?= e($s['code']) ?>" <?= ($filters['status'] ?? '') === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
@@ -95,7 +95,7 @@ foreach ($executors ?? [] as $exec) {
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
-                <select name="priority" class="w-full rounded-md border-gray-300 text-sm">
+                <select name="priority" class="ui-control">
                     <option value="">Все</option>
                     <option value="low" <?= ($filters['priority'] ?? '') === 'low' ? 'selected' : '' ?>>Низкий</option>
                     <option value="medium" <?= ($filters['priority'] ?? '') === 'medium' ? 'selected' : '' ?>>Средний</option>
@@ -106,7 +106,7 @@ foreach ($executors ?? [] as $exec) {
             <?php if ($roleId <= 2): ?>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm">
+                <select name="assigned_to" class="ui-control">
                     <option value="">Все</option>
                     <?php foreach ($executors as $exec): ?>
                         <option value="<?= (int) $exec['id'] ?>" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'selected' : '' ?>><?= e($exec['name']) ?></option>
@@ -116,7 +116,7 @@ foreach ($executors ?? [] as $exec) {
             <?php endif; ?>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                <select name="deadline" class="w-full rounded-md border-gray-300 text-sm">
+                <select name="deadline" class="ui-control">
                     <option value="">Все</option>
                     <option value="today" <?= ($filters['deadline'] ?? '') === 'today' ? 'selected' : '' ?>>Сегодня</option>
                     <option value="week" <?= ($filters['deadline'] ?? '') === 'week' ? 'selected' : '' ?>>На этой неделе</option>
@@ -126,7 +126,7 @@ foreach ($executors ?? [] as $exec) {
             <?php if (!($project ?? null) && !empty($projects)): ?>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
-                <select name="project_id" class="w-full rounded-md border-gray-300 text-sm">
+                <select name="project_id" class="ui-control">
                     <option value="">Все проекты</option>
                     <?php foreach ($projects as $p): ?>
                         <option value="<?= (int) $p['id'] ?>" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= e($p['title']) ?></option>
@@ -135,8 +135,8 @@ foreach ($executors ?? [] as $exec) {
             </div>
             <?php endif; ?>
             <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Фильтр</button>
-                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+                <button type="submit" class="ui-btn ui-btn-dark">Фильтр</button>
+                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
             </div>
         </div>
         <?php if ($project ?? null): ?><input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>"><?php endif; ?>
@@ -229,7 +229,7 @@ foreach ($executors ?? [] as $exec) {
                     <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
-                        <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                        <div class="ui-control bg-gray-50 text-gray-700">
                             <?= e($createProjectLabel) ?>
                         </div>
                     </div>
@@ -255,13 +255,13 @@ foreach ($executors ?? [] as $exec) {
                     <label for="create_task_title" class="block text-xs font-medium text-gray-500 mb-1">Название <span class="text-red-500">*</span></label>
                     <input type="text" name="title" id="create_task_title" x-ref="createTaskTitle" required maxlength="255"
                            placeholder="Название задачи"
-                           class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="ui-control">
                 </div>
 
                 <div>
                     <label for="create_task_description" class="block text-xs font-medium text-gray-500 mb-1">Описание</label>
                     <textarea name="description" id="create_task_description" rows="3" placeholder="Короткое описание"
-                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                              class="ui-control"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -284,7 +284,7 @@ foreach ($executors ?? [] as $exec) {
                     <div>
                         <label for="create_task_deadline" class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
                         <input type="date" name="deadline" id="create_task_deadline"
-                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                               class="ui-control">
                     </div>
                 </div>
 
@@ -307,8 +307,8 @@ foreach ($executors ?? [] as $exec) {
                 <?php endif; ?>
 
                 <div class="flex gap-2 pt-2 border-t">
-                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Создать</button>
-                    <button type="button" @click="showCreate = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Отмена</button>
+                    <button type="submit" class="ui-btn ui-btn-dark">Создать</button>
+                    <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
         </div>
@@ -435,9 +435,9 @@ foreach ($executors ?? [] as $exec) {
                     <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
                 <?php endif; ?>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Применить</button>
+                    <button type="submit" class="ui-btn ui-btn-dark">Применить</button>
                     <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
-                       class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>
+                       class="ui-btn ui-btn-secondary">Сбросить</a>
                 </div>
             </form>
         </div>

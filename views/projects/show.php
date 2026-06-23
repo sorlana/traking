@@ -17,11 +17,11 @@ $layout = 'layouts/app';
         </div>
         <?php if (can('edit_project', (int) $project['id'])): ?>
             <div class="flex items-center gap-2">
-                <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Редактировать</a>
+                <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="ui-btn ui-btn-secondary">Редактировать</a>
                 <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все задачи?')" class="inline">
                         <?= csrf_field() ?>
-                        <button type="submit" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Удалить</button>
+                        <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
                     </form>
                 <?php endif; ?>
             </div>
@@ -52,7 +52,7 @@ $layout = 'layouts/app';
             <div class="flex-1"></div>
             <?php if (can('edit_project', (int) $project['id'])): ?>
             <div class="relative" x-data="{ projActions: false }">
-                <button @click="projActions = !projActions" class="px-3 py-1 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50 shadow-sm">Действия</button>
+                <button @click="projActions = !projActions" class="ui-btn ui-btn-light">Действия</button>
                 <div x-show="projActions" @click.outside="projActions = false" x-cloak x-transition
                      class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
                     <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
@@ -116,7 +116,7 @@ $layout = 'layouts/app';
                                     <input type="hidden" name="status_id" :value="selected">
                                     <div class="relative flex-1">
                                         <button type="button" @click="open = !open"
-                                                class="w-full text-left border border-gray-300 rounded-md shadow-sm text-sm py-2 px-3 bg-white flex items-center justify-between">
+                                                class="ui-control flex items-center justify-between text-left">
                                             <span x-text="selectedName"></span>
                                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                         </button>
@@ -131,7 +131,7 @@ $layout = 'layouts/app';
                                             <?php endforeach; ?>
                                         </div>
                                     </div>
-                                    <button type="submit" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition">Изменить</button>
+                                    <button type="submit" class="ui-btn ui-btn-primary">Изменить</button>
                                 </form>
                             <?php endif; ?>
                         </div>
@@ -211,17 +211,17 @@ $layout = 'layouts/app';
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
-                        <select name="user_id" required class="flex-1 border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select name="user_id" required class="ui-control flex-1">
                             <option value="">Выберите пользователя...</option>
                             <?php foreach ($allUsers as $u): ?>
                                 <option value="<?= e($u['id']) ?>"><?= e($u['name']) ?> (<?= e($u['login']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
-                        <select name="project_role" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select name="project_role" class="ui-control">
                             <option value="manager">Руководитель</option>
                             <option value="executor" selected>Исполнитель</option>
                         </select>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap">Добавить</button>
+                        <button type="submit" class="ui-btn ui-btn-primary whitespace-nowrap">Добавить</button>
                     </form>
                 </div>
             <?php endif; ?>
@@ -264,8 +264,8 @@ $layout = 'layouts/app';
                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-document') ?>" enctype="multipart/form-data" class="space-y-3">
                     <?= csrf_field() ?>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input type="text" name="doc_title" placeholder="Название *" required class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
-                        <select name="document_type" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" name="doc_title" placeholder="Название *" required class="ui-control">
+                        <select name="document_type" class="ui-control">
                             <option value="other">Другое</option>
                             <option value="kp">КП</option>
                             <option value="brief">Бриф</option>
@@ -276,11 +276,11 @@ $layout = 'layouts/app';
                             <option value="figma_link">Figma</option>
                             <option value="cloud_link">Облако</option>
                         </select>
-                        <input type="text" name="external_url" placeholder="Ссылка" class="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" name="external_url" placeholder="Ссылка" class="ui-control">
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <input type="file" name="document_file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition w-full sm:w-auto">Загрузить</button>
+                        <button type="submit" class="ui-btn ui-btn-primary w-full sm:w-auto">Загрузить</button>
                     </div>
                 </form>
             </div>
@@ -358,12 +358,12 @@ $layout = 'layouts/app';
                 <?php if (can('edit_project', (int) $project['id'])): ?>
                     <div class="flex items-center gap-2 flex-wrap">
                         <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>"
-                           class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition">Редактировать</a>
+                           class="ui-btn ui-btn-secondary">Редактировать</a>
                         <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                             <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>"
                                   onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все его задачи?')" class="inline">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm hover:bg-red-100 transition">Удалить</button>
+                                <button type="submit" class="ui-btn bg-red-50 text-red-700 border-red-100 hover:bg-red-100">Удалить</button>
                             </form>
                         <?php endif; ?>
                     </div>
