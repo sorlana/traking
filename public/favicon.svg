@@ -1,22 +1,19 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <title>Flowtask favicon on white background</title>
-  <desc>Flowtask favicon with white square background and F-shaped stacked task cards icon.</desc>
-
-  <!-- White background -->
-  <rect width="256" height="256" fill="#FFFFFF"/>
-
-  <!-- Top card -->
-  <rect x="36" y="40" width="154" height="48" rx="14" fill="#0E1B34"/>
-  <circle cx="64" cy="64" r="11" fill="#FFFFFF"/>
-  <rect x="95" y="57" width="86" height="14" rx="7" fill="#FFFFFF"/>
-
-  <!-- Middle card -->
-  <rect x="36" y="104" width="122" height="48" rx="14" fill="#526BEF"/>
-  <circle cx="64" cy="128" r="11" fill="#FFFFFF"/>
-  <rect x="95" y="121" width="66" height="14" rx="7" fill="#FFFFFF"/>
-
-  <!-- Bottom card -->
-  <rect x="36" y="168" width="90" height="48" rx="14" fill="#BFC5CF"/>
-  <circle cx="64" cy="192" r="11" fill="#FFFFFF"/>
-  <rect x="95" y="185" width="46" height="14" rx="7" fill="#FFFFFF"/>
+<g clip-path="url(#clip0_42_50)">
+<path d="M256 0H0V256H256V0Z" fill="white"/>
+<path d="M203.273 40H52.7273C43.4891 40 36 46.268 36 54V74C36 81.732 43.4891 88 52.7273 88H203.273C212.511 88 220 81.732 220 74V54C220 46.268 212.511 40 203.273 40Z" fill="#0E1B34"/>
+<path d="M64 75C70.0751 75 75 70.0751 75 64C75 57.9249 70.0751 53 64 53C57.9249 53 53 57.9249 53 64C53 70.0751 57.9249 75 64 75Z" fill="white"/>
+<path d="M164.361 104H52.6393C43.4497 104 36 110.268 36 118V138C36 145.732 43.4497 152 52.6393 152H164.361C173.55 152 181 145.732 181 138V118C181 110.268 173.55 104 164.361 104Z" fill="#526BEF"/>
+<path d="M64 139C70.0751 139 75 134.075 75 128C75 121.925 70.0751 117 64 117C57.9249 117 53 121.925 53 128C53 134.075 57.9249 139 64 139Z" fill="white"/>
+<path d="M124.667 168H52.3333C43.3127 168 36 174.268 36 182V202C36 209.732 43.3127 216 52.3333 216H124.667C133.687 216 141 209.732 141 202V182C141 174.268 133.687 168 124.667 168Z" fill="#BFC5CF"/>
+<path d="M64 203C70.0751 203 75 198.075 75 192C75 185.925 70.0751 181 64 181C57.9249 181 53 185.925 53 192C53 198.075 57.9249 203 64 203Z" fill="white"/>
+<rect x="96" y="61" width="96" height="6" rx="3" fill="white"/>
+<rect x="96" y="126" width="60" height="6" rx="3" fill="white"/>
+<rect x="96" y="189" width="45" height="6" rx="3" fill="white"/>
+</g>
+<defs>
+<clipPath id="clip0_42_50">
+<rect width="256" height="256" rx="20" fill="white"/>
+</clipPath>
+</defs>
 </svg>
