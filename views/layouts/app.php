@@ -49,7 +49,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=10">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=11">
 </head>
 <body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
@@ -167,7 +167,7 @@ if ($currentUser) {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     <span x-show="unread > 0" x-cloak class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" style="display:none"></span>
                 </div>
-                <span class="text-xs">Уведомления</span>
+                <span class="text-xs">Уведом...</span>
             </a>
             <!-- Ещё -->
             <button @click="moreOpen = !moreOpen" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/settings') || str_contains($currentPath, '/help') ? 'text-blue-600' : 'text-gray-500' ?>">

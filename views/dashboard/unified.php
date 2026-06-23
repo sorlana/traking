@@ -50,7 +50,7 @@ $layout = 'layouts/app';
             <!-- Модалка со статистикой (мобильная) -->
             <div x-show="showInfoModal"
                  @click.self="showInfoModal = false"
-                 class="md:hidden fixed inset-0 z-[80] bg-black/50 flex items-end"
+                 class="project-stats-modal md:hidden fixed inset-0 z-[80] bg-black/50 flex items-end"
                  style="display: none;"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0"
@@ -246,7 +246,7 @@ $layout = 'layouts/app';
                     <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : currentBoard.done)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-2">
-                                <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                       :class="{
                                           'bg-red-500': task.priority === 'urgent',
                                           'bg-orange-500': task.priority === 'high',
@@ -282,7 +282,7 @@ $layout = 'layouts/app';
                             <template x-for="task in currentBoard.in_progress" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
-                                        <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                        <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="{
                                                   'bg-red-500': task.priority === 'urgent',
                                                   'bg-orange-500': task.priority === 'high',
@@ -313,7 +313,7 @@ $layout = 'layouts/app';
                             <template x-for="task in currentBoard.revision" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
-                                        <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                        <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="{
                                                   'bg-red-500': task.priority === 'urgent',
                                                   'bg-orange-500': task.priority === 'high',
@@ -344,7 +344,7 @@ $layout = 'layouts/app';
                             <template x-for="task in currentBoard.done" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
-                                        <span class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                        <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="{
                                                   'bg-red-500': task.priority === 'urgent',
                                                   'bg-orange-500': task.priority === 'high',

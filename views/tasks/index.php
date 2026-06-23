@@ -185,63 +185,101 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
 
     <!-- Модалка: Фильтры -->
     <div x-show="showFilters" x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showFilters = false" style="display: none;">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md" @click.stop>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[82vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
                 <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
                 <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
-            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                    <select name="status" class="w-full rounded-md border-gray-300 text-sm">
-                        <option value="">Все</option>
+            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-5">
+                <fieldset>
+                    <legend class="block text-xs font-medium text-gray-500 mb-2">Статус</legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="status" value="" class="sr-only peer" <?= empty($filters['status']) ? 'checked' : '' ?>>
+                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все</span>
+                        </label>
                         <?php foreach ($statuses as $s): ?>
-                            <option value="<?= e($s['code']) ?>" <?= ($filters['status'] ?? '') === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="status" value="<?= e($s['code']) ?>" class="sr-only peer" <?= ($filters['status'] ?? '') === $s['code'] ? 'checked' : '' ?>>
+                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($s['name']) ?></span>
+                            </label>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
-                    <select name="priority" class="w-full rounded-md border-gray-300 text-sm">
-                        <option value="">Все</option>
-                        <option value="low" <?= ($filters['priority'] ?? '') === 'low' ? 'selected' : '' ?>>Низкий</option>
-                        <option value="medium" <?= ($filters['priority'] ?? '') === 'medium' ? 'selected' : '' ?>>Средний</option>
-                        <option value="high" <?= ($filters['priority'] ?? '') === 'high' ? 'selected' : '' ?>>Высокий</option>
-                        <option value="urgent" <?= ($filters['priority'] ?? '') === 'urgent' ? 'selected' : '' ?>>Срочный</option>
-                    </select>
-                </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend class="block text-xs font-medium text-gray-500 mb-2">Приоритет</legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <?php
+                        $priorityOptions = [
+                            '' => 'Все',
+                            'low' => 'Низкий',
+                            'medium' => 'Средний',
+                            'high' => 'Высокий',
+                            'urgent' => 'Срочный',
+                        ];
+                        ?>
+                        <?php foreach ($priorityOptions as $value => $label): ?>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="priority" value="<?= e($value) ?>" class="sr-only peer" <?= ($filters['priority'] ?? '') === $value ? 'checked' : '' ?>>
+                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($label) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </fieldset>
                 <?php if ($roleId <= 2): ?>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                    <select name="assigned_to" class="w-full rounded-md border-gray-300 text-sm">
-                        <option value="">Все</option>
+                <fieldset>
+                    <legend class="block text-xs font-medium text-gray-500 mb-2">Исполнитель</legend>
+                    <div class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="assigned_to" value="" class="sr-only peer" <?= empty($filters['assigned_to']) ? 'checked' : '' ?>>
+                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все</span>
+                        </label>
                         <?php foreach ($executors as $exec): ?>
-                            <option value="<?= (int) $exec['id'] ?>" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'selected' : '' ?>><?= e($exec['name']) ?></option>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="assigned_to" value="<?= (int) $exec['id'] ?>" class="sr-only peer" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'checked' : '' ?>>
+                                <span class="block truncate rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($exec['name']) ?></span>
+                            </label>
                         <?php endforeach; ?>
-                    </select>
-                </div>
+                    </div>
+                </fieldset>
                 <?php endif; ?>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                    <select name="deadline" class="w-full rounded-md border-gray-300 text-sm">
-                        <option value="">Все</option>
-                        <option value="today" <?= ($filters['deadline'] ?? '') === 'today' ? 'selected' : '' ?>>Сегодня</option>
-                        <option value="week" <?= ($filters['deadline'] ?? '') === 'week' ? 'selected' : '' ?>>На этой неделе</option>
-                        <option value="overdue" <?= ($filters['deadline'] ?? '') === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
-                    </select>
-                </div>
-                <?php if (!($project ?? null) && !empty($projects)): ?>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
-                    <select name="project_id" class="w-full rounded-md border-gray-300 text-sm">
-                        <option value="">Все проекты</option>
-                        <?php foreach ($projects as $p): ?>
-                            <option value="<?= (int) $p['id'] ?>" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= e($p['title']) ?></option>
+                <fieldset>
+                    <legend class="block text-xs font-medium text-gray-500 mb-2">Срок</legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <?php
+                        $deadlineOptions = [
+                            '' => 'Все',
+                            'today' => 'Сегодня',
+                            'week' => 'Эта неделя',
+                            'overdue' => 'Просроченные',
+                        ];
+                        ?>
+                        <?php foreach ($deadlineOptions as $value => $label): ?>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="deadline" value="<?= e($value) ?>" class="sr-only peer" <?= ($filters['deadline'] ?? '') === $value ? 'checked' : '' ?>>
+                                <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($label) ?></span>
+                            </label>
                         <?php endforeach; ?>
-                    </select>
-                </div>
+                    </div>
+                </fieldset>
+                <?php if (!($project ?? null) && !empty($projects)): ?>
+                <fieldset>
+                    <legend class="block text-xs font-medium text-gray-500 mb-2">Проект</legend>
+                    <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="project_id" value="" class="sr-only peer" <?= empty($filters['project_id']) ? 'checked' : '' ?>>
+                            <span class="block rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium">Все проекты</span>
+                        </label>
+                        <?php foreach ($projects as $p): ?>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="project_id" value="<?= (int) $p['id'] ?>" class="sr-only peer" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'checked' : '' ?>>
+                                <span class="block truncate rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:font-medium"><?= e($p['title']) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </fieldset>
                 <?php endif; ?>
                 <?php if ($project ?? null): ?>
                     <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
