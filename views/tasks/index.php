@@ -333,7 +333,7 @@ document.addEventListener('click', (event) => {
     const option = event.target.closest('.mobile-filter-option');
     if (!option) return;
     setMobileFilterOption(option);
-});
+}, true);
 
 document.addEventListener('toggle', (event) => {
     const opened = event.target;
