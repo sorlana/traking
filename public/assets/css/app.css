@@ -48,6 +48,165 @@
 /* Плавные переходы для Alpine.js */
 [x-cloak] { display: none !important; }
 
+/* Загрузочный экран мобильного приложения */
+.app-loading-screen {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body.app-loading-active .app-loading-screen {
+        --loader-navy: #0E1B34;
+        --loader-blue: #526BEF;
+        --loader-gray: #BFC5CF;
+
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        background: #ffffff;
+        color: var(--loader-navy);
+        font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        opacity: 1;
+        transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+
+    body.app-loading-done .app-loading-screen {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .app-loading-stage {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transform: translateY(-8px);
+    }
+
+    .app-loading-mark {
+        position: relative;
+        width: 118px;
+        height: 122px;
+        flex: 0 0 auto;
+    }
+
+    .app-loading-card {
+        position: absolute;
+        left: 0;
+        height: 38px;
+        border-radius: 9px;
+        box-shadow: 0 10px 26px rgba(14, 27, 52, 0.12);
+        transform-origin: left center;
+        opacity: 0;
+        filter: blur(5px);
+        animation: appLoadingCardIn 1.1s cubic-bezier(.2, .8, .2, 1) forwards;
+    }
+
+    .app-loading-card-top {
+        top: 0;
+        width: 118px;
+        background: var(--loader-navy);
+        animation-delay: 0s;
+    }
+
+    .app-loading-card-mid {
+        top: 48px;
+        width: 89px;
+        background: var(--loader-blue);
+        animation-delay: 0.12s;
+    }
+
+    .app-loading-card-bot {
+        top: 96px;
+        width: 66px;
+        background: var(--loader-gray);
+        animation-delay: 0.24s;
+    }
+
+    .app-loading-dot {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        background: #fff;
+    }
+
+    .app-loading-line {
+        position: absolute;
+        left: 38px;
+        top: 50%;
+        height: 6px;
+        transform: translateY(-50%);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .app-loading-card-top .app-loading-line {
+        width: 62px;
+    }
+
+    .app-loading-card-mid .app-loading-line {
+        width: 44px;
+    }
+
+    .app-loading-card-bot .app-loading-line {
+        width: 34px;
+    }
+
+    .app-loading-word {
+        color: var(--loader-navy);
+        font-size: clamp(38px, 8vw, 52px) !important;
+        font-weight: 760;
+        letter-spacing: -0.055em;
+        line-height: 1;
+        opacity: 0;
+        transform: translateX(-10px);
+        animation: appLoadingWordFade 1s ease forwards;
+        animation-delay: 0.45s;
+    }
+}
+
+@keyframes appLoadingCardIn {
+    0% {
+        opacity: 0;
+        transform: translateY(22px) scaleX(0.55);
+        filter: blur(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scaleX(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes appLoadingWordFade {
+    0% {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-loading-card,
+    .app-loading-word {
+        animation: none !important;
+        transform: none !important;
+        filter: none !important;
+        opacity: 1 !important;
+    }
+}
+
 /* Анимация пульсации для бейджа уведомлений */
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; }

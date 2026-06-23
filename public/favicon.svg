@@ -1,5 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#5B7FE8"/>
-  <path d="M16 4L8 28h3.5l4.5-12 4.5 12H24L16 4z" fill="white"/>
-  <path d="M16 4L14.5 28h3L16 4z" fill="#5B7FE8"/>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Flowtask favicon</title>
+  <desc>Favicon icon for Flowtask based on the F-shaped stacked task cards logo.</desc>
+
+  <!-- Top card -->
+  <rect x="36" y="40" width="154" height="48" rx="14" fill="#0E1B34"/>
+  <circle cx="64" cy="64" r="11" fill="#FFFFFF"/>
+  <rect x="95" y="57" width="86" height="14" rx="7" fill="#FFFFFF"/>
+
+  <!-- Middle card -->
+  <rect x="36" y="104" width="122" height="48" rx="14" fill="#526BEF"/>
+  <circle cx="64" cy="128" r="11" fill="#FFFFFF"/>
+  <rect x="95" y="121" width="66" height="14" rx="7" fill="#FFFFFF"/>
+
+  <!-- Bottom card -->
+  <rect x="36" y="168" width="90" height="48" rx="14" fill="#BFC5CF"/>
+  <circle cx="64" cy="192" r="11" fill="#FFFFFF"/>
+  <rect x="95" y="185" width="46" height="14" rx="7" fill="#FFFFFF"/>
 </svg>

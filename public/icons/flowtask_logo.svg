@@ -1,0 +1,34 @@
+<svg width="980" height="260" viewBox="0 0 980 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Flowtask logo</title>
+  <desc>Flowtask logo with stacked task cards icon and wordmark.</desc>
+
+  <!-- Transparent background -->
+
+  <!-- Icon -->
+  <g transform="translate(70 48)">
+    <!-- Top card -->
+    <rect x="0" y="0" width="170" height="54" rx="13" fill="#0E1B34"/>
+    <circle cx="24" cy="27" r="10" fill="#FFFFFF"/>
+    <rect x="52" y="22" width="88" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.96"/>
+
+    <!-- Middle card -->
+    <rect x="0" y="70" width="128" height="54" rx="13" fill="#526BEF"/>
+    <circle cx="24" cy="97" r="10" fill="#FFFFFF"/>
+    <rect x="52" y="92" width="62" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.96"/>
+
+    <!-- Bottom card -->
+    <rect x="0" y="140" width="94" height="54" rx="13" fill="#BFC5CF"/>
+    <circle cx="24" cy="167" r="10" fill="#FFFFFF"/>
+    <rect x="52" y="162" width="42" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.92"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="310" y="145"
+        fill="#0E1B34"
+        font-family="Inter, Manrope, Arial, sans-serif"
+        font-size="92"
+        font-weight="800"
+        letter-spacing="-3.5">
+    Flowtask
+  </text>
+</svg>

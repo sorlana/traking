@@ -49,9 +49,20 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=16">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=17">
 </head>
-<body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
+<body class="app-loading-active min-h-screen flex flex-col bg-white lg:bg-gray-100">
+
+    <div id="app-loading-screen" class="app-loading-screen" aria-label="Loading screen preview for Flowtask" role="status">
+        <div class="app-loading-stage">
+            <div class="app-loading-mark" aria-hidden="true">
+                <div class="app-loading-card app-loading-card-top"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
+                <div class="app-loading-card app-loading-card-mid"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
+                <div class="app-loading-card app-loading-card-bot"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
+            </div>
+            <div class="app-loading-word">Flowtask</div>
+        </div>
+    </div>
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">
@@ -59,7 +70,12 @@ if ($currentUser) {
             <div class="flex justify-between items-center h-10 md:h-16">
                 <!-- Логотип -->
                 <div class="flex items-center gap-6">
-                    <a href="<?= url('/dashboard') ?>" class="text-xl font-bold text-blue-700">Traking</a>
+                    <a href="<?= url('/dashboard') ?>" class="hidden md:flex items-center" aria-label="Flowtask">
+                        <img src="<?= url('/icons/flowtask_logo.svg') ?>" alt="Flowtask" class="h-8 w-auto">
+                    </a>
+                    <a href="<?= url('/dashboard') ?>" class="md:hidden flex items-center" aria-label="Flowtask">
+                        <img src="<?= url('/favicon.svg') ?>" alt="Flowtask" class="h-8 w-8">
+                    </a>
 
                     <!-- Навигационные ссылки (десктоп) -->
                     <div class="hidden md:flex items-center gap-4">
@@ -241,7 +257,7 @@ if ($currentUser) {
     <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=5"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=6"></script>
 
     <!-- Мигающая фавиконка (inline для гарантированной работы) -->
     <script>
