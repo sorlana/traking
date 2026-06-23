@@ -193,101 +193,54 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                 <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
             <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-4">
-                <?php
-                $statusOptions = ['' => 'Все'];
-                foreach ($statuses as $s) {
-                    $statusOptions[$s['code']] = $s['name'];
-                }
-                $priorityOptions = [
-                    '' => 'Все',
-                    'low' => 'Низкий',
-                    'medium' => 'Средний',
-                    'high' => 'Высокий',
-                    'urgent' => 'Срочный',
-                ];
-                $deadlineOptions = [
-                    '' => 'Все',
-                    'today' => 'Сегодня',
-                    'week' => 'На этой неделе',
-                    'overdue' => 'Просроченные',
-                ];
-                $executorOptions = ['' => 'Все'];
-                foreach ($executors as $exec) {
-                    $executorOptions[(string) $exec['id']] = $exec['name'];
-                }
-                $projectOptions = ['' => 'Все проекты'];
-                foreach ($projects ?? [] as $p) {
-                    $projectOptions[(string) $p['id']] = $p['title'];
-                }
-                $jsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
-                ?>
-                <div class="relative" x-data="{ open: false, label: <?= json_encode($statusOptions[$filters['status'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                    <input x-ref="input" type="hidden" name="status" value="<?= e($filters['status'] ?? '') ?>">
-                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
-                        <span class="truncate" x-text="label"></span>
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <?php foreach ($statusOptions as $value => $label): ?>
-                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['status'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
+                    <select name="status" class="mobile-filter-select">
+                        <option value="">Все</option>
+                        <?php foreach ($statuses as $s): ?>
+                            <option value="<?= e($s['code']) ?>" <?= ($filters['status'] ?? '') === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
                         <?php endforeach; ?>
-                    </div>
+                    </select>
                 </div>
-                <div class="relative" x-data="{ open: false, label: <?= json_encode($priorityOptions[$filters['priority'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
-                    <input x-ref="input" type="hidden" name="priority" value="<?= e($filters['priority'] ?? '') ?>">
-                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
-                        <span class="truncate" x-text="label"></span>
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <?php foreach ($priorityOptions as $value => $label): ?>
-                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['priority'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
-                        <?php endforeach; ?>
-                    </div>
+                    <select name="priority" class="mobile-filter-select">
+                        <option value="">Все</option>
+                        <option value="low" <?= ($filters['priority'] ?? '') === 'low' ? 'selected' : '' ?>>Низкий</option>
+                        <option value="medium" <?= ($filters['priority'] ?? '') === 'medium' ? 'selected' : '' ?>>Средний</option>
+                        <option value="high" <?= ($filters['priority'] ?? '') === 'high' ? 'selected' : '' ?>>Высокий</option>
+                        <option value="urgent" <?= ($filters['priority'] ?? '') === 'urgent' ? 'selected' : '' ?>>Срочный</option>
+                    </select>
                 </div>
                 <?php if ($roleId <= 2): ?>
-                <div class="relative" x-data="{ open: false, label: <?= json_encode($executorOptions[(string) ($filters['assigned_to'] ?? '')] ?? 'Все', $jsonFlags) ?> }">
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                    <input x-ref="input" type="hidden" name="assigned_to" value="<?= e($filters['assigned_to'] ?? '') ?>">
-                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
-                        <span class="truncate" x-text="label"></span>
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <?php foreach ($executorOptions as $value => $label): ?>
-                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full truncate px-3 py-2 text-left text-sm hover:bg-blue-50 <?= (string) ($filters['assigned_to'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
+                    <select name="assigned_to" class="mobile-filter-select">
+                        <option value="">Все</option>
+                        <?php foreach ($executors as $exec): ?>
+                            <option value="<?= (int) $exec['id'] ?>" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'selected' : '' ?>><?= e($exec['name']) ?></option>
                         <?php endforeach; ?>
-                    </div>
+                    </select>
                 </div>
                 <?php endif; ?>
-                <div class="relative" x-data="{ open: false, label: <?= json_encode($deadlineOptions[$filters['deadline'] ?? ''] ?? 'Все', $jsonFlags) ?> }">
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                    <input x-ref="input" type="hidden" name="deadline" value="<?= e($filters['deadline'] ?? '') ?>">
-                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
-                        <span class="truncate" x-text="label"></span>
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <?php foreach ($deadlineOptions as $value => $label): ?>
-                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 <?= ($filters['deadline'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
-                        <?php endforeach; ?>
-                    </div>
+                    <select name="deadline" class="mobile-filter-select">
+                        <option value="">Все</option>
+                        <option value="today" <?= ($filters['deadline'] ?? '') === 'today' ? 'selected' : '' ?>>Сегодня</option>
+                        <option value="week" <?= ($filters['deadline'] ?? '') === 'week' ? 'selected' : '' ?>>На этой неделе</option>
+                        <option value="overdue" <?= ($filters['deadline'] ?? '') === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
+                    </select>
                 </div>
                 <?php if (!($project ?? null) && !empty($projects)): ?>
-                <div class="relative" x-data="{ open: false, label: <?= json_encode($projectOptions[(string) ($filters['project_id'] ?? '')] ?? 'Все проекты', $jsonFlags) ?> }">
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
-                    <input x-ref="input" type="hidden" name="project_id" value="<?= e($filters['project_id'] ?? '') ?>">
-                    <button type="button" @click="open = !open" class="w-full min-h-0 flex items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-800 shadow-sm">
-                        <span class="truncate" x-text="label"></span>
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak @click.outside="open = false" class="absolute left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <?php foreach ($projectOptions as $value => $label): ?>
-                            <button type="button" @click="label = <?= json_encode($label, $jsonFlags) ?>; $refs.input.value = '<?= e($value) ?>'; open = false" class="w-full truncate px-3 py-2 text-left text-sm hover:bg-blue-50 <?= (string) ($filters['project_id'] ?? '') === (string) $value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700' ?>"><?= e($label) ?></button>
+                    <select name="project_id" class="mobile-filter-select">
+                        <option value="">Все проекты</option>
+                        <?php foreach ($projects as $p): ?>
+                            <option value="<?= (int) $p['id'] ?>" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= e($p['title']) ?></option>
                         <?php endforeach; ?>
-                    </div>
+                    </select>
                 </div>
                 <?php endif; ?>
                 <?php if ($project ?? null): ?>
