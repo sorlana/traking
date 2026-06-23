@@ -49,7 +49,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=9">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=10">
 </head>
 <body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
@@ -139,7 +139,7 @@ if ($currentUser) {
     </nav>
 
     <!-- Нижняя навигация (мобильная) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50" x-data="{ moreOpen: false }">
+    <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50" x-data="{ moreOpen: false }">
         <div class="flex items-center h-14">
             <?php if (\Helpers\Auth::isAdmin()): ?>
                 <a href="<?= url('/admin/users') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/admin') ? 'text-blue-600' : 'text-gray-500' ?>">
