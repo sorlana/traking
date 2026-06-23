@@ -41,10 +41,10 @@ if ($currentUser) {
     }
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="<?= url('/manifest.json') ?>">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=3">
     <meta name="theme-color" content="#1e40af">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/icons/icon-192x192.png') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/favicon.svg') ?>">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

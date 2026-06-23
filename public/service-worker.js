@@ -4,7 +4,7 @@
  * - Offline-fallback страница
  */
 
-const CACHE_NAME = 'traking-v65';
+const CACHE_NAME = 'traking-v67';
 const OFFLINE_URL = '/offline.html';
 
 // Ресурсы для предварительного кэширования
@@ -14,8 +14,8 @@ const PRECACHE_URLS = [
     '/assets/css/app.css',
     '/assets/js/app.js',
     '/manifest.json',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png'
+    '/favicon.svg',
+    '/icons/flowtask_logo.svg'
 ];
 
 // Установка — кэшируем статику
