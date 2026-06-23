@@ -247,6 +247,14 @@ nav[class*="fixed"] {
     z-index: 100 !important;
 }
 
+.mobile-filter-field {
+    position: relative;
+}
+
+.mobile-filter-details {
+    position: relative;
+}
+
 .mobile-filter-trigger {
     display: flex;
     width: 100%;
@@ -294,6 +302,11 @@ nav[class*="fixed"] {
 }
 
 .mobile-filter-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 130;
     margin-top: 0.25rem;
     max-height: 9.5rem;
     overflow-y: auto;

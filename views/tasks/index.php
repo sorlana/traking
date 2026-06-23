@@ -231,7 +231,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                         </summary>
                         <div class="mobile-filter-menu">
                             <?php foreach ($mobileStatusOptions as $value => $label): ?>
-                                <button type="button" class="mobile-filter-option <?= ($filters['status'] ?? '') === (string) $value ? 'is-selected' : '' ?>" onclick="setMobileFilterOption(this, '<?= e($value) ?>', <?= json_encode($label, $mobileJsonFlags) ?>)"><?= e($label) ?></button>
+                                <button type="button" class="mobile-filter-option <?= ($filters['status'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </details>
@@ -246,7 +246,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                         </summary>
                         <div class="mobile-filter-menu">
                             <?php foreach ($mobilePriorityOptions as $value => $label): ?>
-                                <button type="button" class="mobile-filter-option <?= ($filters['priority'] ?? '') === (string) $value ? 'is-selected' : '' ?>" onclick="setMobileFilterOption(this, '<?= e($value) ?>', <?= json_encode($label, $mobileJsonFlags) ?>)"><?= e($label) ?></button>
+                                <button type="button" class="mobile-filter-option <?= ($filters['priority'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </details>
@@ -262,7 +262,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                         </summary>
                         <div class="mobile-filter-menu">
                             <?php foreach ($mobileExecutorOptions as $value => $label): ?>
-                                <button type="button" class="mobile-filter-option <?= (string)($filters['assigned_to'] ?? '') === (string) $value ? 'is-selected' : '' ?>" onclick="setMobileFilterOption(this, '<?= e($value) ?>', <?= json_encode($label, $mobileJsonFlags) ?>)"><?= e($label) ?></button>
+                                <button type="button" class="mobile-filter-option <?= (string)($filters['assigned_to'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </details>
@@ -278,7 +278,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                         </summary>
                         <div class="mobile-filter-menu">
                             <?php foreach ($mobileDeadlineOptions as $value => $label): ?>
-                                <button type="button" class="mobile-filter-option <?= ($filters['deadline'] ?? '') === (string) $value ? 'is-selected' : '' ?>" onclick="setMobileFilterOption(this, '<?= e($value) ?>', <?= json_encode($label, $mobileJsonFlags) ?>)"><?= e($label) ?></button>
+                                <button type="button" class="mobile-filter-option <?= ($filters['deadline'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </details>
@@ -294,7 +294,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                         </summary>
                         <div class="mobile-filter-menu">
                             <?php foreach ($mobileProjectOptions as $value => $label): ?>
-                                <button type="button" class="mobile-filter-option <?= (string)($filters['project_id'] ?? '') === (string) $value ? 'is-selected' : '' ?>" onclick="setMobileFilterOption(this, '<?= e($value) ?>', <?= json_encode($label, $mobileJsonFlags) ?>)"><?= e($label) ?></button>
+                                <button type="button" class="mobile-filter-option <?= (string)($filters['project_id'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </details>
@@ -314,18 +314,26 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
 </div>
 
 <script>
-function setMobileFilterOption(button, value, label) {
+function setMobileFilterOption(button) {
     const field = button.closest('.mobile-filter-field');
     if (!field) return;
     const input = field.querySelector('input[type="hidden"]');
     const labelNode = field.querySelector('.mobile-filter-label');
     const details = field.querySelector('details');
+    const value = button.dataset.value || '';
+    const label = button.dataset.label || button.textContent.trim();
     field.querySelectorAll('.mobile-filter-option').forEach((option) => option.classList.remove('is-selected'));
     button.classList.add('is-selected');
     if (input) input.value = value;
     if (labelNode) labelNode.textContent = label;
     if (details) details.removeAttribute('open');
 }
+
+document.addEventListener('click', (event) => {
+    const option = event.target.closest('.mobile-filter-option');
+    if (!option) return;
+    setMobileFilterOption(option);
+});
 
 document.addEventListener('toggle', (event) => {
     const opened = event.target;
