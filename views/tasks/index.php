@@ -24,9 +24,38 @@ $statusColors = [
 
 // Проверка: есть ли активные фильтры
 $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !empty($filters['assigned_to']) || !empty($filters['deadline']) || !empty($filters['project_id']);
+
+$createPriorityOptions = [
+    'low' => 'Низкий',
+    'medium' => 'Средний',
+    'high' => 'Высокий',
+    'urgent' => 'Срочный',
+];
+$createPriorityValue = 'medium';
+
+$createProjectOptions = [];
+foreach ($projects ?? [] as $p) {
+    $createProjectOptions[(string) $p['id']] = $p['title'];
+}
+
+$selectedFilterProjectId = (string) ($filters['project_id'] ?? '');
+$createProjectValue = '';
+$createProjectLabel = 'Выберите проект';
+if ($project ?? null) {
+    $createProjectValue = (string) $project['id'];
+    $createProjectLabel = $project['title'];
+} elseif ($selectedFilterProjectId !== '' && isset($createProjectOptions[$selectedFilterProjectId])) {
+    $createProjectValue = $selectedFilterProjectId;
+    $createProjectLabel = $createProjectOptions[$selectedFilterProjectId];
+}
+
+$createExecutorOptions = ['' => 'Не назначен'];
+foreach ($executors ?? [] as $exec) {
+    $createExecutorOptions[(string) $exec['id']] = $exec['name'];
+}
 ?>
 
-<div class="space-y-4" x-data="{ showFilters: false }">
+<div class="space-y-4" x-data="{ showFilters: false, showCreate: false }">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
     <div class="flex items-center justify-between gap-4">
         <h1 class="text-xl font-bold text-gray-800">
@@ -39,12 +68,13 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
 
         <div class="flex items-center gap-2">
             <?php if (can('create_task', $project['id'] ?? null)): ?>
-                <a href="<?= url('/tasks/create') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
-                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                <button type="button"
+                        @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createTaskTitle?.focus())"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                     Создать
-                </a>
+                </button>
             <?php endif; ?>
-            <button @click="showFilters = true"
+            <button type="button" @click="showFilters = true; showCreate = false"
                     class="lg:hidden px-3 py-1.5 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
@@ -183,6 +213,107 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
         <p class="text-sm text-gray-400">Найдено задач: <?= count($tasks) ?></p>
     <?php endif; ?>
 
+    <!-- Модалка: Создание задачи -->
+    <div x-show="showCreate" x-transition.opacity
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
+         @click.self="showCreate = false" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[86vh] overflow-y-auto" @click.stop>
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">Новая задача</h2>
+                <button type="button" @click="showCreate = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <form method="POST" action="<?= url('/tasks/create') ?>" class="p-4 space-y-4" data-mobile-form-validation>
+                <?= csrf_field() ?>
+
+                <?php if ($project ?? null): ?>
+                    <input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
+                        <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                            <?= e($createProjectLabel) ?>
+                        </div>
+                    </div>
+                <?php elseif (!empty($createProjectOptions)): ?>
+                    <div class="mobile-filter-field" data-required-mobile-select>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Проект <span class="text-red-500">*</span></label>
+                        <input type="hidden" name="project_id" value="<?= e($createProjectValue) ?>">
+                        <details class="mobile-filter-details">
+                            <summary class="mobile-filter-trigger">
+                                <span class="mobile-filter-label"><?= e($createProjectLabel) ?></span>
+                                <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+                            <div class="mobile-filter-menu">
+                                <?php foreach ($createProjectOptions as $value => $label): ?>
+                                    <button type="button" class="mobile-filter-option <?= $createProjectValue === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    </div>
+                <?php endif; ?>
+
+                <div>
+                    <label for="create_task_title" class="block text-xs font-medium text-gray-500 mb-1">Название <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" id="create_task_title" x-ref="createTaskTitle" required maxlength="255"
+                           placeholder="Название задачи"
+                           class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="create_task_description" class="block text-xs font-medium text-gray-500 mb-1">Описание</label>
+                    <textarea name="description" id="create_task_description" rows="3" placeholder="Короткое описание"
+                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="mobile-filter-field">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
+                        <input type="hidden" name="priority" value="<?= e($createPriorityValue) ?>">
+                        <details class="mobile-filter-details">
+                            <summary class="mobile-filter-trigger">
+                                <span class="mobile-filter-label"><?= e($createPriorityOptions[$createPriorityValue] ?? 'Средний') ?></span>
+                                <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+                            <div class="mobile-filter-menu">
+                                <?php foreach ($createPriorityOptions as $value => $label): ?>
+                                    <button type="button" class="mobile-filter-option <?= $createPriorityValue === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div>
+                        <label for="create_task_deadline" class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
+                        <input type="date" name="deadline" id="create_task_deadline"
+                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <?php if ($roleId <= 2): ?>
+                    <div class="mobile-filter-field">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
+                        <input type="hidden" name="assigned_to" value="">
+                        <details class="mobile-filter-details">
+                            <summary class="mobile-filter-trigger">
+                                <span class="mobile-filter-label"><?= e($createExecutorOptions['']) ?></span>
+                                <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </summary>
+                            <div class="mobile-filter-menu">
+                                <?php foreach ($createExecutorOptions as $value => $label): ?>
+                                    <button type="button" class="mobile-filter-option <?= (string) $value === '' ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    </div>
+                <?php endif; ?>
+
+                <div class="flex gap-2 pt-2 border-t">
+                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Создать</button>
+                    <button type="button" @click="showCreate = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Модалка: Фильтры -->
     <div x-show="showFilters" x-transition.opacity
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
@@ -312,34 +443,3 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
         </div>
     </div>
 </div>
-
-<script>
-function setMobileFilterOption(button) {
-    const field = button.closest('.mobile-filter-field');
-    if (!field) return;
-    const input = field.querySelector('input[type="hidden"]');
-    const labelNode = field.querySelector('.mobile-filter-label');
-    const details = field.querySelector('details');
-    const value = button.dataset.value || '';
-    const label = button.dataset.label || button.textContent.trim();
-    field.querySelectorAll('.mobile-filter-option').forEach((option) => option.classList.remove('is-selected'));
-    button.classList.add('is-selected');
-    if (input) input.value = value;
-    if (labelNode) labelNode.textContent = label;
-    if (details) details.removeAttribute('open');
-}
-
-document.addEventListener('click', (event) => {
-    const option = event.target.closest('.mobile-filter-option');
-    if (!option) return;
-    setMobileFilterOption(option);
-}, true);
-
-document.addEventListener('toggle', (event) => {
-    const opened = event.target;
-    if (!opened.matches('.mobile-filter-details') || !opened.open) return;
-    document.querySelectorAll('.mobile-filter-details[open]').forEach((details) => {
-        if (details !== opened) details.removeAttribute('open');
-    });
-}, true);
-</script>

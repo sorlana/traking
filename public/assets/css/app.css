@@ -284,6 +284,11 @@ nav[class*="fixed"] {
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14);
 }
 
+.mobile-filter-field-error .mobile-filter-trigger {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.14);
+}
+
 .mobile-filter-details[open] .mobile-filter-arrow {
     transform: rotate(180deg);
 }

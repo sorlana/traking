@@ -7,9 +7,48 @@ $layout = 'layouts/app';
 
 // Проверка: есть ли активные фильтры
 $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empty($filters['executor']) || !empty($filters['deadline']);
+
+$mobileStatusOptions = ['' => 'Все статусы'];
+foreach ($statuses as $s) {
+    $mobileStatusOptions[$s['code']] = $s['name'];
+}
+
+$mobileManagerOptions = ['' => 'Все'];
+foreach ($managers as $m) {
+    $mobileManagerOptions[(string) $m['id']] = $m['name'];
+}
+
+$mobileExecutorOptions = ['' => 'Все'];
+foreach ($executors as $ex) {
+    $mobileExecutorOptions[(string) $ex['id']] = $ex['name'];
+}
+
+$mobileDeadlineOptions = [
+    '' => 'Все',
+    'overdue' => 'Просроченные',
+    'week' => 'На этой неделе',
+];
+
+$createStatusOptions = [];
+$createStatusValue = '';
+$createStatusLabel = 'Выберите статус';
+foreach ($statuses as $s) {
+    $createStatusOptions[(string) $s['id']] = $s['name'];
+    if (($s['code'] ?? '') === 'new') {
+        $createStatusValue = (string) $s['id'];
+        $createStatusLabel = $s['name'];
+    }
+}
+if ($createStatusValue === '' && !empty($createStatusOptions)) {
+    foreach ($createStatusOptions as $value => $label) {
+        $createStatusValue = (string) $value;
+        $createStatusLabel = $label;
+        break;
+    }
+}
 ?>
 
-<div x-data="{ showFilters: false }">
+<div x-data="{ showFilters: false, showCreate: false }">
 
     <!-- Заголовок + Создать + Фильтры -->
     <div class="flex items-center justify-between gap-4 mb-6">
@@ -17,12 +56,13 @@ $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empt
 
         <div class="flex items-center gap-2">
             <?php if (can('create_project')): ?>
-                <a href="<?= url('/projects/create') ?>"
-                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                <button type="button"
+                        @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createProjectTitle?.focus())"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                     Создать
-                </a>
+                </button>
             <?php endif; ?>
-            <button @click="showFilters = true"
+            <button type="button" @click="showFilters = true; showCreate = false"
                     class="lg:hidden px-3 py-1.5 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition <?= $hasFilters ? 'border-blue-500 text-blue-700' : '' ?>">
                 Фильтры<?= $hasFilters ? ' ●' : '' ?>
             </button>
@@ -31,7 +71,7 @@ $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empt
 
     <!-- Десктопные фильтры (lg+) -->
     <form method="GET" action="<?= url('/projects') ?>" class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-5 gap-4">
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
                 <select name="status" class="w-full border-gray-300 rounded-md text-sm">
@@ -57,6 +97,14 @@ $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empt
                     <?php foreach ($executors as $ex): ?>
                         <option value="<?= e($ex['id']) ?>" <?= $filters['executor'] == $ex['id'] ? 'selected' : '' ?>><?= e($ex['name']) ?></option>
                     <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
+                <select name="deadline" class="w-full border-gray-300 rounded-md text-sm">
+                    <option value="">Все</option>
+                    <option value="overdue" <?= $filters['deadline'] === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
+                    <option value="week" <?= $filters['deadline'] === 'week' ? 'selected' : '' ?>>На этой неделе</option>
                 </select>
             </div>
             <div class="flex items-end gap-2">
@@ -135,51 +183,144 @@ $hasFilters = !empty($filters['status']) || !empty($filters['manager']) || !empt
         </div>
     <?php endif; ?>
 
+    <!-- Модалка: Создание проекта -->
+    <div x-show="showCreate" x-transition.opacity
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
+         @click.self="showCreate = false" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[86vh] overflow-y-auto" @click.stop>
+            <div class="flex items-center justify-between p-4 border-b">
+                <h2 class="text-lg font-bold text-gray-800">Новый проект</h2>
+                <button type="button" @click="showCreate = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <form method="POST" action="<?= url('/projects/create') ?>" class="p-4 space-y-4" data-mobile-form-validation>
+                <?= csrf_field() ?>
+
+                <div>
+                    <label for="create_project_title" class="block text-xs font-medium text-gray-500 mb-1">Название проекта <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" id="create_project_title" x-ref="createProjectTitle" required maxlength="255"
+                           placeholder="Введите название проекта"
+                           class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="create_project_description" class="block text-xs font-medium text-gray-500 mb-1">Описание</label>
+                    <textarea name="description" id="create_project_description" rows="3" placeholder="Описание проекта"
+                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="create_project_deadline" class="block text-xs font-medium text-gray-500 mb-1">Срок сдачи</label>
+                        <input type="date" name="deadline" id="create_project_deadline"
+                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="create_project_estimated_hours" class="block text-xs font-medium text-gray-500 mb-1">Расчётное время</label>
+                        <input type="number" name="estimated_hours" id="create_project_estimated_hours" step="0.5" min="0.5"
+                               placeholder="Часы"
+                               class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="mobile-filter-field" data-required-mobile-select>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Статус <span class="text-red-500">*</span></label>
+                    <input type="hidden" name="status_id" value="<?= e($createStatusValue) ?>">
+                    <details class="mobile-filter-details">
+                        <summary class="mobile-filter-trigger">
+                            <span class="mobile-filter-label"><?= e($createStatusLabel) ?></span>
+                            <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="mobile-filter-menu">
+                            <?php foreach ($createStatusOptions as $value => $label): ?>
+                                <button type="button" class="mobile-filter-option <?= $createStatusValue === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t">
+                    <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Создать</button>
+                    <button type="button" @click="showCreate = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Модалка: Фильтры -->
     <div x-show="showFilters" x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showFilters = false" style="display: none;">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md" @click.stop>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[82vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
                 <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
-                <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <button type="button" @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
             <form method="GET" action="<?= url('/projects') ?>" class="p-4 space-y-4">
-                <div>
+                <div class="mobile-filter-field">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                    <select name="status" class="w-full border-gray-300 rounded-md text-sm">
-                        <option value="">Все статусы</option>
-                        <?php foreach ($statuses as $s): ?>
-                            <option value="<?= e($s['code']) ?>" <?= $filters['status'] === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="status" value="<?= e($filters['status'] ?? '') ?>">
+                    <details class="mobile-filter-details">
+                        <summary class="mobile-filter-trigger">
+                            <span class="mobile-filter-label"><?= e($mobileStatusOptions[$filters['status'] ?? ''] ?? 'Все статусы') ?></span>
+                            <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="mobile-filter-menu">
+                            <?php foreach ($mobileStatusOptions as $value => $label): ?>
+                                <button type="button" class="mobile-filter-option <?= ($filters['status'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
                 </div>
-                <div>
+
+                <div class="mobile-filter-field">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Руководитель</label>
-                    <select name="manager" class="w-full border-gray-300 rounded-md text-sm">
-                        <option value="">Все</option>
-                        <?php foreach ($managers as $m): ?>
-                            <option value="<?= e($m['id']) ?>" <?= $filters['manager'] == $m['id'] ? 'selected' : '' ?>><?= e($m['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="manager" value="<?= e($filters['manager'] ?? '') ?>">
+                    <details class="mobile-filter-details">
+                        <summary class="mobile-filter-trigger">
+                            <span class="mobile-filter-label"><?= e($mobileManagerOptions[(string)($filters['manager'] ?? '')] ?? 'Все') ?></span>
+                            <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="mobile-filter-menu">
+                            <?php foreach ($mobileManagerOptions as $value => $label): ?>
+                                <button type="button" class="mobile-filter-option <?= (string)($filters['manager'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
                 </div>
-                <div>
+
+                <div class="mobile-filter-field">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                    <select name="executor" class="w-full border-gray-300 rounded-md text-sm">
-                        <option value="">Все</option>
-                        <?php foreach ($executors as $ex): ?>
-                            <option value="<?= e($ex['id']) ?>" <?= $filters['executor'] == $ex['id'] ? 'selected' : '' ?>><?= e($ex['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="executor" value="<?= e($filters['executor'] ?? '') ?>">
+                    <details class="mobile-filter-details">
+                        <summary class="mobile-filter-trigger">
+                            <span class="mobile-filter-label"><?= e($mobileExecutorOptions[(string)($filters['executor'] ?? '')] ?? 'Все') ?></span>
+                            <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="mobile-filter-menu">
+                            <?php foreach ($mobileExecutorOptions as $value => $label): ?>
+                                <button type="button" class="mobile-filter-option <?= (string)($filters['executor'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
                 </div>
-                <div>
+
+                <div class="mobile-filter-field">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                    <select name="deadline" class="w-full border-gray-300 rounded-md text-sm">
-                        <option value="">Все</option>
-                        <option value="overdue" <?= $filters['deadline'] === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
-                        <option value="week" <?= $filters['deadline'] === 'week' ? 'selected' : '' ?>>На этой неделе</option>
-                    </select>
+                    <input type="hidden" name="deadline" value="<?= e($filters['deadline'] ?? '') ?>">
+                    <details class="mobile-filter-details">
+                        <summary class="mobile-filter-trigger">
+                            <span class="mobile-filter-label"><?= e($mobileDeadlineOptions[$filters['deadline'] ?? ''] ?? 'Все') ?></span>
+                            <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="mobile-filter-menu">
+                            <?php foreach ($mobileDeadlineOptions as $value => $label): ?>
+                                <button type="button" class="mobile-filter-option <?= ($filters['deadline'] ?? '') === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
                 </div>
+
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-700 transition">Применить</button>
                     <a href="<?= url('/projects') ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition">Сбросить</a>

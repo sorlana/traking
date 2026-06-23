@@ -49,7 +49,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=15">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=16">
 </head>
 <body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
@@ -241,7 +241,7 @@ if ($currentUser) {
     <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=3"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=5"></script>
 
     <!-- Мигающая фавиконка (inline для гарантированной работы) -->
     <script>

@@ -12,6 +12,139 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 /**
+ * Компактные выпадающие поля для мобильных модалок.
+ * Используются в фильтрах и быстрых формах создания.
+ */
+function setMobileFilterOption(button) {
+    const field = button.closest('.mobile-filter-field');
+    if (!field) return;
+
+    const input = field.querySelector('input[type="hidden"], select');
+    const labelNode = field.querySelector('.mobile-filter-label');
+    const details = field.querySelector('details');
+    const value = button.dataset.value || '';
+    const label = button.dataset.label || button.textContent.trim();
+
+    field.querySelectorAll('.mobile-filter-option').forEach((option) => option.classList.remove('is-selected'));
+    button.classList.add('is-selected');
+
+    if (input) {
+        input.value = value;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (labelNode) labelNode.textContent = label;
+    field.classList.remove('mobile-filter-field-error');
+    if (details) details.removeAttribute('open');
+}
+
+document.addEventListener('click', (event) => {
+    const option = event.target.closest('.mobile-filter-option');
+    if (!option) return;
+    setMobileFilterOption(option);
+}, true);
+
+document.addEventListener('toggle', (event) => {
+    const opened = event.target;
+    if (!opened.matches('.mobile-filter-details') || !opened.open) return;
+
+    document.querySelectorAll('.mobile-filter-details[open]').forEach((details) => {
+        if (details !== opened) details.removeAttribute('open');
+    });
+}, true);
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!form.matches('[data-mobile-form-validation]')) return;
+
+    let firstInvalidField = null;
+    form.querySelectorAll('[data-required-mobile-select]').forEach((field) => {
+        const input = field.querySelector('input[type="hidden"], select');
+        const isEmpty = !input || !input.value;
+        field.classList.toggle('mobile-filter-field-error', isEmpty);
+        if (isEmpty && !firstInvalidField) firstInvalidField = field;
+    });
+
+    if (!firstInvalidField) return;
+
+    event.preventDefault();
+    const details = firstInvalidField.querySelector('details');
+    const trigger = firstInvalidField.querySelector('.mobile-filter-trigger');
+    if (details) details.setAttribute('open', '');
+    if (trigger) trigger.focus();
+}, true);
+
+window.setMobileFilterOption = setMobileFilterOption;
+
+function enhanceNativeSelect(select) {
+    if (select.dataset.mobileEnhanced === 'true') return;
+
+    const field = select.closest('div');
+    if (!field) return;
+
+    field.classList.add('mobile-filter-field');
+    select.dataset.mobileEnhanced = 'true';
+    select.style.display = 'none';
+
+    const selectedOption = select.options[select.selectedIndex] || select.options[0];
+    const details = document.createElement('details');
+    details.className = 'mobile-filter-details';
+
+    const summary = document.createElement('summary');
+    summary.className = 'mobile-filter-trigger';
+
+    const label = document.createElement('span');
+    label.className = 'mobile-filter-label';
+    label.textContent = selectedOption ? selectedOption.textContent : '';
+
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    arrow.setAttribute('class', 'mobile-filter-arrow w-4 h-4 text-gray-400');
+    arrow.setAttribute('fill', 'none');
+    arrow.setAttribute('stroke', 'currentColor');
+    arrow.setAttribute('viewBox', '0 0 24 24');
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('d', 'M19 9l-7 7-7-7');
+    arrow.appendChild(path);
+
+    summary.append(label, arrow);
+
+    const menu = document.createElement('div');
+    menu.className = 'mobile-filter-menu';
+
+    Array.from(select.options).forEach((option) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'mobile-filter-option';
+        if (option.selected) button.classList.add('is-selected');
+        button.dataset.value = option.value;
+        button.dataset.label = option.textContent;
+        button.textContent = option.textContent;
+        menu.appendChild(button);
+    });
+
+    details.append(summary, menu);
+    select.insertAdjacentElement('afterend', details);
+}
+
+function enhanceProjectFilterSelects() {
+    if (!window.matchMedia('(max-width: 1023px)').matches) return;
+    document
+        .querySelectorAll('[x-show="showFilters"] form[action$="/projects"] select')
+        .forEach(enhanceNativeSelect);
+}
+
+document.addEventListener('DOMContentLoaded', enhanceProjectFilterSelects);
+enhanceProjectFilterSelects();
+window.addEventListener('resize', enhanceProjectFilterSelects);
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('button, a, summary')) return;
+    requestAnimationFrame(enhanceProjectFilterSelects);
+}, true);
+
+/**
  * Выполнить POST-запрос через fetch с CSRF-токеном
  *
  * @param {string} url — адрес эндпоинта
