@@ -192,55 +192,115 @@ $hasFilters = !empty($filters['status']) || !empty($filters['priority']) || !emp
                 <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
                 <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
-            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-4">
+            <?php
+            $mobileStatusOptions = ['' => 'Все'];
+            foreach ($statuses as $s) {
+                $mobileStatusOptions[$s['code']] = $s['name'];
+            }
+            $mobilePriorityOptions = [
+                '' => 'Все',
+                'low' => 'Низкий',
+                'medium' => 'Средний',
+                'high' => 'Высокий',
+                'urgent' => 'Срочный',
+            ];
+            $mobileDeadlineOptions = [
+                '' => 'Все',
+                'today' => 'Сегодня',
+                'week' => 'На этой неделе',
+                'overdue' => 'Просроченные',
+            ];
+            $mobileExecutorOptions = ['' => 'Все'];
+            foreach ($executors as $exec) {
+                $mobileExecutorOptions[(string) $exec['id']] = $exec['name'];
+            }
+            $mobileProjectOptions = ['' => 'Все проекты'];
+            foreach ($projects ?? [] as $p) {
+                $mobileProjectOptions[(string) $p['id']] = $p['title'];
+            }
+            $mobileJsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+            ?>
+            <form method="GET" action="<?= url('/tasks') ?>" class="p-4 space-y-4"
+                  x-data="{
+                    openFilter: null,
+                    status: '<?= e($filters['status'] ?? '') ?>',
+                    statusLabel: <?= json_encode($mobileStatusOptions[$filters['status'] ?? ''] ?? 'Все', $mobileJsonFlags) ?>,
+                    priority: '<?= e($filters['priority'] ?? '') ?>',
+                    priorityLabel: <?= json_encode($mobilePriorityOptions[$filters['priority'] ?? ''] ?? 'Все', $mobileJsonFlags) ?>,
+                    assigned_to: '<?= e($filters['assigned_to'] ?? '') ?>',
+                    assignedLabel: <?= json_encode($mobileExecutorOptions[(string)($filters['assigned_to'] ?? '')] ?? 'Все', $mobileJsonFlags) ?>,
+                    deadline: '<?= e($filters['deadline'] ?? '') ?>',
+                    deadlineLabel: <?= json_encode($mobileDeadlineOptions[$filters['deadline'] ?? ''] ?? 'Все', $mobileJsonFlags) ?>,
+                    project_id: '<?= e($filters['project_id'] ?? '') ?>',
+                    projectLabel: <?= json_encode($mobileProjectOptions[(string)($filters['project_id'] ?? '')] ?? 'Все проекты', $mobileJsonFlags) ?>
+                  }">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
-                    <select name="status" class="mobile-filter-select">
-                        <option value="">Все</option>
-                        <?php foreach ($statuses as $s): ?>
-                            <option value="<?= e($s['code']) ?>" <?= ($filters['status'] ?? '') === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
+                    <input type="hidden" name="status" :value="status">
+                    <button type="button" class="mobile-filter-trigger" @click="openFilter = openFilter === 'status' ? null : 'status'">
+                        <span x-text="statusLabel"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="openFilter === 'status' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="openFilter === 'status'" x-cloak class="mobile-filter-menu">
+                        <?php foreach ($mobileStatusOptions as $value => $label): ?>
+                            <button type="button" class="mobile-filter-option" :class="status === '<?= e($value) ?>' ? 'is-selected' : ''" @click="status = '<?= e($value) ?>'; statusLabel = <?= json_encode($label, $mobileJsonFlags) ?>; openFilter = null"><?= e($label) ?></button>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
-                    <select name="priority" class="mobile-filter-select">
-                        <option value="">Все</option>
-                        <option value="low" <?= ($filters['priority'] ?? '') === 'low' ? 'selected' : '' ?>>Низкий</option>
-                        <option value="medium" <?= ($filters['priority'] ?? '') === 'medium' ? 'selected' : '' ?>>Средний</option>
-                        <option value="high" <?= ($filters['priority'] ?? '') === 'high' ? 'selected' : '' ?>>Высокий</option>
-                        <option value="urgent" <?= ($filters['priority'] ?? '') === 'urgent' ? 'selected' : '' ?>>Срочный</option>
-                    </select>
+                    <input type="hidden" name="priority" :value="priority">
+                    <button type="button" class="mobile-filter-trigger" @click="openFilter = openFilter === 'priority' ? null : 'priority'">
+                        <span x-text="priorityLabel"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="openFilter === 'priority' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="openFilter === 'priority'" x-cloak class="mobile-filter-menu">
+                        <?php foreach ($mobilePriorityOptions as $value => $label): ?>
+                            <button type="button" class="mobile-filter-option" :class="priority === '<?= e($value) ?>' ? 'is-selected' : ''" @click="priority = '<?= e($value) ?>'; priorityLabel = <?= json_encode($label, $mobileJsonFlags) ?>; openFilter = null"><?= e($label) ?></button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php if ($roleId <= 2): ?>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                    <select name="assigned_to" class="mobile-filter-select">
-                        <option value="">Все</option>
-                        <?php foreach ($executors as $exec): ?>
-                            <option value="<?= (int) $exec['id'] ?>" <?= ($filters['assigned_to'] ?? '') == $exec['id'] ? 'selected' : '' ?>><?= e($exec['name']) ?></option>
+                    <input type="hidden" name="assigned_to" :value="assigned_to">
+                    <button type="button" class="mobile-filter-trigger" @click="openFilter = openFilter === 'assigned' ? null : 'assigned'">
+                        <span x-text="assignedLabel"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="openFilter === 'assigned' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="openFilter === 'assigned'" x-cloak class="mobile-filter-menu">
+                        <?php foreach ($mobileExecutorOptions as $value => $label): ?>
+                            <button type="button" class="mobile-filter-option" :class="assigned_to === '<?= e($value) ?>' ? 'is-selected' : ''" @click="assigned_to = '<?= e($value) ?>'; assignedLabel = <?= json_encode($label, $mobileJsonFlags) ?>; openFilter = null"><?= e($label) ?></button>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <?php endif; ?>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                    <select name="deadline" class="mobile-filter-select">
-                        <option value="">Все</option>
-                        <option value="today" <?= ($filters['deadline'] ?? '') === 'today' ? 'selected' : '' ?>>Сегодня</option>
-                        <option value="week" <?= ($filters['deadline'] ?? '') === 'week' ? 'selected' : '' ?>>На этой неделе</option>
-                        <option value="overdue" <?= ($filters['deadline'] ?? '') === 'overdue' ? 'selected' : '' ?>>Просроченные</option>
-                    </select>
+                    <input type="hidden" name="deadline" :value="deadline">
+                    <button type="button" class="mobile-filter-trigger" @click="openFilter = openFilter === 'deadline' ? null : 'deadline'">
+                        <span x-text="deadlineLabel"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="openFilter === 'deadline' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="openFilter === 'deadline'" x-cloak class="mobile-filter-menu">
+                        <?php foreach ($mobileDeadlineOptions as $value => $label): ?>
+                            <button type="button" class="mobile-filter-option" :class="deadline === '<?= e($value) ?>' ? 'is-selected' : ''" @click="deadline = '<?= e($value) ?>'; deadlineLabel = <?= json_encode($label, $mobileJsonFlags) ?>; openFilter = null"><?= e($label) ?></button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php if (!($project ?? null) && !empty($projects)): ?>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
-                    <select name="project_id" class="mobile-filter-select">
-                        <option value="">Все проекты</option>
-                        <?php foreach ($projects as $p): ?>
-                            <option value="<?= (int) $p['id'] ?>" <?= ($filters['project_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= e($p['title']) ?></option>
+                    <input type="hidden" name="project_id" :value="project_id">
+                    <button type="button" class="mobile-filter-trigger" @click="openFilter = openFilter === 'project' ? null : 'project'">
+                        <span x-text="projectLabel"></span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="openFilter === 'project' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="openFilter === 'project'" x-cloak class="mobile-filter-menu">
+                        <?php foreach ($mobileProjectOptions as $value => $label): ?>
+                            <button type="button" class="mobile-filter-option" :class="project_id === '<?= e($value) ?>' ? 'is-selected' : ''" @click="project_id = '<?= e($value) ?>'; projectLabel = <?= json_encode($label, $mobileJsonFlags) ?>; openFilter = null"><?= e($label) ?></button>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <?php endif; ?>
                 <?php if ($project ?? null): ?>
