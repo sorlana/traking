@@ -162,15 +162,17 @@ function urlBase64ToUint8Array(base64String) {
         $pushService = new PushService();
         
         try {
-            $pushService->sendToUser($userId, 'Тест уведомления', 'Если видишь это — push работает!', url('/dashboard'));
+            // Отправляем и собираем результат с HTTP-кодами
+            $results = $pushService->sendToUserDebug($userId, 'Тест уведомления', 'Если видишь это — push работает!', url('/dashboard'));
             $this->json([
                 'success' => true,
                 'message' => 'Push отправлен',
                 'subscriptions_count' => count($subscriptions),
                 'endpoints' => array_map(fn($s) => substr($s['endpoint'], 0, 80) . '...', $subscriptions),
+                'push_results' => $results,
             ]);
         } catch (\Throwable $e) {
-            $this->json(['success' => false, 'error' => $e->getMessage()]);
+            $this->json(['success' => false, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
     }
 }

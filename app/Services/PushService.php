@@ -68,6 +68,24 @@ class PushService
     }
 
     /**
+     * Debug-версия: возвращает HTTP-коды ответов для каждой подписки
+     */
+    public function sendToUserDebug(int $userId, string $title, string $body, ?string $url = null): array
+    {
+        $results = [];
+        $db = Database::getInstance();
+        $subscriptions = $db->fetchAll(
+            "SELECT * FROM push_subscriptions WHERE user_id = ?",
+            [$userId]
+        );
+
+        foreach ($subscriptions as $sub) {
+            $results[] = $this->sendPushDebug($sub, $title, $body, $url);
+        }
+        return $results;
+    }
+
+    /**
      * Отправить push участникам задачи (кроме отправителя)
      * Обёрнуто в try-catch — если таблица не существует, просто пропускаем
      */
@@ -214,6 +232,64 @@ class PushService
             $db = Database::getInstance();
             $db->delete('push_subscriptions', 'id = ?', [(int)$subscription['id']]);
         }
+    }
+
+    /**
+     * Debug-версия sendPush — возвращает результат вместо логирования
+     */
+    private function sendPushDebug(array $subscription, string $title, string $body, ?string $url = null): array
+    {
+        $payload = json_encode([
+            'title' => $title,
+            'body' => $body,
+            'url' => $url,
+            'icon' => '/favicon.svg',
+        ], JSON_UNESCAPED_UNICODE);
+
+        $endpoint = $subscription['endpoint'];
+        $userPublicKey = $this->base64urlDecode($subscription['p256dh_key']);
+        $userAuthToken = $this->base64urlDecode($subscription['auth_key']);
+
+        $encrypted = $this->encryptPayload($payload, $userPublicKey, $userAuthToken);
+        if (!$encrypted) {
+            return ['error' => 'encrypt_failed', 'endpoint' => substr($endpoint, 0, 60)];
+        }
+
+        $headers = [
+            'Content-Type: application/octet-stream',
+            'Content-Encoding: aes128gcm',
+            'Content-Length: ' . strlen($encrypted),
+            'TTL: 86400',
+        ];
+
+        $jwt = $this->createVapidJwt($endpoint);
+        if ($jwt) {
+            $headers[] = 'Authorization: vapid t=' . $jwt . ', k=' . $this->config['public_key'];
+        } else {
+            return ['error' => 'vapid_jwt_failed', 'endpoint' => substr($endpoint, 0, 60)];
+        }
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $encrypted,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        return [
+            'httpCode' => $httpCode,
+            'response' => substr($response, 0, 200),
+            'curlError' => $curlError,
+            'endpoint' => substr($endpoint, 0, 60),
+            'encrypted_size' => strlen($encrypted),
+        ];
     }
 
     /**
