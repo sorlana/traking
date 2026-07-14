@@ -139,40 +139,6 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
-            <!-- Модалка с деревом задач -->
-            <div x-show="showTreeModal"
-                 @click.self="showTreeModal = false"
-                 class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
-                 style="display: none;"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0">
-                <div class="bg-white w-full md:w-[600px] md:max-w-[90vw] rounded-t-2xl md:rounded-2xl p-4 pb-8 max-h-[80vh] overflow-y-auto"
-                     @click.stop>
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-sm font-medium text-gray-700">Дерево задач</h3>
-                        <button @click="showTreeModal = false" class="p-1 text-gray-400 hover:text-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                    <!-- Легенда -->
-                    <div class="flex gap-3 mb-3 text-xs text-gray-500">
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
-                    </div>
-                    <!-- Загрузка -->
-                    <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
-                    <!-- Пусто -->
-                    <div x-show="!treeLoading && treeData.length === 0" class="text-center py-8 text-gray-400 text-sm">Нет задач</div>
-                    <!-- Дерево с линиями -->
-                    <div x-show="!treeLoading && treeData.length > 0" x-html="renderTree(treeData, 0)"></div>
-                </div>
-            </div>
-
             <!-- Stats_Panel: только десктоп -->
             <div class="hidden md:grid grid-cols-4 gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
@@ -408,6 +374,40 @@ $layout = 'layouts/app';
             </div>
         </div>
     </template>
+
+    <!-- Модалка с деревом задач (вне template для корректного fixed позиционирования) -->
+    <div x-show="showTreeModal"
+         @click.self="showTreeModal = false"
+         class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
+         style="display: none;"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white w-full md:w-[600px] md:max-w-[90vw] rounded-t-2xl md:rounded-2xl p-4 pb-8 max-h-[80vh] overflow-y-auto"
+             @click.stop>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium text-gray-700">Дерево задач</h3>
+                <button @click="showTreeModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <!-- Легенда -->
+            <div class="flex gap-3 mb-3 text-xs text-gray-500">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
+            </div>
+            <!-- Загрузка -->
+            <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
+            <!-- Пусто -->
+            <div x-show="!treeLoading && treeData.length === 0" class="text-center py-8 text-gray-400 text-sm">Нет задач</div>
+            <!-- Дерево с линиями -->
+            <div x-show="!treeLoading && treeData.length > 0" x-html="renderTree(treeData, 0)"></div>
+        </div>
+    </div>
 
 </div>
 
