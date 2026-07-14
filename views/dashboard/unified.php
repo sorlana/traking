@@ -142,7 +142,7 @@ $layout = 'layouts/app';
             <!-- Модалка с деревом задач -->
             <div x-show="showTreeModal"
                  @click.self="showTreeModal = false"
-                 class="fixed inset-0 z-[80] bg-black/50 flex items-end md:items-center md:justify-center"
+                 class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
                  style="display: none;"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0"
