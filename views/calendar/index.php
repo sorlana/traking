@@ -3,7 +3,7 @@
 <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Календарь времени</h1>
+            <h1 class="text-xl font-bold text-gray-800">Календарь</h1>
         </div>
         <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2">
             <a href="<?= url('/calendar?month=' . $previousMonth) ?>" class="ui-btn ui-btn-secondary" aria-label="Предыдущий месяц">←</a>
