@@ -66,21 +66,21 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                          @touchstart="startLongPress($event, msg)"
                          @touchend="cancelLongPress()"
                          @touchmove="cancelLongPress()">
-                        <!-- Текстовая часть (синий фон) -->
-                        <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-blue-500 text-white rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
+                        <!-- Текстовая часть (графитовый фон) -->
+                        <div x-show="msg.comment_text && msg.comment_text !== '📎 Файл'" class="bg-gray-800 text-white rounded-lg px-3 py-2" :class="{'mb-1': msg.files.length > 0}">
                             <!-- Цитата (ответ на сообщение) -->
                             <template x-if="getParentMessage(msg)">
-                                <div class="bg-blue-400 bg-opacity-50 rounded px-2 py-1 mb-2 border-l-2 border-white border-opacity-70 text-xs">
-                                    <div class="font-medium text-blue-100" x-text="getParentMessage(msg).user_name"></div>
-                                    <div class="text-blue-200 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                <div class="bg-gray-700 bg-opacity-70 rounded px-2 py-1 mb-2 border-l-2 border-white border-opacity-70 text-xs">
+                                    <div class="font-medium text-gray-300" x-text="getParentMessage(msg).user_name"></div>
+                                    <div class="text-gray-400 truncate" x-text="getParentMessage(msg).comment_text"></div>
                                 </div>
                             </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
-                            <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right flex items-center justify-end gap-1">
+                            <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-400 mt-1 text-right flex items-center justify-end gap-1">
                                 <span x-text="formatTime(msg.created_at)"></span>
                                 <!-- Галочки прочтения (WhatsApp-стиль) -->
-                                <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-200" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                <svg x-show="!msg.read_by_others" class="w-4 h-4 text-blue-300 opacity-70" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg x-show="msg.read_by_others" class="w-4 h-4 text-green-400" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-500" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                         </div>
                         <!-- Прикреплённые файлы (без фона для изображений) -->
@@ -104,7 +104,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Остальные файлы — иконка + имя -->
                                 <template x-if="!isImage(file.file_type) && !isVideo(file.file_type)">
                                     <a :href="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                       class="flex items-center gap-2 p-2 bg-blue-500 rounded-lg text-xs text-white hover:bg-blue-600 transition">
+                                       class="flex items-center gap-2 p-2 bg-gray-700 rounded-lg text-xs text-white hover:bg-gray-600 transition">
                                         <span>📄</span>
                                         <span x-text="file.file_name + ' (' + formatSize(file.file_size) + ')'"></span>
                                     </a>
@@ -114,7 +114,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <!-- Ссылки -->
                         <template x-for="link in msg.links" :key="link.id">
                             <a :href="link.url" target="_blank" rel="noopener"
-                               class="flex items-center gap-2 mt-1 p-2 bg-blue-500 rounded-lg text-xs text-white hover:bg-blue-600 transition">
+                               class="flex items-center gap-2 mt-1 p-2 bg-gray-700 rounded-lg text-xs text-white hover:bg-gray-600 transition">
                                 <span>🔗</span>
                                 <span x-text="link.title || link.url"></span>
                             </a>
@@ -123,7 +123,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right flex items-center justify-end gap-1">
                             <span x-text="formatTime(msg.created_at)"></span>
                             <!-- Галочки прочтения (WhatsApp-стиль) -->
-                            <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg x-show="msg.read_by_others" class="w-4 h-4 text-green-400" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                     </div>
