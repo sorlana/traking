@@ -219,7 +219,9 @@ function showToast(message, type = 'success') {
  */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+        navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' }).catch((e) => {
+            console.warn('[SW] Registration failed:', e);
+        });
     });
 }
 
