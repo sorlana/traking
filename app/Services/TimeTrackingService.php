@@ -45,13 +45,28 @@ class TimeTrackingService
     }
 
     /**
-     * Прибавить время к итогу задачи и сохранить отдельную запись за сегодня.
+     * Прибавить время к итогу задачи и сохранить отдельную запись за выбранную дату.
      */
-    public function addTime(int $taskId, int $userId, float $hours, string $type = 'executor'): array
+    public function addTime(
+        int $taskId,
+        int $userId,
+        float $hours,
+        string $type = 'executor',
+        ?string $entryDate = null
+    ): array
     {
         $errors = $this->validateTimeValue($hours);
         if (!empty($errors)) {
             return ['success' => false, 'error' => $errors[0], 'time_spent' => null];
+        }
+
+        $entryDate ??= date('Y-m-d');
+        $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $entryDate);
+        if (!$parsedDate || $parsedDate->format('Y-m-d') !== $entryDate) {
+            return ['success' => false, 'error' => 'Укажите корректную дату', 'time_spent' => null];
+        }
+        if ($entryDate > date('Y-m-d')) {
+            return ['success' => false, 'error' => 'Нельзя добавить время будущей датой', 'time_spent' => null];
         }
 
         $type = $type === 'manager' ? 'manager' : 'executor';
@@ -96,7 +111,7 @@ class TimeTrackingService
                 'user_id' => $userId,
                 'time_type' => $type,
                 'hours' => $hours,
-                'entry_date' => date('Y-m-d'),
+                'entry_date' => $entryDate,
             ]);
             $pdo->commit();
 
@@ -105,7 +120,7 @@ class TimeTrackingService
                 'error' => null,
                 'time_spent' => $newTotal,
                 'manager_time_spent' => $type === 'manager' ? $newTotal : null,
-                'entry_date' => date('Y-m-d'),
+                'entry_date' => $entryDate,
                 'added' => $hours,
             ];
         } catch (\Throwable $e) {

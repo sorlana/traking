@@ -570,6 +570,7 @@ document.addEventListener('click', async function (e) {
     const container = e.target.closest('.js-time-container');
     const form = container?.querySelector('.js-add-time-form');
     const input = container?.querySelector('.js-add-time-input');
+    const dateInput = container?.querySelector('.js-add-time-date');
     if (!container || !form || !input) return;
 
     if (toggle) {
@@ -580,6 +581,7 @@ document.addEventListener('click', async function (e) {
     }
     if (cancel) {
         input.value = '';
+        if (dateInput?.max) dateInput.value = dateInput.max;
         form.classList.add('hidden');
         form.classList.remove('flex');
         return;
@@ -588,6 +590,10 @@ document.addEventListener('click', async function (e) {
     const validation = validateTimeSpent(input.value.trim());
     if (!validation.valid) {
         showToast(validation.error, 'error');
+        return;
+    }
+    if (dateInput && !dateInput.value) {
+        showToast('Укажите дату затраченного времени', 'error');
         return;
     }
 
@@ -603,6 +609,7 @@ document.addEventListener('click', async function (e) {
             body: JSON.stringify({
                 add_time: parseFloat(input.value),
                 type: container.dataset.timeType || 'executor',
+                entry_date: dateInput?.value || null,
             }),
         });
         const data = await response.json();
@@ -616,9 +623,11 @@ document.addEventListener('click', async function (e) {
         if (mainInput) mainInput.value = total;
         switchToViewMode(container, total);
         input.value = '';
+        if (dateInput?.max) dateInput.value = dateInput.max;
         form.classList.add('hidden');
         form.classList.remove('flex');
-        showToast(`Добавлено ${data.added} ч за сегодня`, 'success');
+        const formattedDate = data.entry_date.split('-').reverse().join('.');
+        showToast(`Добавлено ${data.added} ч за ${formattedDate}`, 'success');
     } catch (error) {
         showToast('Ошибка сети. Время не сохранено.', 'error');
     } finally {

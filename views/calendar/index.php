@@ -19,13 +19,7 @@
     </div>
 
     <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
-        <?php if (empty($rows)): ?>
-            <div class="py-16 px-4 text-center">
-                <p class="text-gray-500">В этом месяце пока нет дневных записей времени.</p>
-                <p class="text-sm text-gray-400 mt-2">Добавляйте часы кнопкой «+» во вкладке «Информация» задачи.</p>
-            </div>
-        <?php else: ?>
-            <div class="overflow-x-auto">
+        <div class="overflow-x-auto">
                 <table class="border-collapse text-xs" style="min-width:<?= 260 + count($days) * 54 ?>px">
                     <thead>
                         <tr class="bg-gray-50 border-b">
@@ -40,6 +34,17 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php if (empty($rows)): ?>
+                            <tr class="border-b">
+                                <td class="sticky left-0 z-10 bg-white px-3 py-4 border-r text-gray-400">
+                                    Нет записей времени
+                                </td>
+                                <?php foreach ($days as $day): ?>
+                                    <td class="h-12 border-r <?= $day['weekend'] ? 'bg-gray-50' : '' ?>"></td>
+                                <?php endforeach; ?>
+                                <td></td>
+                            </tr>
+                        <?php endif; ?>
                         <?php foreach ($rows as $row): ?>
                             <tr class="border-b last:border-b-0 hover:bg-gray-50/50">
                                 <td class="sticky left-0 z-10 bg-white px-3 py-2 border-r">
@@ -81,8 +86,7 @@
                         </tr>
                     </tfoot>
                 </table>
-            </div>
-        <?php endif; ?>
+        </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">

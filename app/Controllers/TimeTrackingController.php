@@ -70,7 +70,8 @@ class TimeTrackingController extends Controller
             $type = $input['type'] ?? 'executor';
 
             if ($isAddition) {
-                $result = $this->timeTrackingService->addTime($taskId, $userId, $timeSpent, $type);
+                $entryDate = isset($input['entry_date']) ? (string) $input['entry_date'] : null;
+                $result = $this->timeTrackingService->addTime($taskId, $userId, $timeSpent, $type, $entryDate);
                 if ($result['success']) {
                     $this->json([
                         'success' => true,
