@@ -77,6 +77,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->get('/push/vapid-key', [\Controllers\PushController::class, 'vapidKey']);
     $router->get('/push/test', [\Controllers\PushController::class, 'test']);
     $router->get('/push/test-raw', [\Controllers\PushController::class, 'testRaw']);
+    $router->get('/push/diag', [\Controllers\PushController::class, 'diag']);
 
     // Дашборд — главная страница после входа
     $router->get('/dashboard', [\Controllers\DashboardController::class, 'index']);

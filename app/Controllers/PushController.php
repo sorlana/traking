@@ -256,4 +256,108 @@ function urlBase64ToUint8Array(base64String) {
             'note' => 'Если httpCode=201 и уведомление пришло — проблема в шифровании. Если не пришло — проблема в SW на устройстве.',
         ]);
     }
+
+    /**
+     * GET /push/diag — всегда показывает диагностику устройства (без проверки подписок)
+     */
+    public function diag(): void
+    {
+        header('Content-Type: text/html; charset=utf-8');
+        $baseUrl = rtrim(url('/'), '/');
+        echo <<<HTML
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Push Диагностика</title></head>
+<body style="font-family:system-ui;padding:20px;max-width:600px;margin:0 auto;">
+<h2>Диагностика Push</h2>
+<button onclick="runDiag()" style="padding:12px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;width:100%;">Проверить и подписаться</button>
+<pre id="log" style="margin-top:16px;background:#f3f4f6;padding:12px;border-radius:8px;font-size:11px;overflow:auto;white-space:pre-wrap;min-height:200px;"></pre>
+<script>
+const BASE_URL = "{$baseUrl}";
+function log(msg) { document.getElementById("log").textContent += msg + "\\n"; }
+
+async function runDiag() {
+    document.getElementById("log").textContent = "";
+    log("=== Диагностика устройства ===");
+    log("serviceWorker: " + ("serviceWorker" in navigator));
+    log("PushManager: " + ("PushManager" in window));
+    log("Notification: " + ("Notification" in window));
+    log("standalone: " + window.matchMedia("(display-mode: standalone)").matches);
+    log("iOS standalone: " + (navigator.standalone === true));
+    log("UA: " + navigator.userAgent.substring(0, 100));
+    log("");
+
+    if (!("serviceWorker" in navigator)) { log("❌ ServiceWorker не поддерживается"); return; }
+    if (!("PushManager" in window)) { log("❌ PushManager недоступен — push невозможен на этом устройстве/браузере"); return; }
+
+    log("✓ API доступны. Регистрирую SW...");
+    try {
+        const reg = await navigator.serviceWorker.register(BASE_URL + "/service-worker.js", { scope: BASE_URL + "/" });
+        log("✓ SW зарегистрирован: " + reg.scope);
+        log("  active: " + !!reg.active);
+        log("  waiting: " + !!reg.waiting);
+        log("  installing: " + !!reg.installing);
+    } catch(e) {
+        log("❌ SW register error: " + e.message);
+        return;
+    }
+
+    log("Жду активации SW...");
+    try {
+        const registration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise((_, r) => setTimeout(() => r(new Error("timeout 10s")), 10000))
+        ]);
+        log("✓ SW активен");
+
+        if ("Notification" in window) {
+            log("Notification.permission: " + Notification.permission);
+            if (Notification.permission === "default") {
+                log("Запрашиваю разрешение...");
+                const perm = await Notification.requestPermission();
+                log("Результат: " + perm);
+                if (perm !== "granted") { log("❌ Разрешение не дано"); return; }
+            } else if (Notification.permission === "denied") {
+                log("❌ Уведомления заблокированы в браузере"); return;
+            }
+        } else {
+            log("Notification API отсутствует (iOS?) — попробую подписаться напрямую");
+        }
+
+        log("Получаю VAPID ключ...");
+        const resp = await fetch(BASE_URL + "/push/vapid-key", {headers:{"X-Requested-With":"XMLHttpRequest"}});
+        const { publicKey } = await resp.json();
+        log("✓ VAPID: " + (publicKey ? publicKey.substring(0,20) + "..." : "ПУСТО"));
+        if (!publicKey) { log("❌ Нет VAPID ключа"); return; }
+
+        log("Подписываюсь на push...");
+        const key = urlBase64ToUint8Array(publicKey);
+        const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+        const sub = subscription.toJSON();
+        log("✓ Подписка: " + sub.endpoint.substring(0, 60) + "...");
+
+        log("Сохраняю на сервер...");
+        const fd = new FormData();
+        fd.append("endpoint", sub.endpoint);
+        fd.append("p256dh", sub.keys.p256dh);
+        fd.append("auth", sub.keys.auth);
+        const saveResp = await fetch(BASE_URL + "/push/subscribe", {method:"POST", headers:{"X-Requested-With":"XMLHttpRequest"}, body:fd});
+        log("Сервер: " + saveResp.status);
+        log("");
+        log("✅ Готово! Push подключён на этом устройстве.");
+    } catch(e) {
+        log("❌ Ошибка: " + e.message);
+    }
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    return Uint8Array.from(rawData, c => c.charCodeAt(0));
+}
+</script>
+</body></html>
+HTML;
+        exit;
+    }
 }
