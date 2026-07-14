@@ -125,7 +125,11 @@ function pushSettings(serverEnabled) {
                 // Разрешение браузера сохранилось, но endpoint мог исчезнуть
                 // после переустановки PWA. В этом случае восстанавливаем его
                 // без повторного системного запроса.
-                if (serverEnabled && state.permission === 'granted' && !state.subscribed) {
+                if (serverEnabled && state.subscribed) {
+                    // Локальная подписка могла сохраниться, а серверная запись —
+                    // исчезнуть после временного 404/410 от push-провайдера.
+                    await window.PushNotifications.saveSubscription(state.subscription);
+                } else if (serverEnabled && state.permission === 'granted') {
                     await window.PushNotifications.ensureSubscription();
                     state = await window.PushNotifications.getState();
                 }

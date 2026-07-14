@@ -27,15 +27,26 @@ class PushService
     {
         $db = Database::getInstance();
         
-        // Удаляем старую подписку с тем же endpoint (если переподписка)
-        $db->delete('push_subscriptions', 'endpoint = ?', [$endpoint]);
-        
-        $db->insert('push_subscriptions', [
+        // Endpoint идентифицирует конкретную браузерную установку. Обновляем
+        // существующую запись на месте, чтобы повторная синхронизация одного
+        // устройства не затрагивала остальные подписки пользователя.
+        $existing = $db->fetch(
+            "SELECT id FROM push_subscriptions WHERE endpoint = ? LIMIT 1",
+            [$endpoint]
+        );
+
+        $data = [
             'user_id' => $userId,
-            'endpoint' => $endpoint,
             'p256dh_key' => $p256dh,
             'auth_key' => $auth,
-        ]);
+        ];
+
+        if ($existing) {
+            $db->update('push_subscriptions', $data, 'id = ?', [(int) $existing['id']]);
+            return;
+        }
+
+        $db->insert('push_subscriptions', $data + ['endpoint' => $endpoint]);
     }
 
     /**

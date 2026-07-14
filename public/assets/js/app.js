@@ -369,19 +369,27 @@ window.PushNotifications = {
     },
 };
 
-// После переустановки автоматически восстанавливаем подписку, если пользователь
-// уже дал браузеру разрешение. Само разрешение автоматически не запрашиваем.
-window.addEventListener('load', () => {
+// PWA на Android часто не перезагружает страницу, а просто возвращает её из
+// фона. При каждом возврате повторно связываем локальный endpoint с аккаунтом.
+// Системное разрешение автоматически не запрашиваем.
+let pushRecoveryPromise = null;
+function recoverPushSubscription() {
     if (!window.PushNotifications.isSupported() || !PUSH_ENABLED) return;
 
-    window.PushNotifications.getRegistration()
+    const permission = 'Notification' in window ? Notification.permission : 'default';
+    if (permission !== 'granted' || pushRecoveryPromise) return;
+
+    pushRecoveryPromise = window.PushNotifications.getRegistration()
         .then(() => {
-            const perm = 'Notification' in window ? Notification.permission : 'default';
-            if (perm === 'granted') {
-                return window.PushNotifications.ensureSubscription();
-            }
+            return window.PushNotifications.ensureSubscription();
         })
-        .catch(error => console.warn('[Push] Automatic recovery failed:', error));
+        .catch(error => console.warn('[Push] Automatic recovery failed:', error))
+        .finally(() => { pushRecoveryPromise = null; });
+}
+
+window.addEventListener('pageshow', recoverPushSubscription);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') recoverPushSubscription();
 });
 
 /**
