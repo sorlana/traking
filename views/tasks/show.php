@@ -226,7 +226,7 @@ $isClosed = ($task['status_code'] === 'closed');
                 <div class="border-t pt-4">
                     <label class="text-xs text-gray-400">Затраченное время</label>
                     <?php if ($canEditTime): ?>
-                        <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>">
+                        <div class="mt-1 flex items-center gap-2 flex-wrap js-time-container" data-task-id="<?= (int) $task['id'] ?>">
                             <!-- Режим просмотра -->
                             <span class="js-time-display text-sm text-gray-800 <?= $time_spent === null ? '' : '' ?>" <?= $time_spent !== null ? '' : 'style="display:none"' ?>><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></span>
                             <!-- Режим редактирования (скрыт если уже есть значение) -->
@@ -244,6 +244,13 @@ $isClosed = ($task['status_code'] === 'closed');
                             <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-blue-600 transition <?= $time_spent === null ? 'hidden' : '' ?>" title="Редактировать">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                             </button>
+                            <button type="button" class="js-toggle-add-time w-7 h-7 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold" title="Добавить время">+</button>
+                            <div class="js-add-time-form hidden items-center gap-1">
+                                <input type="number" step="0.5" min="0.5" max="999.5" class="js-add-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2" placeholder="+ 0.5">
+                                <span class="text-xs text-gray-400">ч</span>
+                                <button type="button" class="js-save-added-time p-1.5 text-blue-600 hover:text-blue-800" title="Прибавить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
+                                <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-gray-600" title="Отмена">×</button>
+                            </div>
                         </div>
                     <?php else: ?>
                         <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
@@ -260,12 +267,19 @@ $isClosed = ($task['status_code'] === 'closed');
                 <div class="border-t pt-4">
                     <label class="text-xs text-gray-400">Время руководителя</label>
                     <?php if ($canManagerEditTime): ?>
-                        <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>" data-time-type="manager">
+                        <div class="mt-1 flex items-center gap-2 flex-wrap js-time-container" data-task-id="<?= (int) $task['id'] ?>" data-time-type="manager">
                             <span class="js-time-display text-sm text-gray-800" <?= $manager_time_spent !== null ? '' : 'style="display:none"' ?>><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></span>
                             <input type="number" step="0.5" min="0.5" max="999.5" name="time_spent" value="<?= $manager_time_spent !== null ? e($manager_time_spent) : '' ?>" placeholder="0.5" class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">
                             <span class="js-time-unit text-xs text-gray-400 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">ч</span>
                             <button type="button" class="js-save-time p-1.5 text-purple-600 hover:text-purple-800 transition <?= $manager_time_spent !== null ? 'hidden' : '' ?>" title="Сохранить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
                             <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-purple-600 transition <?= $manager_time_spent === null ? 'hidden' : '' ?>" title="Редактировать"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                            <button type="button" class="js-toggle-add-time w-7 h-7 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 font-semibold" title="Добавить время">+</button>
+                            <div class="js-add-time-form hidden items-center gap-1">
+                                <input type="number" step="0.5" min="0.5" max="999.5" class="js-add-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-purple-500 focus:ring-purple-500 py-1.5 px-2" placeholder="+ 0.5">
+                                <span class="text-xs text-gray-400">ч</span>
+                                <button type="button" class="js-save-added-time p-1.5 text-purple-600 hover:text-purple-800" title="Прибавить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
+                                <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-gray-600" title="Отмена">×</button>
+                            </div>
                         </div>
                     <?php else: ?>
                         <p class="text-sm text-gray-800 mt-1"><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></p>
@@ -433,12 +447,19 @@ $isClosed = ($task['status_code'] === 'closed');
         <div class="border-t pt-4">
             <label class="text-xs text-gray-400">Затраченное время</label>
             <?php if ($canEditTime): ?>
-                <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>">
+                <div class="mt-1 flex items-center gap-2 flex-wrap js-time-container" data-task-id="<?= (int) $task['id'] ?>">
                     <span class="js-time-display text-sm text-gray-800" <?= $time_spent !== null ? '' : 'style="display:none"' ?>><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></span>
                     <input type="number" step="0.5" min="0.5" max="999.5" name="time_spent" value="<?= $time_spent !== null ? e($time_spent) : '' ?>" placeholder="0.5" class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $time_spent !== null ? 'hidden' : '' ?>">
                     <span class="js-time-unit text-xs text-gray-400 <?= $time_spent !== null ? 'hidden' : '' ?>">ч</span>
                     <button type="button" class="js-save-time p-1.5 text-blue-600 hover:text-blue-800 transition <?= $time_spent !== null ? 'hidden' : '' ?>" title="Сохранить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
                     <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-blue-600 transition <?= $time_spent === null ? 'hidden' : '' ?>" title="Редактировать"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                    <button type="button" class="js-toggle-add-time w-7 h-7 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold" title="Добавить время">+</button>
+                    <div class="js-add-time-form hidden items-center gap-1">
+                        <input type="number" step="0.5" min="0.5" max="999.5" class="js-add-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2" placeholder="+ 0.5">
+                        <span class="text-xs text-gray-400">ч</span>
+                        <button type="button" class="js-save-added-time p-1.5 text-blue-600 hover:text-blue-800" title="Прибавить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
+                        <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-gray-600" title="Отмена">×</button>
+                    </div>
                 </div>
             <?php else: ?>
                 <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
@@ -452,12 +473,19 @@ $isClosed = ($task['status_code'] === 'closed');
         <div class="border-t pt-4">
             <label class="text-xs text-gray-400">Время руководителя</label>
             <?php if ($canManagerEditTime): ?>
-                <div class="mt-1 flex items-center gap-2 js-time-container" data-task-id="<?= (int) $task['id'] ?>" data-time-type="manager">
+                <div class="mt-1 flex items-center gap-2 flex-wrap js-time-container" data-task-id="<?= (int) $task['id'] ?>" data-time-type="manager">
                     <span class="js-time-display text-sm text-gray-800" <?= $manager_time_spent !== null ? '' : 'style="display:none"' ?>><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></span>
                     <input type="number" step="0.5" min="0.5" max="999.5" name="time_spent" value="<?= $manager_time_spent !== null ? e($manager_time_spent) : '' ?>" placeholder="0.5" class="js-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">
                     <span class="js-time-unit text-xs text-gray-400 <?= $manager_time_spent !== null ? 'hidden' : '' ?>">ч</span>
                     <button type="button" class="js-save-time p-1.5 text-purple-600 hover:text-purple-800 transition <?= $manager_time_spent !== null ? 'hidden' : '' ?>" title="Сохранить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
                     <button type="button" class="js-edit-time p-1.5 text-gray-400 hover:text-purple-600 transition <?= $manager_time_spent === null ? 'hidden' : '' ?>" title="Редактировать"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                    <button type="button" class="js-toggle-add-time w-7 h-7 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 font-semibold" title="Добавить время">+</button>
+                    <div class="js-add-time-form hidden items-center gap-1">
+                        <input type="number" step="0.5" min="0.5" max="999.5" class="js-add-time-input w-20 text-sm border-gray-300 rounded-md shadow-sm focus:border-purple-500 focus:ring-purple-500 py-1.5 px-2" placeholder="+ 0.5">
+                        <span class="text-xs text-gray-400">ч</span>
+                        <button type="button" class="js-save-added-time p-1.5 text-purple-600 hover:text-purple-800" title="Прибавить"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>
+                        <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-gray-600" title="Отмена">×</button>
+                    </div>
                 </div>
             <?php else: ?>
                 <p class="text-sm text-gray-800 mt-1"><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></p>

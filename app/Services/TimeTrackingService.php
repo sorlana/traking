@@ -23,6 +23,114 @@ class TimeTrackingService
         $this->activityLogService = new ActivityLogService();
     }
 
+    /** Создать хранилище дневных записей при первом использовании. */
+    public function ensureTimeEntriesTable(): void
+    {
+        Database::getInstance()->query(
+            "CREATE TABLE IF NOT EXISTS time_entries (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                task_id INT UNSIGNED NOT NULL,
+                user_id INT UNSIGNED NOT NULL,
+                time_type ENUM('executor', 'manager') NOT NULL DEFAULT 'executor',
+                hours DECIMAL(6,2) NOT NULL,
+                entry_date DATE NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                INDEX idx_time_entries_user_date (user_id, entry_date),
+                INDEX idx_time_entries_task (task_id),
+                CONSTRAINT fk_time_entries_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON UPDATE CASCADE ON DELETE CASCADE,
+                CONSTRAINT fk_time_entries_user FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+    }
+
+    /**
+     * Прибавить время к итогу задачи и сохранить отдельную запись за сегодня.
+     */
+    public function addTime(int $taskId, int $userId, float $hours, string $type = 'executor'): array
+    {
+        $errors = $this->validateTimeValue($hours);
+        if (!empty($errors)) {
+            return ['success' => false, 'error' => $errors[0], 'time_spent' => null];
+        }
+
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $db = Database::getInstance();
+        $task = $db->fetch(
+            "SELECT t.*, ts.code AS status_code
+             FROM tasks t
+             JOIN task_statuses ts ON ts.id = t.status_id
+             WHERE t.id = ?",
+            [$taskId]
+        );
+        if (!$task) {
+            return ['success' => false, 'error' => 'Задача не найдена', 'time_spent' => null];
+        }
+
+        $access = $type === 'manager'
+            ? $this->canManagerEditTime($task, $userId)
+            : $this->canEditTime($task, $userId);
+        if (!$access['allowed']) {
+            return ['success' => false, 'error' => $access['reason'], 'time_spent' => null];
+        }
+
+        $this->ensureTimeEntriesTable();
+        $pdo = $db->getConnection();
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+
+        try {
+            $pdo->beginTransaction();
+            $locked = $db->fetch(
+                "SELECT time_spent, manager_time_spent FROM tasks WHERE id = ? FOR UPDATE",
+                [$taskId]
+            );
+            $newTotal = round((float) ($locked[$field] ?? 0) + $hours, 2);
+            if ($newTotal > 999.5) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Общее время не может превышать 999.5 часов', 'time_spent' => null];
+            }
+
+            $db->update('tasks', [$field => $newTotal], 'id = ?', [$taskId]);
+            $db->insert('time_entries', [
+                'task_id' => $taskId,
+                'user_id' => $userId,
+                'time_type' => $type,
+                'hours' => $hours,
+                'entry_date' => date('Y-m-d'),
+            ]);
+            $pdo->commit();
+
+            return [
+                'success' => true,
+                'error' => null,
+                'time_spent' => $newTotal,
+                'manager_time_spent' => $type === 'manager' ? $newTotal : null,
+                'entry_date' => date('Y-m-d'),
+                'added' => $hours,
+            ];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /** Дневные затраты текущего пользователя за выбранный период. */
+    public function getCalendarEntries(int $userId, string $dateFrom, string $dateTo): array
+    {
+        $this->ensureTimeEntriesTable();
+        return Database::getInstance()->fetchAll(
+            "SELECT te.task_id, te.time_type, te.entry_date, SUM(te.hours) AS hours,
+                    t.title AS task_title, t.parent_id, p.title AS project_title
+             FROM time_entries te
+             JOIN tasks t ON t.id = te.task_id
+             JOIN projects p ON p.id = t.project_id
+             WHERE te.user_id = ? AND te.entry_date BETWEEN ? AND ?
+             GROUP BY te.task_id, te.time_type, te.entry_date, t.title, t.parent_id, p.title
+             ORDER BY p.title, t.title, te.time_type, te.entry_date",
+            [$userId, $dateFrom, $dateTo]
+        );
+    }
+
     /**
      * Валидация значения затраченного времени
      *

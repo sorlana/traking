@@ -83,6 +83,9 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // Дашборд — главная страница после входа
     $router->get('/dashboard', [\Controllers\DashboardController::class, 'index']);
 
+    // Календарь дневных затрат текущего пользователя
+    $router->get('/calendar', [\Controllers\CalendarController::class, 'index']);
+
     // Уведомления
     $router->get('/notifications', [\Controllers\NotificationController::class, 'index']);
     $router->post('/notifications/read-all', [\Controllers\NotificationController::class, 'markAllRead']);

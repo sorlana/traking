@@ -95,6 +95,11 @@ if ($currentUser) {
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Проекты
                             </a>
+
+                            <a href="<?= url('/calendar') ?>"
+                               class="text-sm font-medium <?= str_starts_with($currentPath, '/calendar') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
+                                Календарь
+                            </a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -170,6 +175,10 @@ if ($currentUser) {
                 <a href="<?= url('/projects') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-500' ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     <span class="text-xs">Проекты</span>
+                </a>
+                <a href="<?= url('/calendar') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/calendar') ? 'text-blue-600' : 'text-gray-500' ?>">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
+                    <span class="text-xs">Календарь</span>
                 </a>
             <?php endif; ?>
             <!-- Уведомления -->
@@ -256,7 +265,7 @@ if ($currentUser) {
     </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=10"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=11"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>

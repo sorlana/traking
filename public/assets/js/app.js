@@ -560,6 +560,72 @@ document.addEventListener('click', function (e) {
     switchToEditMode(container);
 });
 
+// Дополнительное время: прибавляет значение к итогу и создаёт дневную запись.
+document.addEventListener('click', async function (e) {
+    const toggle = e.target.closest('.js-toggle-add-time');
+    const cancel = e.target.closest('.js-cancel-added-time');
+    const save = e.target.closest('.js-save-added-time');
+    if (!toggle && !cancel && !save) return;
+
+    const container = e.target.closest('.js-time-container');
+    const form = container?.querySelector('.js-add-time-form');
+    const input = container?.querySelector('.js-add-time-input');
+    if (!container || !form || !input) return;
+
+    if (toggle) {
+        form.classList.remove('hidden');
+        form.classList.add('flex');
+        input.focus();
+        return;
+    }
+    if (cancel) {
+        input.value = '';
+        form.classList.add('hidden');
+        form.classList.remove('flex');
+        return;
+    }
+
+    const validation = validateTimeSpent(input.value.trim());
+    if (!validation.valid) {
+        showToast(validation.error, 'error');
+        return;
+    }
+
+    save.disabled = true;
+    try {
+        const response = await fetch(`${BASE_URL}/tasks/${container.dataset.taskId}/time`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                add_time: parseFloat(input.value),
+                type: container.dataset.timeType || 'executor',
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            showToast(data.error || 'Ошибка сохранения времени', 'error');
+            return;
+        }
+
+        const total = Number(data.time_spent);
+        const mainInput = container.querySelector('.js-time-input');
+        if (mainInput) mainInput.value = total;
+        switchToViewMode(container, total);
+        input.value = '';
+        form.classList.add('hidden');
+        form.classList.remove('flex');
+        showToast(`Добавлено ${data.added} ч за сегодня`, 'success');
+    } catch (error) {
+        showToast('Ошибка сети. Время не сохранено.', 'error');
+    } finally {
+        save.disabled = false;
+    }
+});
+
 /**
  * Переключить контейнер времени в режим просмотра
  * @param {HTMLElement} container
@@ -702,26 +768,10 @@ document.addEventListener('alpine:init', () => {
             const rounded = Math.round(hours * 2) / 2; // Округление до 0.5
             const timeToSave = Math.max(rounded, 0.5); // Минимум 0.5 ч
 
-            // Суммируем с текущим значением из поля ввода
             const selector = this.timeType === 'manager'
                 ? `.js-time-container[data-task-id="${this.taskId}"][data-time-type="manager"]`
                 : `.js-time-container[data-task-id="${this.taskId}"]:not([data-time-type="manager"])`;
             const container = document.querySelector(selector);
-            let existingValue = 0;
-            if (container) {
-                const input = container.querySelector('.js-time-input');
-                const display = container.querySelector('.js-time-display');
-                if (input && input.value) {
-                    existingValue = parseFloat(input.value) || 0;
-                } else if (display && display.textContent) {
-                    const match = display.textContent.match(/([\d.]+)/);
-                    if (match) existingValue = parseFloat(match[1]) || 0;
-                }
-            }
-
-            const totalTime = existingValue + timeToSave;
-            // Ограничение 999.5
-            const finalTime = Math.min(totalTime, 999.5);
 
             // Отправляем на сервер
             try {
@@ -732,7 +782,7 @@ document.addEventListener('alpine:init', () => {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': csrfToken,
                     },
-                    body: JSON.stringify({ time_spent: finalTime, type: this.timeType }),
+                    body: JSON.stringify({ add_time: timeToSave, type: this.timeType }),
                 });
 
                 const contentType = response.headers.get('content-type') || '';
@@ -741,6 +791,8 @@ document.addEventListener('alpine:init', () => {
                     if (response.ok && data.success) {
                         // Обновляем отображение на вкладке Информация
                         if (container) {
+                            const input = container.querySelector('.js-time-input');
+                            if (input) input.value = data.time_spent;
                             switchToViewMode(container, data.time_spent);
                         }
                         showToast(`Время сохранено: +${timeToSave} ч (всего ${data.time_spent} ч)`, 'success');

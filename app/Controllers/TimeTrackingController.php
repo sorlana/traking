@@ -54,17 +54,36 @@ class TimeTrackingController extends Controller
         // Получаем JSON-тело запроса
         $input = json_decode(file_get_contents('php://input'), true);
 
-        // Проверка: передано ли значение time_spent и является ли оно числом
-        if (!isset($input['time_spent']) || !is_numeric($input['time_spent'])) {
+        $isAddition = isset($input['add_time']);
+        $rawTime = $isAddition ? $input['add_time'] : ($input['time_spent'] ?? null);
+
+        // Проверка: передано ли числовое значение времени
+        if (!is_numeric($rawTime)) {
             $this->json(['error' => 'Введите корректное числовое значение'], 422);
             return;
         }
 
-        $timeSpent = (float) $input['time_spent'];
+        $timeSpent = (float) $rawTime;
 
         try {
             // Определяем тип: исполнитель или руководитель
             $type = $input['type'] ?? 'executor';
+
+            if ($isAddition) {
+                $result = $this->timeTrackingService->addTime($taskId, $userId, $timeSpent, $type);
+                if ($result['success']) {
+                    $this->json([
+                        'success' => true,
+                        'time_spent' => $result['time_spent'],
+                        'manager_time_spent' => $result['manager_time_spent'],
+                        'added' => $result['added'],
+                        'entry_date' => $result['entry_date'],
+                    ]);
+                } else {
+                    $this->json(['error' => $result['error']], $this->resolveErrorCode($result['error']));
+                }
+                return;
+            }
 
             if ($type === 'manager') {
                 // Сохраняем время руководителя
