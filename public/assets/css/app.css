@@ -633,7 +633,6 @@ nav[class*="fixed"] {
     }
     main {
         min-height: 0;
-        padding-bottom: 5rem !important;
     }
 }
 
