@@ -87,7 +87,10 @@ self.addEventListener('fetch', (event) => {
 
 // Обработка входящего push-сообщения
 self.addEventListener('push', (event) => {
-    let data = { title: 'Traking', body: 'Новое сообщение', url: '/' };
+    // Логируем факт получения push (для отладки)
+    console.log('[SW] Push received!', event.data ? event.data.text().substring(0, 50) : 'no data');
+    
+    let data = { title: 'Flowtask', body: 'Новое сообщение', url: '/' };
     
     if (event.data) {
         try {
@@ -98,18 +101,18 @@ self.addEventListener('push', (event) => {
     }
 
     const options = {
-        body: data.body,
-        icon: '/traking/icons/push-icon.php',
+        body: data.body || 'Новое сообщение',
+        icon: data.icon || '/traking/icons/push-icon.php',
         badge: '/traking/icons/push-badge.php',
-        data: { url: data.url || '/' },
+        data: { url: data.url || '/traking/' },
         vibrate: [200, 100, 200],
         requireInteraction: true,
-        tag: 'flowtask-msg-' + (data.url || '').replace(/\D/g, ''),
+        tag: 'flowtask-msg-' + Date.now(),
         renotify: true,
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
+        self.registration.showNotification(data.title || 'Flowtask', options)
     );
 });
 

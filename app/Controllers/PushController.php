@@ -178,4 +178,73 @@ function urlBase64ToUint8Array(base64String) {
             $this->json(['success' => false, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
     }
+
+    /**
+     * GET /push/test-raw — отправить push БЕЗ payload (пустой) для диагностики
+     * Если пустой push приходит, а зашифрованный нет — проблема в шифровании
+     */
+    public function testRaw(): void
+    {
+        $userId = Auth::id();
+        $db = \Helpers\Database::getInstance();
+        $config = require BASE_PATH . '/config/push.php';
+        
+        $subscriptions = $db->fetchAll(
+            "SELECT * FROM push_subscriptions WHERE user_id = ?",
+            [$userId]
+        );
+        
+        if (empty($subscriptions)) {
+            $this->json(['error' => 'Нет подписок']);
+            return;
+        }
+
+        $sub = $subscriptions[0];
+        $endpoint = $sub['endpoint'];
+        
+        // Создаём VAPID JWT
+        $pushService = new \Services\PushService();
+        
+        // Отправляем пустой push (без payload, без шифрования)
+        $parsedUrl = parse_url($endpoint);
+        $audience = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+        
+        $headers = [
+            'TTL: 60',
+            'Content-Length: 0',
+        ];
+        
+        // VAPID auth
+        $jwt = $pushService->debugVapidJwt($endpoint);
+        if ($jwt['jwt_created']) {
+            // Нужен сам JWT строкой — пересоздадим
+            $jwtToken = $pushService->getVapidJwtString($endpoint);
+            if ($jwtToken) {
+                $headers[] = 'Authorization: vapid t=' . $jwtToken . ', k=' . $config['public_key'];
+            }
+        }
+        
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => '',
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $this->json([
+            'test' => 'empty push (no payload)',
+            'httpCode' => $httpCode,
+            'response' => substr($response, 0, 200),
+            'curlError' => $curlError,
+            'endpoint' => substr($endpoint, 0, 80),
+            'note' => 'Если httpCode=201 и уведомление пришло — проблема в шифровании. Если не пришло — проблема в SW на устройстве.',
+        ]);
+    }
 }

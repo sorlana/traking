@@ -86,6 +86,14 @@ class PushService
     }
 
     /**
+     * Получить JWT строку для VAPID (публичный метод для тестирования)
+     */
+    public function getVapidJwtString(string $endpoint): ?string
+    {
+        return $this->createVapidJwt($endpoint);
+    }
+
+    /**
      * Debug: диагностика VAPID JWT
      */
     public function debugVapidJwt(string $endpoint): array
