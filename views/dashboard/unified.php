@@ -158,48 +158,18 @@ $layout = 'layouts/app';
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
+                    <!-- Легенда -->
+                    <div class="flex gap-3 mb-3 text-xs text-gray-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
+                    </div>
                     <!-- Загрузка -->
                     <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
                     <!-- Пусто -->
                     <div x-show="!treeLoading && treeData.length === 0" class="text-center py-8 text-gray-400 text-sm">Нет задач</div>
-                    <!-- Дерево -->
-                    <div x-show="!treeLoading && treeData.length > 0" class="space-y-0.5">
-                        <template x-for="node in treeData" :key="node.id">
-                            <div>
-                                <div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50">
-                                    <span class="w-2 h-2 rounded-full flex-shrink-0" :class="{'bg-yellow-500': node.status_code === 'in_progress', 'bg-orange-500': node.status_code === 'revision', 'bg-green-500': node.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(node.status_code)}"></span>
-                                    <a :href="BASE_URL + '/tasks/' + node.id" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate" x-text="node.title"></a>
-                                    <span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': node.status_code === 'in_progress', 'bg-orange-100 text-orange-800': node.status_code === 'revision', 'bg-green-100 text-green-800': node.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(node.status_code)}" x-text="node.status_name"></span>
-                                </div>
-                                <!-- Дочерние (1 уровень) -->
-                                <template x-if="node.children && node.children.length > 0">
-                                    <div class="ml-4">
-                                        <template x-for="child in node.children" :key="child.id">
-                                            <div>
-                                                <div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50">
-                                                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="{'bg-yellow-500': child.status_code === 'in_progress', 'bg-orange-500': child.status_code === 'revision', 'bg-green-500': child.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(child.status_code)}"></span>
-                                                    <a :href="BASE_URL + '/tasks/' + child.id" class="text-xs text-gray-700 hover:text-blue-600 flex-1 truncate" x-text="child.title"></a>
-                                                    <span class="text-xs px-1 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': child.status_code === 'in_progress', 'bg-orange-100 text-orange-800': child.status_code === 'revision', 'bg-green-100 text-green-800': child.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(child.status_code)}" x-text="child.status_name"></span>
-                                                </div>
-                                                <!-- Вложенные (2+ уровень) -->
-                                                <template x-if="child.children && child.children.length > 0">
-                                                    <div class="ml-4">
-                                                        <template x-for="sub in child.children" :key="sub.id">
-                                                            <div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50">
-                                                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="{'bg-yellow-500': sub.status_code === 'in_progress', 'bg-orange-500': sub.status_code === 'revision', 'bg-green-500': sub.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(sub.status_code)}"></span>
-                                                                <a :href="BASE_URL + '/tasks/' + sub.id" class="text-xs text-gray-600 hover:text-blue-600 flex-1 truncate" x-text="sub.title"></a>
-                                                                <span class="text-xs px-1 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': sub.status_code === 'in_progress', 'bg-orange-100 text-orange-800': sub.status_code === 'revision', 'bg-green-100 text-green-800': sub.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(sub.status_code)}" x-text="sub.status_name"></span>
-                                                            </div>
-                                                        </template>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
+                    <!-- Дерево с линиями -->
+                    <div x-show="!treeLoading && treeData.length > 0" x-html="renderTree(treeData, 0)"></div>
                 </div>
             </div>
 
@@ -500,6 +470,56 @@ document.addEventListener('alpine:init', () => {
                 this.treeData = [];
             }
             this.treeLoading = false;
+        },
+
+        renderTree(nodes, depth) {
+            if (!nodes || nodes.length === 0) return '';
+            let html = '';
+            const statusDot = (code) => {
+                if (code === 'in_progress') return 'bg-yellow-500';
+                if (code === 'revision') return 'bg-orange-500';
+                if (code === 'done') return 'bg-green-500';
+                return 'bg-gray-400';
+            };
+            const statusBadge = (code, name) => {
+                let cls = 'bg-gray-100 text-gray-600';
+                if (code === 'in_progress') cls = 'bg-yellow-100 text-yellow-800';
+                else if (code === 'revision') cls = 'bg-orange-100 text-orange-800';
+                else if (code === 'done') cls = 'bg-green-100 text-green-800';
+                return `<span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${cls}">${this.esc(name)}</span>`;
+            };
+
+            nodes.forEach((node, i) => {
+                const isLast = i === nodes.length - 1;
+                const hasChildren = node.children && node.children.length > 0;
+                const connector = depth === 0 ? '' : (isLast ? '└─' : '├─');
+                const lineClass = depth === 0 ? '' : 'border-l border-gray-300';
+
+                html += `<div class="relative" style="padding-left: ${depth * 20}px;">`;
+                // Вертикальная линия
+                if (depth > 0) {
+                    html += `<span class="absolute top-0 bottom-0 border-l border-gray-300" style="left: ${(depth - 1) * 20 + 9}px; ${isLast ? 'height: 16px;' : ''}"></span>`;
+                    // Горизонтальная линия
+                    html += `<span class="absolute border-t border-gray-300" style="left: ${(depth - 1) * 20 + 9}px; top: 16px; width: 11px;"></span>`;
+                }
+                html += `<div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 relative">`;
+                html += `<span class="w-2 h-2 rounded-full flex-shrink-0 ${statusDot(node.status_code)}"></span>`;
+                html += `<a href="${BASE_URL}/tasks/${node.id}" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate">${this.esc(node.title)}</a>`;
+                html += statusBadge(node.status_code, node.status_name || '');
+                html += `</div>`;
+                if (hasChildren) {
+                    html += this.renderTree(node.children, depth + 1);
+                }
+                html += `</div>`;
+            });
+            return html;
+        },
+
+        esc(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
         }
     }));
 });
