@@ -4,25 +4,27 @@
  * - Offline-fallback страница
  */
 
-const CACHE_NAME = 'traking-v71';
+const CACHE_NAME = 'traking-v72';
 const OFFLINE_URL = '/offline.html';
 
 // Ресурсы для предварительного кэширования
 const PRECACHE_URLS = [
-    '/',
-    '/offline.html',
-    '/assets/css/app.css',
-    '/assets/js/app.js',
-    '/manifest.json',
-    '/favicon.svg',
-    '/icons/flowtask_logo.svg'
+    './',
+    './offline.html',
+    './assets/css/app.css',
+    './assets/js/app.js',
+    './manifest.json',
+    './favicon.svg',
+    './icons/flowtask_logo.svg'
 ];
 
-// Установка — кэшируем статику
+// Установка — кэшируем статику (ошибка кэширования не блокирует установку)
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(PRECACHE_URLS);
+            return cache.addAll(PRECACHE_URLS).catch(e => {
+                console.warn('[SW] Precache failed (non-blocking):', e);
+            });
         })
     );
     self.skipWaiting();
