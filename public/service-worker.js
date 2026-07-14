@@ -1,190 +1,106 @@
 /**
- * Service Worker для Traking PWA
- * - Кэширование статических ресурсов
- * - Offline-fallback страница
+ * Service Worker для Flowtask PWA
+ * Минимальный — только push-уведомления и offline fallback.
+ * Без precache чтобы гарантировать мгновенную активацию.
  */
 
-const CACHE_NAME = 'traking-v76';
-const OFFLINE_URL = '/offline.html';
+// Установка — мгновенная активация
+self.addEventListener('install', () => self.skipWaiting());
 
-// Ресурсы для предварительного кэширования
-const PRECACHE_URLS = [
-    './',
-    './offline.html',
-    './assets/css/app.css',
-    './assets/js/app.js',
-    './manifest.json',
-    './favicon.svg',
-    './icons/flowtask_logo.svg'
-];
-
-// Установка — кэшируем статику (ошибка кэширования не блокирует установку)
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(PRECACHE_URLS).catch(e => {
-                console.warn('[SW] Precache failed (non-blocking):', e);
-            });
-        })
-    );
-    self.skipWaiting();
-});
-
-// Активация — удаляем старые кэши
+// Активация — забираем контроль + чистим старые кэши
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames
-                    .filter((name) => name !== CACHE_NAME)
-                    .map((name) => caches.delete(name))
-            );
-        })
+        caches.keys()
+            .then(names => Promise.all(names.map(n => caches.delete(n))))
+            .then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
-// Fetch — стратегия Network First для страниц, Cache First для статики
+// Fetch — просто network, без кэширования (для надёжности)
 self.addEventListener('fetch', (event) => {
-    const { request } = event;
-
-    // Только GET-запросы
-    if (request.method !== 'GET') return;
-
-    // Для навигационных запросов — Network First
-    if (request.mode === 'navigate') {
-        event.respondWith(
-            fetch(request).catch(() => {
-                return caches.match(OFFLINE_URL);
-            })
-        );
-        return;
-    }
-
-    // Для статики (css, js, img) — Cache First
-    if (request.url.match(/\.(css|js|png|jpg|jpeg|svg|ico|woff2?)$/)) {
-        event.respondWith(
-            caches.match(request).then((cached) => {
-                return cached || fetch(request).then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-                    return response;
-                });
-            })
-        );
-        return;
-    }
-
-    // Для всего остального — Network First
-    event.respondWith(
-        fetch(request).catch(() => caches.match(request))
-    );
+    // Не перехватываем — браузер сам обработает
 });
 
 // ============================================================================
 // Push-уведомления
 // ============================================================================
 
-// Обработка входящего push-сообщения
 self.addEventListener('push', (event) => {
-    // Логируем факт получения push (для отладки)
-    console.log('[SW] Push received!', event.data ? event.data.text().substring(0, 50) : 'no data');
-    
-    let data = { title: 'Flowtask', body: 'Новое сообщение', url: '/' };
-    
+    let data = { title: 'Flowtask', body: 'Новое сообщение', url: '/traking/' };
+
     if (event.data) {
         try {
-            data = event.data.json();
-        } catch(e) {
-            data.body = event.data.text();
+            data = { ...data, ...event.data.json() };
+        } catch (e) {
+            data.body = event.data.text() || 'Новое сообщение';
         }
     }
 
-    const options = {
-        body: data.body || 'Новое сообщение',
-        icon: data.icon || '/traking/icons/push-icon.php',
-        badge: '/traking/icons/push-badge.php',
-        data: { url: data.url || '/traking/' },
-        vibrate: [200, 100, 200],
-        requireInteraction: true,
-        tag: 'flowtask-msg-' + Date.now(),
-        renotify: true,
-    };
-
     event.waitUntil(
-        self.registration.showNotification(data.title || 'Flowtask', options)
+        self.registration.showNotification(data.title || 'Flowtask', {
+            body: data.body || 'Новое сообщение',
+            icon: data.icon || '/traking/icons/push-icon.php',
+            badge: '/traking/icons/push-badge.php',
+            data: { url: data.url || '/traking/' },
+            vibrate: [200, 100, 200],
+            requireInteraction: true,
+            tag: 'flowtask-' + Date.now(),
+            renotify: true,
+        })
     );
 });
 
-// Браузер может заменить push endpoint после обновления, очистки данных или
-// восстановления приложения. Синхронизируем новую подписку с сервером.
-self.addEventListener('pushsubscriptionchange', (event) => {
-    event.waitUntil((async () => {
-        try {
-            let subscription = event.newSubscription;
-
-            if (!subscription) {
-                let applicationServerKey = event.oldSubscription?.options?.applicationServerKey;
-
-                if (!applicationServerKey) {
-                    const basePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
-                    const keyResponse = await fetch(basePath + '/push/vapid-key', {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        credentials: 'same-origin',
-                    });
-                    const keyData = await keyResponse.json();
-                    const padding = '='.repeat((4 - keyData.publicKey.length % 4) % 4);
-                    const base64 = (keyData.publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
-                    const rawData = atob(base64);
-                    applicationServerKey = Uint8Array.from(rawData, char => char.charCodeAt(0));
-                }
-
-                subscription = await self.registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey,
-                });
-            }
-
-            const data = subscription.toJSON();
-            const formData = new FormData();
-            formData.append('endpoint', data.endpoint);
-            formData.append('p256dh', data.keys.p256dh);
-            formData.append('auth', data.keys.auth);
-
-            const basePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
-            const response = await fetch(basePath + '/push/subscribe', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin',
-                body: formData,
-            });
-
-            const result = await response.json().catch(() => null);
-            if (!response.ok || !result?.success) {
-                throw new Error('Subscription sync failed: HTTP ' + response.status);
-            }
-        } catch (error) {
-            console.error('[SW] Push subscription recovery failed:', error);
-        }
-    })());
-});
-
-// Клик по push-уведомлению — открыть задачу
+// Клик по уведомлению — открыть задачу
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-
-    const url = event.notification.data?.url || '/';
+    const url = event.notification.data?.url || '/traking/';
 
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Если есть открытая вкладка — переключиться на неё
-            for (const client of clientList) {
-                if (client.url.includes(url) && 'focus' in client) {
-                    return client.focus();
-                }
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            for (const client of list) {
+                if (client.url.includes(url) && 'focus' in client) return client.focus();
             }
-            // Иначе — открыть новую
             return clients.openWindow(url);
         })
     );
+});
+
+// Переподписка при смене endpoint
+self.addEventListener('pushsubscriptionchange', (event) => {
+    event.waitUntil((async () => {
+        try {
+            const basePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+            let subscription = event.newSubscription;
+
+            if (!subscription) {
+                const keyResp = await fetch(basePath + '/push/vapid-key', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const { publicKey } = await keyResp.json();
+                const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+                const base64 = (publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+                const raw = atob(base64);
+                const key = Uint8Array.from(raw, c => c.charCodeAt(0));
+
+                subscription = await self.registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: key,
+                });
+            }
+
+            const sub = subscription.toJSON();
+            const fd = new FormData();
+            fd.append('endpoint', sub.endpoint);
+            fd.append('p256dh', sub.keys.p256dh);
+            fd.append('auth', sub.keys.auth);
+
+            await fetch(basePath + '/push/subscribe', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd,
+            });
+        } catch (e) {
+            console.error('[SW] pushsubscriptionchange failed:', e);
+        }
+    })());
 });
