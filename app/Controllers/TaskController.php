@@ -21,6 +21,7 @@ use Models\Project;
 use Services\TaskTreeService;
 use Services\TimeTrackingService;
 use Services\NotificationService;
+use Services\PushService;
 use Services\ActivityLogService;
 
 class TaskController extends Controller
@@ -540,7 +541,17 @@ class TaskController extends Controller
             $data['description'] = null;
         }
 
+        $statusChanged = (int) $task['status_id'] !== (int) $data['status_id'];
         $this->taskModel->update($taskId, $data);
+
+        if ($statusChanged) {
+            $db = Database::getInstance();
+            $newStatus = $db->fetch("SELECT name FROM task_statuses WHERE id = ?", [$data['status_id']]);
+            if ($newStatus) {
+                $this->notificationService->notifyStatusChanged($taskId, $newStatus['name'], Auth::id());
+                (new PushService())->sendTaskStatusChanged($taskId, Auth::id(), $newStatus['name']);
+            }
+        }
 
         Session::flash('success', 'Задача обновлена');
         $this->redirect('/tasks/' . $taskId);
@@ -648,6 +659,9 @@ class TaskController extends Controller
 
         // Уведомляем участников
         $this->notificationService->notifyStatusChanged($taskId, $status['name'], Auth::id());
+        if ((int) $task['status_id'] !== $statusId) {
+            (new PushService())->sendTaskStatusChanged($taskId, Auth::id(), $status['name']);
+        }
 
         if ($this->isAjax()) {
             $this->json([
@@ -706,6 +720,9 @@ class TaskController extends Controller
 
         // Уведомляем участников
         $this->notificationService->notifyStatusChanged($taskId, 'Сделано', Auth::id());
+        if ((int) $task['status_id'] !== (int) $closedStatus['id']) {
+            (new PushService())->sendTaskStatusChanged($taskId, Auth::id(), 'Сделано');
+        }
 
         Session::flash('success', 'Задача закрыта и перемещена в архив');
         $this->redirect("/tasks/{$taskId}");

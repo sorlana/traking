@@ -160,6 +160,35 @@ class PushService
         }
     }
 
+    /**
+     * Отправить push о смене статуса задачи или подзадачи всем заинтересованным
+     * участникам, кроме пользователя, который выполнил изменение.
+     */
+    public function sendTaskStatusChanged(int $taskId, int $changedBy, string $newStatus): void
+    {
+        $db = Database::getInstance();
+        $task = $db->fetch(
+            "SELECT title, parent_id FROM tasks WHERE id = ?",
+            [$taskId]
+        );
+        if (!$task) return;
+
+        $changer = $db->fetch(
+            "SELECT name, login FROM users WHERE id = ?",
+            [$changedBy]
+        );
+        $changerName = $changer['name'] ?? $changer['login'] ?? 'Пользователь';
+        $entity = $task['parent_id'] ? 'Подзадача' : 'Задача';
+
+        $this->sendToTaskParticipants(
+            $taskId,
+            $changedBy,
+            $entity . ': ' . $task['title'],
+            $changerName . ' изменил(а) статус на «' . $newStatus . '»',
+            url('/tasks/' . $taskId)
+        );
+    }
+
     private function doSendToTaskParticipants(int $taskId, int $excludeUserId, string $title, string $body, ?string $url = null): void
     {
         $db = Database::getInstance();
@@ -185,6 +214,17 @@ class PushService
         foreach ($managers as $m) {
             if ((int)$m['user_id'] !== $excludeUserId) {
                 $recipients[] = (int)$m['user_id'];
+            }
+        }
+
+        // Дополнительные исполнители и наблюдатели, назначенные на задачу.
+        $participants = $db->fetchAll(
+            "SELECT user_id FROM task_participants WHERE task_id = ?",
+            [$taskId]
+        );
+        foreach ($participants as $participant) {
+            if ((int) $participant['user_id'] !== $excludeUserId) {
+                $recipients[] = (int) $participant['user_id'];
             }
         }
 
