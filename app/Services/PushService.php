@@ -222,37 +222,56 @@ class PushService
      */
     private function encryptPayload(string $payload, string $userPublicKey, string $userAuthToken): ?string
     {
-        // Генерируем ephemeral ECDH key pair
+        if (strlen($userPublicKey) !== 65 || strlen($userAuthToken) !== 16) {
+            error_log('PushService: Invalid key lengths: pub=' . strlen($userPublicKey) . ' auth=' . strlen($userAuthToken));
+            return null;
+        }
+
+        // Генерируем ephemeral ECDH key pair (P-256)
         $localKey = openssl_pkey_new([
             'curve_name' => 'prime256v1',
             'private_key_type' => OPENSSL_KEYTYPE_EC,
         ]);
-        if (!$localKey) return null;
+        if (!$localKey) {
+            error_log('PushService: Failed to generate EC key: ' . openssl_error_string());
+            return null;
+        }
 
         $localKeyDetails = openssl_pkey_get_details($localKey);
         $localPublicKey = $this->getUncompressedPublicKey($localKeyDetails);
-        if (!$localPublicKey || strlen($localPublicKey) !== 65) return null;
+        if (!$localPublicKey || strlen($localPublicKey) !== 65) {
+            error_log('PushService: Invalid local public key length: ' . strlen($localPublicKey ?? ''));
+            return null;
+        }
 
         // ECDH: вычисляем shared secret
         $sharedSecret = $this->computeECDHSecret($localKey, $userPublicKey);
-        if (!$sharedSecret) return null;
+        if (!$sharedSecret) {
+            error_log('PushService: ECDH failed: ' . openssl_error_string());
+            return null;
+        }
 
-        // HKDF для IKM: PRK = HMAC-SHA256(auth_secret, shared_secret)
-        // info = "WebPush: info\0" + client_public + server_public
+        // RFC 8291 key derivation
+        // IKM = HKDF(auth_secret, ecdh_secret, "WebPush: info\0" || ua_public || as_public, 32)
         $ikm_info = "WebPush: info\0" . $userPublicKey . $localPublicKey;
-        $ikm = $this->hkdf($userAuthToken, $sharedSecret, $ikm_info, 32);
+        $prk_key = hash_hmac('sha256', $sharedSecret, $userAuthToken, true);
+        $ikm = substr(hash_hmac('sha256', $ikm_info . "\x01", $prk_key, true), 0, 32);
 
         // Salt (random 16 bytes)
         $salt = random_bytes(16);
 
-        // Derive content encryption key (CEK) and nonce
-        $cek_info = "Content-Encoding: aes128gcm\0";
-        $nonce_info = "Content-Encoding: nonce\0";
+        // PRK for content encryption
         $prk = hash_hmac('sha256', $ikm, $salt, true);
-        $cek = substr(hash_hmac('sha256', $cek_info . "\1", $prk, true), 0, 16);
-        $nonce = substr(hash_hmac('sha256', $nonce_info . "\1", $prk, true), 0, 12);
 
-        // Padding: payload + \x02 (delimiter)
+        // CEK: HKDF-Expand(PRK, "Content-Encoding: aes128gcm\0\1", 16)
+        $cek_info = "Content-Encoding: aes128gcm\0\x01";
+        $cek = substr(hash_hmac('sha256', $cek_info, $prk, true), 0, 16);
+
+        // Nonce: HKDF-Expand(PRK, "Content-Encoding: nonce\0\1", 12)
+        $nonce_info = "Content-Encoding: nonce\0\x01";
+        $nonce = substr(hash_hmac('sha256', $nonce_info, $prk, true), 0, 12);
+
+        // Padding delimiter + payload (RFC 8188: plaintext record = data + padding delimiter)
         $paddedPayload = $payload . "\x02";
 
         // AES-128-GCM шифрование
@@ -267,16 +286,17 @@ class PushService
             '',
             16
         );
-        if ($encrypted === false) return null;
+        if ($encrypted === false) {
+            error_log('PushService: AES-GCM encrypt failed: ' . openssl_error_string());
+            return null;
+        }
 
-        // Формируем aes128gcm content:
-        // salt (16) + rs (4, uint32 big-endian) + idlen (1) + keyid (65, local public key) + encrypted + tag
-        $rs = pack('N', 4096); // record size
-        $idlen = chr(65); // длина keyid (публичный ключ = 65 байт)
+        // aes128gcm header: salt(16) || rs(4) || idlen(1) || keyid(65)
+        // followed by: ciphertext || tag
+        $rs = pack('N', 4096);
+        $idlen = chr(65);
 
-        $result = $salt . $rs . $idlen . $localPublicKey . $encrypted . $tag;
-
-        return $result;
+        return $salt . $rs . $idlen . $localPublicKey . $encrypted . $tag;
     }
 
     /**
@@ -285,8 +305,14 @@ class PushService
     private function getUncompressedPublicKey(array $keyDetails): ?string
     {
         if (!isset($keyDetails['ec']['x']) || !isset($keyDetails['ec']['y'])) return null;
-        $x = str_pad($keyDetails['ec']['x'], 32, "\0", STR_PAD_LEFT);
-        $y = str_pad($keyDetails['ec']['y'], 32, "\0", STR_PAD_LEFT);
+        // x и y — бинарные строки, нужно дополнить до 32 байт каждый
+        $x = $keyDetails['ec']['x'];
+        $y = $keyDetails['ec']['y'];
+        $x = str_pad($x, 32, "\0", STR_PAD_LEFT);
+        $y = str_pad($y, 32, "\0", STR_PAD_LEFT);
+        // Обрезаем до 32 если вдруг больше (leading zero byte)
+        $x = substr($x, -32);
+        $y = substr($y, -32);
         return "\x04" . $x . $y;
     }
 
@@ -295,17 +321,28 @@ class PushService
      */
     private function computeECDHSecret($localPrivateKey, string $peerPublicKeyRaw): ?string
     {
+        // Проверяем наличие функции
+        if (!function_exists('openssl_pkey_derive')) {
+            error_log('PushService: openssl_pkey_derive not available (PHP 7.3+ required)');
+            return null;
+        }
+
         // Создаём PEM из raw public key для openssl
         $peerPem = $this->rawPublicKeyToPem($peerPublicKeyRaw);
         if (!$peerPem) return null;
 
         $peerKey = openssl_pkey_get_public($peerPem);
-        if (!$peerKey) return null;
+        if (!$peerKey) {
+            error_log('PushService: Failed to parse peer public key: ' . openssl_error_string());
+            return null;
+        }
 
-        $shared = openssl_pkey_derive($localPrivateKey, $peerKey, 256);
-        if ($shared === false) return null;
+        $shared = openssl_pkey_derive($localPrivateKey, $peerKey);
+        if ($shared === false) {
+            error_log('PushService: openssl_pkey_derive failed: ' . openssl_error_string());
+            return null;
+        }
 
-        // openssl_pkey_derive возвращает shared secret нужной длины
         return $shared;
     }
 

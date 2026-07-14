@@ -58,4 +58,20 @@ class PushController extends Controller
         $config = require BASE_PATH . '/config/push.php';
         $this->json(['publicKey' => $config['public_key']]);
     }
+
+    /**
+     * GET /push/test — отправить тестовый push текущему пользователю
+     */
+    public function test(): void
+    {
+        $userId = Auth::id();
+        $pushService = new PushService();
+        
+        try {
+            $pushService->sendToUser($userId, 'Тест уведомления', 'Если видишь это — push работает!', url('/dashboard'));
+            $this->json(['success' => true, 'message' => 'Push отправлен']);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
 }
