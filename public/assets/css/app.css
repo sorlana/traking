@@ -481,10 +481,18 @@ a[class*="px-5"] {
 /* Предотвращаем дёрганье fixed-элементов при прокрутке на мобильных */
 nav.fixed,
 nav[class*="fixed"] {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+}
+
+/* Модалки — гарантированно покрывают весь экран включая safe-area */
+.fixed.inset-0,
+[class*="fixed"][class*="inset-0"] {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 .mobile-bottom-nav > div > a,

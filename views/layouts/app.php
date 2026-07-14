@@ -25,7 +25,7 @@ if ($currentUser) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title><?= e($title ?? 'Traking') ?></title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <style>[x-cloak]{display:none!important}</style>
