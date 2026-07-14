@@ -20,6 +20,12 @@ Options -Indexes
 # Кодировка по умолчанию
 AddDefaultCharset UTF-8
 
+# Service Worker — правильный Content-Type
+<FilesMatch "service-worker\.js$">
+    Header set Service-Worker-Allowed "/"
+    Header set Content-Type "application/javascript"
+</FilesMatch>
+
 # Кэширование статики
 <IfModule mod_expires.c>
     ExpiresActive On
