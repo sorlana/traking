@@ -158,6 +158,7 @@ class PushService
     /**
      * Отправить один push-запрос
      * Использует Web Push Protocol (RFC 8030) с VAPID (RFC 8292)
+     * и шифрование payload по RFC 8291 (ECDH + AES128GCM)
      */
     private function sendPush(array $subscription, string $title, string $body, ?string $url = null): void
     {
@@ -169,9 +170,19 @@ class PushService
         ], JSON_UNESCAPED_UNICODE);
 
         $endpoint = $subscription['endpoint'];
+        $userPublicKey = $this->base64urlDecode($subscription['p256dh_key']);
+        $userAuthToken = $this->base64urlDecode($subscription['auth_key']);
+
+        // Шифруем payload по RFC 8291 (aes128gcm)
+        $encrypted = $this->encryptPayload($payload, $userPublicKey, $userAuthToken);
+        if (!$encrypted) {
+            error_log('PushService: Failed to encrypt payload for endpoint: ' . $endpoint);
+            return;
+        }
 
         $headers = [
-            'Content-Type: application/json',
+            'Content-Type: application/octet-stream',
+            'Content-Encoding: aes128gcm',
             'TTL: 86400',
         ];
 
@@ -184,7 +195,7 @@ class PushService
         $ch = curl_init($endpoint);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_POSTFIELDS => $encrypted,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
@@ -199,6 +210,131 @@ class PushService
             $db = Database::getInstance();
             $db->delete('push_subscriptions', 'id = ?', [(int)$subscription['id']]);
         }
+    }
+
+    /**
+     * Шифрование payload по RFC 8291 (aes128gcm content encoding)
+     *
+     * @param string $payload Текст для шифрования
+     * @param string $userPublicKey Публичный ключ подписчика (65 байт, uncompressed P-256)
+     * @param string $userAuthToken Auth secret подписчика (16 байт)
+     * @return string|null Зашифрованный payload или null при ошибке
+     */
+    private function encryptPayload(string $payload, string $userPublicKey, string $userAuthToken): ?string
+    {
+        // Генерируем ephemeral ECDH key pair
+        $localKey = openssl_pkey_new([
+            'curve_name' => 'prime256v1',
+            'private_key_type' => OPENSSL_KEYTYPE_EC,
+        ]);
+        if (!$localKey) return null;
+
+        $localKeyDetails = openssl_pkey_get_details($localKey);
+        $localPublicKey = $this->getUncompressedPublicKey($localKeyDetails);
+        if (!$localPublicKey || strlen($localPublicKey) !== 65) return null;
+
+        // ECDH: вычисляем shared secret
+        $sharedSecret = $this->computeECDHSecret($localKey, $userPublicKey);
+        if (!$sharedSecret) return null;
+
+        // HKDF для IKM: PRK = HMAC-SHA256(auth_secret, shared_secret)
+        // info = "WebPush: info\0" + client_public + server_public
+        $ikm_info = "WebPush: info\0" . $userPublicKey . $localPublicKey;
+        $ikm = $this->hkdf($userAuthToken, $sharedSecret, $ikm_info, 32);
+
+        // Salt (random 16 bytes)
+        $salt = random_bytes(16);
+
+        // Derive content encryption key (CEK) and nonce
+        $cek_info = "Content-Encoding: aes128gcm\0";
+        $nonce_info = "Content-Encoding: nonce\0";
+        $prk = hash_hmac('sha256', $ikm, $salt, true);
+        $cek = substr(hash_hmac('sha256', $cek_info . "\1", $prk, true), 0, 16);
+        $nonce = substr(hash_hmac('sha256', $nonce_info . "\1", $prk, true), 0, 12);
+
+        // Padding: payload + \x02 (delimiter)
+        $paddedPayload = $payload . "\x02";
+
+        // AES-128-GCM шифрование
+        $tag = '';
+        $encrypted = openssl_encrypt(
+            $paddedPayload,
+            'aes-128-gcm',
+            $cek,
+            OPENSSL_RAW_DATA,
+            $nonce,
+            $tag,
+            '',
+            16
+        );
+        if ($encrypted === false) return null;
+
+        // Формируем aes128gcm content:
+        // salt (16) + rs (4, uint32 big-endian) + idlen (1) + keyid (65, local public key) + encrypted + tag
+        $rs = pack('N', 4096); // record size
+        $idlen = chr(65); // длина keyid (публичный ключ = 65 байт)
+
+        $result = $salt . $rs . $idlen . $localPublicKey . $encrypted . $tag;
+
+        return $result;
+    }
+
+    /**
+     * Получить uncompressed public key (65 bytes: 04 + x + y) из деталей ключа
+     */
+    private function getUncompressedPublicKey(array $keyDetails): ?string
+    {
+        if (!isset($keyDetails['ec']['x']) || !isset($keyDetails['ec']['y'])) return null;
+        $x = str_pad($keyDetails['ec']['x'], 32, "\0", STR_PAD_LEFT);
+        $y = str_pad($keyDetails['ec']['y'], 32, "\0", STR_PAD_LEFT);
+        return "\x04" . $x . $y;
+    }
+
+    /**
+     * Вычислить ECDH shared secret
+     */
+    private function computeECDHSecret($localPrivateKey, string $peerPublicKeyRaw): ?string
+    {
+        // Создаём PEM из raw public key для openssl
+        $peerPem = $this->rawPublicKeyToPem($peerPublicKeyRaw);
+        if (!$peerPem) return null;
+
+        $peerKey = openssl_pkey_get_public($peerPem);
+        if (!$peerKey) return null;
+
+        $shared = openssl_pkey_derive($localPrivateKey, $peerKey, 256);
+        if ($shared === false) return null;
+
+        // openssl_pkey_derive возвращает shared secret нужной длины
+        return $shared;
+    }
+
+    /**
+     * Конвертировать raw uncompressed P-256 public key (65 bytes) в PEM
+     */
+    private function rawPublicKeyToPem(string $rawKey): ?string
+    {
+        if (strlen($rawKey) !== 65 || $rawKey[0] !== "\x04") return null;
+
+        // DER-структура для EC public key (P-256, uncompressed)
+        $der = "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01"
+             . "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07\x03\x42\x00"
+             . $rawKey;
+
+        $pem = "-----BEGIN PUBLIC KEY-----\n"
+             . chunk_split(base64_encode($der), 64, "\n")
+             . "-----END PUBLIC KEY-----";
+
+        return $pem;
+    }
+
+    /**
+     * HKDF (extract + expand, single-step)
+     */
+    private function hkdf(string $salt, string $ikm, string $info, int $length): string
+    {
+        $prk = hash_hmac('sha256', $ikm, $salt, true);
+        return substr(hash_hmac('sha256', $info . "\1", $prk, true), 0, $length);
     }
 
     /**
