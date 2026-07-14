@@ -69,12 +69,17 @@ class PushService
 
         $db = Database::getInstance();
         $subscriptions = $db->fetchAll(
-            "SELECT * FROM push_subscriptions WHERE user_id = ?",
+            "SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY id DESC",
             [$userId]
         );
 
         foreach ($subscriptions as $sub) {
-            $this->sendPush($sub, $title, $body, $url);
+            try {
+                $this->sendPush($sub, $title, $body, $url);
+            } catch (\Throwable $e) {
+                // Сбой одного endpoint не должен лишать push остальные устройства.
+                error_log('PushService endpoint error: id=' . (int) $sub['id'] . ', error=' . $e->getMessage());
+            }
         }
     }
 
@@ -86,7 +91,7 @@ class PushService
         $results = [];
         $db = Database::getInstance();
         $subscriptions = $db->fetchAll(
-            "SELECT * FROM push_subscriptions WHERE user_id = ?",
+            "SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY id DESC",
             [$userId]
         );
 
@@ -339,6 +344,11 @@ class PushService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($httpCode === 410 || $httpCode === 404) {
+            $db = Database::getInstance();
+            $db->delete('push_subscriptions', 'id = ?', [(int) $subscription['id']]);
+        }
 
         return [
             'httpCode' => $httpCode,
