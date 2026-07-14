@@ -17,7 +17,38 @@ require_once BASE_PATH . '/app/Helpers/functions.php';
 $config = require BASE_PATH . '/config/app.php';
 $GLOBALS['config'] = $config;
 
+// Защитный HTTPS-редирект на уровне приложения. Основной редирект выполняет
+// корневой .htaccess, но этот fallback не даст запустить PHP в insecure context,
+// если конфигурация веб-сервера изменится.
+$isHttps = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+    || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+
+if (!$isHttps && PHP_SAPI !== 'cli') {
+    $canonical = parse_url($config['url'] ?? '');
+    if (($canonical['scheme'] ?? '') === 'https' && !empty($canonical['host'])) {
+        $canonicalOrigin = 'https://' . $canonical['host'];
+        if (!empty($canonical['port']) && (int) $canonical['port'] !== 443) {
+            $canonicalOrigin .= ':' . (int) $canonical['port'];
+        }
+
+        $requestUri = $_SERVER['REQUEST_URI'] ?? ($canonical['path'] ?? '/');
+        if (!str_starts_with($requestUri, '/')) {
+            $requestUri = '/' . $requestUri;
+        }
+
+        header('Location: ' . $canonicalOrigin . $requestUri, true, 301);
+        exit;
+    }
+}
+
 // Запуск сессии
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 
 // Обработка ошибок

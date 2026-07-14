@@ -1,6 +1,7 @@
 {
     "name": "Flowtask",
     "short_name": "Flowtask",
+    "id": "/traking/",
     "description": "Система управления проектами, задачами и правками",
     "start_url": "/traking/",
     "scope": "/traking/",

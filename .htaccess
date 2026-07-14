@@ -2,6 +2,11 @@
     RewriteEngine On
     RewriteBase /traking/
 
+    # PWA, Service Worker и Web Push работают только в secure context.
+    # Канонизируем весь проект на HTTPS до внутренних rewrite-правил.
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://unique-style.ru%{REQUEST_URI} [R=301,L,NE]
+
     # Запрет прямого доступа к служебным папкам
     RewriteRule ^(app|config|database|storage|views)(/|$) - [F,L]
 

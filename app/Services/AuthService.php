@@ -119,7 +119,7 @@ class AuthService
         setcookie('auth_token', '', [
             'expires'  => time() - 3600,
             'path'     => '/',
-            'secure'   => isset($_SERVER['HTTPS']),
+            'secure'   => true,
             'httponly'  => true,
             'samesite' => 'Lax',
         ]);
@@ -193,7 +193,7 @@ class AuthService
         setcookie('auth_token', $plainToken, [
             'expires'  => time() + 7776000, // 3 месяца (90 дней)
             'path'     => '/',
-            'secure'   => isset($_SERVER['HTTPS']),
+            'secure'   => true,
             'httponly'  => true,
             'samesite' => 'Lax',
         ]);

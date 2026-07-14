@@ -19,14 +19,24 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
             <h3 class="text-sm font-medium text-gray-700 mb-3">Push-уведомления</h3>
             <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="push_enabled" value="1"
-                       x-model="pushActive"
-                       @change="toggle()"
-                       :disabled="subscribing || !supported"
+                       x-model="accountEnabled"
                        class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                <span class="text-sm text-gray-700">Получать push-уведомления на устройство</span>
+                <span class="text-sm text-gray-700">Разрешить push-уведомления для аккаунта</span>
             </label>
-            <span x-show="pushStatus" x-text="pushStatus" class="text-xs ml-7 mt-1 block"
+
+            <div class="ml-7 mt-3 flex items-center gap-3 flex-wrap">
+                <button type="button"
+                        @click="toggleDevice()"
+                        :disabled="subscribing || !supported"
+                        x-text="deviceSubscribed ? 'Отключить это устройство' : 'Подключить это устройство'"
+                        class="ui-btn ui-btn-secondary text-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                </button>
+            </div>
+            <span x-show="pushStatus" x-text="pushStatus" class="text-xs ml-7 mt-2 block"
                   :class="pushState === 'connected' ? 'text-green-600' : pushState === 'error' ? 'text-red-600' : 'text-gray-500'"></span>
+            <p class="text-xs text-gray-400 ml-7 mt-1">
+                Общий переключатель действует на все устройства. Кнопка выше управляет только текущим устройством.
+            </p>
         </div>
 
         <!-- Звуковые уведомления -->
@@ -93,9 +103,8 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
 <script>
 function pushSettings(serverEnabled) {
     return {
-        // До завершения проверки сохраняем серверное значение, чтобы ранняя
-        // отправка формы случайно не выключила push.
-        pushActive: serverEnabled,
+        accountEnabled: serverEnabled,
+        deviceSubscribed: false,
         subscribing: true,
         supported: true,
         pushStatus: 'Проверка подписки...',
@@ -121,15 +130,18 @@ function pushSettings(serverEnabled) {
                     state = await window.PushNotifications.getState();
                 }
 
-                this.pushActive = serverEnabled && state.subscribed;
+                this.deviceSubscribed = state.subscribed;
 
-                if (this.pushActive) {
+                if (this.deviceSubscribed && this.accountEnabled) {
                     this.pushStatus = '✓ Подключено на этом устройстве';
                     this.pushState = 'connected';
+                } else if (this.deviceSubscribed) {
+                    this.pushStatus = 'Устройство подключено, но push выключен для аккаунта';
+                    this.pushState = 'needs-action';
                 } else if (state.permission === 'denied') {
                     this.pushStatus = '✗ Уведомления заблокированы в настройках браузера';
                     this.pushState = 'error';
-                } else if (serverEnabled) {
+                } else if (this.accountEnabled) {
                     // Настройка сохранилась на сервере, но после переустановки
                     // этому устройству требуется новая браузерная подписка.
                     this.pushStatus = 'Требуется повторное подключение на этом устройстве';
@@ -147,26 +159,33 @@ function pushSettings(serverEnabled) {
             }
         },
 
-        async toggle() {
+        async toggleDevice() {
             this.subscribing = true;
 
             try {
-                if (this.pushActive) {
-                    this.pushStatus = 'Подключение...';
-                    this.pushState = 'checking';
-                    await window.PushNotifications.ensureSubscription({ requestPermission: true });
-                    this.pushStatus = '✓ Подключено на этом устройстве';
-                    this.pushState = 'connected';
-                } else {
+                if (this.deviceSubscribed) {
                     this.pushStatus = 'Отключение...';
                     this.pushState = 'checking';
                     await window.PushNotifications.unsubscribe();
+                    this.deviceSubscribed = false;
                     this.pushStatus = 'Отключено на этом устройстве';
                     this.pushState = 'idle';
+                } else {
+                    this.pushStatus = 'Подключение...';
+                    this.pushState = 'checking';
+                    await window.PushNotifications.ensureSubscription({ requestPermission: true });
+                    this.deviceSubscribed = true;
+
+                    if (!this.accountEnabled) {
+                        this.accountEnabled = true;
+                        this.pushStatus = '✓ Устройство подключено. Нажмите «Сохранить»';
+                    } else {
+                        this.pushStatus = '✓ Подключено на этом устройстве';
+                    }
+                    this.pushState = 'connected';
                 }
             } catch (error) {
-                console.error('[Push] Toggle failed:', error);
-                this.pushActive = false;
+                console.error('[Push] Device toggle failed:', error);
                 this.pushStatus = error.message || '✗ Ошибка подключения';
                 this.pushState = 'error';
             } finally {

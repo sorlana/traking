@@ -45,7 +45,7 @@ if ($currentUser) {
     </script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=4">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=5">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
     <link rel="apple-touch-icon" href="<?= url('/icons/push-icon.php') ?>">
