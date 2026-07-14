@@ -258,6 +258,63 @@ function urlBase64ToUint8Array(base64String) {
     }
 
     /**
+     * GET /push/test-task/{id} — симулирует отправку push как при сообщении в задаче
+     */
+    public function testTask(string $id): void
+    {
+        $taskId = (int) $id;
+        $userId = Auth::id();
+        $db = \Helpers\Database::getInstance();
+
+        $task = $db->fetch("SELECT assigned_to, created_by, project_id, title FROM tasks WHERE id = ?", [$taskId]);
+        if (!$task) {
+            $this->json(['error' => 'Задача не найдена']);
+            return;
+        }
+
+        // Собираем получателей (как в doSendToTaskParticipants)
+        $recipients = [];
+        if ($task['assigned_to'] && (int)$task['assigned_to'] !== $userId) {
+            $recipients[] = (int)$task['assigned_to'];
+        }
+        if ($task['created_by'] && (int)$task['created_by'] !== $userId) {
+            $recipients[] = (int)$task['created_by'];
+        }
+        $managers = $db->fetchAll(
+            "SELECT user_id FROM project_users WHERE project_id = ? AND project_role = 'manager'",
+            [(int)$task['project_id']]
+        );
+        foreach ($managers as $m) {
+            if ((int)$m['user_id'] !== $userId) {
+                $recipients[] = (int)$m['user_id'];
+            }
+        }
+        $recipients = array_unique($recipients);
+
+        // Проверяем canSend для каждого
+        $pushService = new PushService();
+        $results = [];
+        foreach ($recipients as $recipientId) {
+            $settings = $db->fetch("SELECT push_enabled, dnd_enabled, schedule_enabled FROM user_settings WHERE user_id = ?", [$recipientId]);
+            $subs = $db->fetchAll("SELECT id, endpoint FROM push_subscriptions WHERE user_id = ?", [$recipientId]);
+            $results[] = [
+                'user_id' => $recipientId,
+                'settings' => $settings,
+                'subscriptions' => count($subs),
+                'endpoints' => array_map(fn($s) => substr($s['endpoint'], 0, 50), $subs),
+            ];
+        }
+
+        $this->json([
+            'task_id' => $taskId,
+            'sender_id' => $userId,
+            'task_title' => $task['title'],
+            'recipients' => $recipients,
+            'details' => $results,
+        ]);
+    }
+
+    /**
      * GET /push/diag — всегда показывает диагностику устройства (без проверки подписок)
      */
     public function diag(): void
