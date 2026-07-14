@@ -492,7 +492,6 @@ nav[class*="fixed"] {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    padding-top: env(safe-area-inset-top, 0px);
 }
 
 .mobile-bottom-nav > div > a,

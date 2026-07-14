@@ -252,6 +252,23 @@ if ($currentUser) {
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
     <script src="<?= url('/assets/js/app.js') ?>?v=7"></script>
 
+    <!-- Динамический theme-color для модалок (status bar затемняется) -->
+    <script>
+    (function() {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (!meta) return;
+        const originalColor = '#ffffff';
+        const modalColor = '#000000';
+        
+        const observer = new MutationObserver(() => {
+            const hasModal = document.querySelector('.fixed.inset-0:not([style*="display: none"]):not([style*="display:none"])');
+            meta.content = hasModal ? modalColor : originalColor;
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    })();
+    </script>
+
     <!-- Мигающая фавиконка (inline для гарантированной работы) -->
     <script>
     window.FaviconBlinker = {
