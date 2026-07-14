@@ -48,7 +48,7 @@ if ($currentUser) {
     <link rel="manifest" href="<?= url('/manifest.json') ?>?v=4">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/favicon.svg') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/icons/push-icon.php') ?>">
     <!-- iOS: белая заставка вместо авто-генерируемой с иконкой -->
     <link rel="apple-touch-startup-image" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect fill='%23fff' width='1' height='1'/></svg>">
     <meta name="mobile-web-app-capable" content="yes">
