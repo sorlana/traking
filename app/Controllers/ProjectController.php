@@ -630,6 +630,25 @@ class ProjectController extends Controller
      * @return array Массив ошибок
      */
     /**
+     * AJAX: дерево задач проекта
+     * GET /ajax/projects/{id}/tree
+     */
+    public function ajaxTree(string $id): void
+    {
+        $projectId = (int) $id;
+
+        if (!ProjectAccessMiddleware::check($projectId)) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        $treeService = new \Services\TaskTreeService();
+        $tree = $treeService->getProjectTree($projectId);
+
+        $this->json($tree);
+    }
+
+    /**
      * Валидация данных проекта
      *
      * @param array $data Данные формы

@@ -39,8 +39,12 @@ $layout = 'layouts/app';
                                 x-text="project.title"
                             ></button>
                         </template>
+                        <!-- Иконка Дерева задач (только мобильный) -->
+                        <button @click="showTreeModal = true; loadTree()" class="md:hidden ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16M10 12v6"/></svg>
+                        </button>
                         <!-- Иконка Инфо (только мобильный) -->
-                        <button @click="showInfoModal = true" class="md:hidden ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Статистика">
+                        <button @click="showInfoModal = true" class="md:hidden flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Статистика">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                     </div>
@@ -132,6 +136,70 @@ $layout = 'layouts/app';
                             </template>
                         </div>
                     </template>
+                </div>
+            </div>
+
+            <!-- Модалка с деревом задач -->
+            <div x-show="showTreeModal"
+                 @click.self="showTreeModal = false"
+                 class="fixed inset-0 z-[80] bg-black/50 flex items-end md:items-center md:justify-center"
+                 style="display: none;"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+                <div class="bg-white w-full md:w-[600px] md:max-w-[90vw] rounded-t-2xl md:rounded-2xl p-4 pb-8 max-h-[80vh] overflow-y-auto"
+                     @click.stop>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-700">Дерево задач</h3>
+                        <button @click="showTreeModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <!-- Загрузка -->
+                    <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
+                    <!-- Пусто -->
+                    <div x-show="!treeLoading && treeData.length === 0" class="text-center py-8 text-gray-400 text-sm">Нет задач</div>
+                    <!-- Дерево -->
+                    <div x-show="!treeLoading && treeData.length > 0" class="space-y-0.5">
+                        <template x-for="node in treeData" :key="node.id">
+                            <div>
+                                <div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50">
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0" :class="{'bg-yellow-500': node.status_code === 'in_progress', 'bg-orange-500': node.status_code === 'revision', 'bg-green-500': node.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(node.status_code)}"></span>
+                                    <a :href="BASE_URL + '/tasks/' + node.id" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate" x-text="node.title"></a>
+                                    <span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': node.status_code === 'in_progress', 'bg-orange-100 text-orange-800': node.status_code === 'revision', 'bg-green-100 text-green-800': node.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(node.status_code)}" x-text="node.status_name"></span>
+                                </div>
+                                <!-- Дочерние (1 уровень) -->
+                                <template x-if="node.children && node.children.length > 0">
+                                    <div class="ml-4">
+                                        <template x-for="child in node.children" :key="child.id">
+                                            <div>
+                                                <div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50">
+                                                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="{'bg-yellow-500': child.status_code === 'in_progress', 'bg-orange-500': child.status_code === 'revision', 'bg-green-500': child.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(child.status_code)}"></span>
+                                                    <a :href="BASE_URL + '/tasks/' + child.id" class="text-xs text-gray-700 hover:text-blue-600 flex-1 truncate" x-text="child.title"></a>
+                                                    <span class="text-xs px-1 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': child.status_code === 'in_progress', 'bg-orange-100 text-orange-800': child.status_code === 'revision', 'bg-green-100 text-green-800': child.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(child.status_code)}" x-text="child.status_name"></span>
+                                                </div>
+                                                <!-- Вложенные (2+ уровень) -->
+                                                <template x-if="child.children && child.children.length > 0">
+                                                    <div class="ml-4">
+                                                        <template x-for="sub in child.children" :key="sub.id">
+                                                            <div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50">
+                                                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="{'bg-yellow-500': sub.status_code === 'in_progress', 'bg-orange-500': sub.status_code === 'revision', 'bg-green-500': sub.status_code === 'done', 'bg-gray-400': !['in_progress','revision','done'].includes(sub.status_code)}"></span>
+                                                                <a :href="BASE_URL + '/tasks/' + sub.id" class="text-xs text-gray-600 hover:text-blue-600 flex-1 truncate" x-text="sub.title"></a>
+                                                                <span class="text-xs px-1 py-0.5 rounded flex-shrink-0" :class="{'bg-yellow-100 text-yellow-800': sub.status_code === 'in_progress', 'bg-orange-100 text-orange-800': sub.status_code === 'revision', 'bg-green-100 text-green-800': sub.status_code === 'done', 'bg-gray-100 text-gray-600': !['in_progress','revision','done'].includes(sub.status_code)}" x-text="sub.status_name"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
 
@@ -382,6 +450,9 @@ document.addEventListener('alpine:init', () => {
         timeData: <?= json_encode($timeData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         activeProjectId: null,
         showInfoModal: false,
+        showTreeModal: false,
+        treeData: [],
+        treeLoading: false,
 
         init() {
             if (this.projects.length > 0) {
@@ -414,6 +485,21 @@ document.addEventListener('alpine:init', () => {
 
         selectProject(projectId) {
             this.activeProjectId = projectId;
+        },
+
+        async loadTree() {
+            if (!this.activeProjectId) return;
+            this.treeLoading = true;
+            this.treeData = [];
+            try {
+                const res = await fetch(BASE_URL + '/ajax/projects/' + this.activeProjectId + '/tree', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                this.treeData = await res.json();
+            } catch (e) {
+                this.treeData = [];
+            }
+            this.treeLoading = false;
         }
     }));
 });
