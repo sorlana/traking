@@ -279,15 +279,47 @@ function log(msg) { document.getElementById("log").textContent += msg + "\\n"; }
 async function runDiag() {
     document.getElementById("log").textContent = "";
     log("=== Диагностика устройства ===");
+    log("time: " + new Date().toISOString());
+    log("href: " + location.href);
+    log("origin: " + location.origin);
+    log("protocol: " + location.protocol);
+    log("isSecureContext: " + window.isSecureContext);
+    log("top-level: " + (window.top === window.self));
+    log("referrer: " + (document.referrer || "(empty)"));
     log("serviceWorker: " + ("serviceWorker" in navigator));
     log("PushManager: " + ("PushManager" in window));
     log("Notification: " + ("Notification" in window));
+    log("Notification.permission: " + (("Notification" in window) ? Notification.permission : "n/a"));
     log("standalone: " + window.matchMedia("(display-mode: standalone)").matches);
     log("iOS standalone: " + (navigator.standalone === true));
-    log("UA: " + navigator.userAgent.substring(0, 100));
+    log("platform: " + navigator.platform);
+    log("maxTouchPoints: " + navigator.maxTouchPoints);
+    log("online: " + navigator.onLine);
+    log("cookies: " + navigator.cookieEnabled);
+    log("UA: " + navigator.userAgent);
     log("");
 
-    if (!("serviceWorker" in navigator)) { log("❌ ServiceWorker не поддерживается"); return; }
+    try {
+        localStorage.setItem("push_diag", "ok");
+        log("localStorage: " + (localStorage.getItem("push_diag") === "ok"));
+        localStorage.removeItem("push_diag");
+    } catch (e) {
+        log("localStorage: false (" + e.name + ": " + e.message + ")");
+    }
+
+    await inspectResource(BASE_URL + "/manifest.json", "manifest");
+    await inspectResource(BASE_URL + "/service-worker.js", "service-worker file");
+    log("");
+
+    if (!window.isSecureContext) {
+        log("❌ Страница не является secure context — Service Worker намеренно скрыт браузером");
+        return;
+    }
+    if (!("serviceWorker" in navigator)) {
+        log("❌ HTTPS и файлы доступны, но WebKit скрыл Service Worker API");
+        log("Причина находится на устройстве: WebView/MDM/Lockdown/системная политика WebKit");
+        return;
+    }
     if (!("PushManager" in window)) { log("❌ PushManager недоступен — push невозможен на этом устройстве/браузере"); return; }
 
     log("✓ API доступны. Регистрирую SW...");
@@ -347,6 +379,21 @@ async function runDiag() {
         log("✅ Готово! Push подключён на этом устройстве.");
     } catch(e) {
         log("❌ Ошибка: " + e.message);
+    }
+}
+
+async function inspectResource(url, label) {
+    try {
+        const response = await fetch(url + "?diag=" + Date.now(), {
+            cache: "no-store",
+            credentials: "same-origin"
+        });
+        log(label + ": HTTP " + response.status
+            + ", type=" + (response.headers.get("content-type") || "(none)")
+            + ", redirected=" + response.redirected
+            + ", final=" + response.url);
+    } catch (e) {
+        log(label + ": FETCH ERROR " + e.name + ": " + e.message);
     }
 }
 
