@@ -270,6 +270,7 @@ function urlBase64ToUint8Array(base64String) {
 <body style="font-family:system-ui;padding:20px;max-width:600px;margin:0 auto;">
 <h2>Диагностика Push</h2>
 <button onclick="runDiag()" style="padding:12px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;width:100%;">Проверить и подписаться</button>
+<button onclick="resetAndSubscribe()" style="padding:12px 24px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;width:100%;margin-top:8px;">Сбросить и подписаться заново</button>
 <pre id="log" style="margin-top:16px;background:#f3f4f6;padding:12px;border-radius:8px;font-size:11px;overflow:auto;white-space:pre-wrap;min-height:200px;"></pre>
 <script>
 const BASE_URL = "{$baseUrl}";
@@ -354,6 +355,71 @@ function urlBase64ToUint8Array(base64String) {
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
     const rawData = window.atob(base64);
     return Uint8Array.from(rawData, c => c.charCodeAt(0));
+}
+
+async function resetAndSubscribe() {
+    document.getElementById("log").textContent = "";
+    log("=== Сброс и переподписка ===");
+
+    try {
+        // Удаляем все SW регистрации
+        const regs = await navigator.serviceWorker.getRegistrations();
+        log("SW регистраций найдено: " + regs.length);
+        for (const reg of regs) {
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) {
+                await sub.unsubscribe();
+                log("Старая подписка удалена");
+            }
+            await reg.unregister();
+            log("SW удалён: " + reg.scope);
+        }
+
+        log("Жду 2 сек...");
+        await new Promise(r => setTimeout(r, 2000));
+
+        log("Регистрирую новый SW...");
+        const reg = await navigator.serviceWorker.register(BASE_URL + "/service-worker.js", { scope: BASE_URL + "/" });
+        log("✓ SW: " + reg.scope);
+
+        // Ждём активации
+        let attempts = 0;
+        while (!reg.active && attempts < 20) {
+            await new Promise(r => setTimeout(r, 500));
+            attempts++;
+        }
+        if (!reg.active) { log("❌ SW не активировался"); return; }
+        log("✓ SW активен");
+
+        // Разрешение
+        if ("Notification" in window && Notification.permission === "default") {
+            const perm = await Notification.requestPermission();
+            if (perm !== "granted") { log("❌ Разрешение отклонено"); return; }
+        }
+
+        // VAPID
+        const resp = await fetch(BASE_URL + "/push/vapid-key", {headers:{"X-Requested-With":"XMLHttpRequest"}});
+        const { publicKey } = await resp.json();
+        log("VAPID: " + publicKey.substring(0, 20) + "...");
+
+        // Подписка
+        log("Подписываюсь...");
+        const key = urlBase64ToUint8Array(publicKey);
+        const subscription = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+        const sub = subscription.toJSON();
+        log("✓ Endpoint: " + sub.endpoint.substring(0, 50) + "...");
+
+        // Сохраняем
+        const fd = new FormData();
+        fd.append("endpoint", sub.endpoint);
+        fd.append("p256dh", sub.keys.p256dh);
+        fd.append("auth", sub.keys.auth);
+        const saveResp = await fetch(BASE_URL + "/push/subscribe", {method:"POST", headers:{"X-Requested-With":"XMLHttpRequest"}, body:fd});
+        log("Сервер: " + saveResp.status);
+        log("\\n✅ Готово! Push подключён.");
+    } catch(e) {
+        log("❌ Ошибка: " + e.message);
+    }
 }
 </script>
 </body></html>
