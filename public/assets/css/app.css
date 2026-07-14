@@ -617,16 +617,17 @@ nav[class*="fixed"] {
 
 /* Блокируем эластичную прокрутку (overscroll bounce) на мобильных */
 @media (max-width: 768px) {
-    html, body {
-        overflow: hidden !important;
+    html {
         height: 100% !important;
+    }
+    body {
+        height: 100% !important;
+        overflow-y: auto !important;
         overscroll-behavior: none;
     }
     main {
-        height: calc(100vh - 2.5rem - 3.5rem) !important; /* экран минус хедер минус нижнее меню */
-        overflow-y: auto !important;
-        overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+        padding-bottom: 4rem !important;
     }
 }
 
