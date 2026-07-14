@@ -12,65 +12,6 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 /**
- * Скрыть мобильный загрузочный экран после старта приложения.
- */
-function initAppLoadingScreen() {
-    const loader = document.getElementById('app-loading-screen');
-    if (!loader || !document.body.classList.contains('app-loading-active')) return;
-
-    let loaderSeen = false;
-    try {
-        loaderSeen = sessionStorage.getItem('flowtaskLoaderSeen') === '1';
-    } catch (e) {}
-
-    if (loaderSeen) {
-        loader.remove();
-        document.body.classList.remove('app-loading-active', 'app-loading-done');
-        return;
-    }
-
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (!isMobile) {
-        loader.remove();
-        document.body.classList.remove('app-loading-active');
-        return;
-    }
-
-    try {
-        sessionStorage.setItem('flowtaskLoaderSeen', '1');
-    } catch (e) {}
-
-    const startedAt = performance.now();
-    const minVisibleMs = 1450;
-    let hidden = false;
-
-    function hideLoader() {
-        if (hidden) return;
-        hidden = true;
-        document.body.classList.add('app-loading-done');
-        window.setTimeout(() => {
-            loader.remove();
-            document.body.classList.remove('app-loading-active', 'app-loading-done');
-        }, 320);
-    }
-
-    function hideAfterMinimumTime() {
-        const elapsed = performance.now() - startedAt;
-        window.setTimeout(hideLoader, Math.max(0, minVisibleMs - elapsed));
-    }
-
-    if (document.readyState === 'complete') {
-        hideAfterMinimumTime();
-    } else {
-        window.addEventListener('load', hideAfterMinimumTime, { once: true });
-    }
-
-    window.setTimeout(hideLoader, 3500);
-}
-
-initAppLoadingScreen();
-
-/**
  * Компактные выпадающие поля для мобильных модалок.
  * Используются в фильтрах и быстрых формах создания.
  */

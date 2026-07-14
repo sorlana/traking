@@ -313,22 +313,42 @@ class Task extends Model
     }
 
     /**
-     * Получить суммарное затраченное время по задаче и всем её дочерним задачам
-     *
-     * Суммирует time_spent самой задачи и всех прямых дочерних задач (доработок).
-     * NULL-значения трактуются как 0.
+     * Получить суммарное затраченное время по задаче и всем вложенным задачам (рекурсивно)
      *
      * @param int $taskId ID задачи
      * @return float Суммарное время (0.0 если ни у одной задачи не задано время)
      */
     public function getTotalTimeWithChildren(int $taskId): float
     {
-        $sql = "SELECT COALESCE(SUM(time_spent), 0) as total_time
-                FROM tasks
-                WHERE id = ? OR parent_id = ?";
+        $db = $this->db();
+        // Собираем все ID задач рекурсивно
+        $allIds = $this->collectChildIds($taskId);
+        $allIds[] = $taskId;
 
-        $result = $this->db()->fetch($sql, [$taskId, $taskId]);
+        $placeholders = implode(',', array_fill(0, count($allIds), '?'));
+        $result = $db->fetch(
+            "SELECT COALESCE(SUM(time_spent), 0) as total_time FROM tasks WHERE id IN ($placeholders)",
+            $allIds
+        );
 
         return (float) ($result['total_time'] ?? 0);
+    }
+
+    /**
+     * Рекурсивный сбор ID всех дочерних задач
+     *
+     * @param int $parentId ID родительской задачи
+     * @return array Все ID дочерних задач на всех уровнях
+     */
+    private function collectChildIds(int $parentId): array
+    {
+        $db = $this->db();
+        $children = $db->fetchAll("SELECT id FROM tasks WHERE parent_id = ?", [$parentId]);
+        $ids = [];
+        foreach ($children as $child) {
+            $ids[] = (int) $child['id'];
+            $ids = array_merge($ids, $this->collectChildIds((int) $child['id']));
+        }
+        return $ids;
     }
 }

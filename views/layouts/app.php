@@ -40,36 +40,22 @@ if ($currentUser) {
         }
     }
     </script>
-    <script>
-    try {
-        if (sessionStorage.getItem('flowtaskLoaderSeen') === '1') {
-            document.documentElement.classList.add('app-loader-seen');
-        }
-    } catch (e) {}
-    </script>
+
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=3">
-    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=4">
+    <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
     <link rel="apple-touch-icon" href="<?= url('/favicon.svg') ?>">
+    <!-- iOS: белая заставка вместо авто-генерируемой с иконкой -->
+    <link rel="apple-touch-startup-image" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect fill='%23fff' width='1' height='1'/></svg>">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=20">
-</head>
-<body class="app-loading-active min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
-    <div id="app-loading-screen" class="app-loading-screen" aria-label="Loading screen preview for Flowtask" role="status">
-        <div class="app-loading-stage">
-            <div class="app-loading-mark" aria-hidden="true">
-                <div class="app-loading-card app-loading-card-top"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
-                <div class="app-loading-card app-loading-card-mid"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
-                <div class="app-loading-card app-loading-card-bot"><i class="app-loading-dot"></i><i class="app-loading-line"></i></div>
-            </div>
-            <div class="app-loading-word">Flowtask</div>
-        </div>
-    </div>
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=21">
+</head>
+<body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
     <!-- Навигация -->
     <nav class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">

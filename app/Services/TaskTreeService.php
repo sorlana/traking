@@ -141,6 +141,17 @@ class TaskTreeService
      * @param int $parentId ID родительской задачи
      * @return array Массив дочерних задач с вложенными children
      */
+    public function getChildrenTree(int $parentId): array
+    {
+        return $this->loadChildren($parentId);
+    }
+
+    /**
+     * Рекурсивная загрузка дочерних задач (внутренний метод)
+     *
+     * @param int $parentId ID родительской задачи
+     * @return array Массив дочерних задач с вложенными children
+     */
     private function loadChildren(int $parentId): array
     {
         $children = $this->taskModel->getChildren($parentId);

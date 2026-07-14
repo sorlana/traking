@@ -8,6 +8,18 @@
  */
 $layout = 'layouts/app';
 
+// Функция рекурсивного подсчёта всех доработок на всех уровнях
+function countAllChildren(array $nodes): int {
+    $count = count($nodes);
+    foreach ($nodes as $node) {
+        if (!empty($node['children'])) {
+            $count += countAllChildren($node['children']);
+        }
+    }
+    return $count;
+}
+$totalChildrenCount = countAllChildren($childrenTree ?? []);
+
 $currentUser = \Helpers\Auth::user();
 $roleId = (int) ($currentUser['role_id'] ?? 0);
 
@@ -64,10 +76,10 @@ $isClosed = ($task['status_code'] === 'closed');
         <div class="flex items-center justify-between mb-2">
             <nav class="flex items-center gap-1.5 text-xs text-gray-400">
                 <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500"><?= e($task['project_title'] ?? 'Проект') ?></a>
-                <?php if ($parent ?? null): ?>
+                <?php foreach ($breadcrumbs as $crumb): ?>
                     <span>›</span>
-                    <a href="<?= url('/tasks/' . (int) $parent['id']) ?>" class="hover:text-blue-500"><?= e($parent['title']) ?></a>
-                <?php endif; ?>
+                    <a href="<?= url('/tasks/' . (int) $crumb['id']) ?>" class="hover:text-blue-500 truncate max-w-[120px]" title="<?= e($crumb['title']) ?>"><?= e($crumb['title']) ?></a>
+                <?php endforeach; ?>
             </nav>
             <a href="<?= url('/tasks') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все задачи</a>
         </div>
@@ -170,7 +182,7 @@ $isClosed = ($task['status_code'] === 'closed');
         <div class="flex flex-col min-h-0" x-data="{ tab: 'subtasks' }">
             <div class="bg-white rounded-t-lg shadow-sm border border-b-0">
                 <nav class="flex -mb-px">
-                    <button @click="tab = 'subtasks'" :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">Доработки <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full"><?= count($children) ?></span></button>
+                    <button @click="tab = 'subtasks'" :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">Доработки <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full"><?= $totalChildrenCount ?></span></button>
                     <button @click="tab = 'info'" :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">Информация</button>
                     <button @click="tab = 'history'" :class="tab === 'history' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex-1 whitespace-nowrap py-3 px-2 border-b-2 font-medium text-xs text-center transition">История</button>
                 </nav>
@@ -192,19 +204,12 @@ $isClosed = ($task['status_code'] === 'closed');
                     </form>
                 </div>
                 <?php endif; ?>
-                <?php if (empty($children)): ?>
+                <?php if (empty($childrenTree)): ?>
                     <p class="text-sm text-gray-400">Доработок нет</p>
                 <?php else: ?>
-                    <div class="space-y-2">
-                        <?php foreach ($children as $child): ?>
-                            <?php $childOverdue = !empty($child['deadline']) && strtotime($child['deadline']) < strtotime(date('Y-m-d')) && ($child['status_code'] ?? '') !== 'done'; $dotColor = $statusDots[$child['status_code'] ?? ''] ?? 'bg-gray-400'; ?>
-                            <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>">
-                                <span class="w-2 h-2 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>
-                                <a href="<?= url('/tasks/' . (int) $child['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex-1 truncate"><?= e($child['title']) ?></a>
-                                <?php if (!empty($child['deadline'])): ?><span class="text-xs <?= $childOverdue ? 'text-red-600 font-medium' : 'text-gray-400' ?> flex-shrink-0"><?= date('d.m', strtotime($child['deadline'])) ?></span><?php endif; ?>
-                                <span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 <?= $statusColors[$child['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-600' ?>"><?= e($child['status_name'] ?? '') ?></span>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="space-y-1">
+                        <?php include BASE_PATH . '/views/components/subtask-tree.php'; ?>
+                        <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -243,7 +248,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php else: ?>
                         <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
                     <?php endif; ?>
-                    <?php if (count($children) > 0): ?>
+                    <?php if ($totalChildrenCount > 0): ?>
                         <div class="mt-2">
                             <label class="text-xs text-gray-400">Суммарное время</label>
                             <p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p>
@@ -265,7 +270,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php else: ?>
                         <p class="text-sm text-gray-800 mt-1"><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></p>
                     <?php endif; ?>
-                    <?php if (count($children) > 0): ?>
+                    <?php if ($totalChildrenCount > 0): ?>
                         <div class="mt-2"><label class="text-xs text-gray-400">Суммарное (рук.)</label><p class="text-sm text-gray-800 mt-0.5"><?= $manager_total_time > 0 ? e($manager_total_time) . ' ч' : '—' ?></p></div>
                     <?php endif; ?>
                 </div>
@@ -373,10 +378,10 @@ $isClosed = ($task['status_code'] === 'closed');
             <button @click="tab = 'chat'"
                     :class="tab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
                     class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Чат</button>
-            <?php if (count($children) > 0): ?>
+            <?php if ($totalChildrenCount > 0): ?>
             <button @click="tab = 'subtasks'"
                     :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Доработки <?= count($children) ?></button>
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Доработки <?= $totalChildrenCount ?></button>
             <?php endif; ?>
             <button @click="tab = 'info'"
                     :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
@@ -402,10 +407,11 @@ $isClosed = ($task['status_code'] === 'closed');
             </form>
         </div>
         <?php endif; ?>
-        <?php if (empty($children)): ?><p class="text-sm text-gray-400">Доработок нет</p>
-        <?php else: ?><div class="space-y-2"><?php foreach ($children as $child): ?><?php $childOverdue = !empty($child['deadline']) && strtotime($child['deadline']) < strtotime(date('Y-m-d')) && ($child['status_code'] ?? '') !== 'done'; $dotColor = $statusDots[$child['status_code'] ?? ''] ?? 'bg-gray-400'; ?>
-            <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>"><span class="w-2 h-2 rounded-full flex-shrink-0 <?= $dotColor ?>"></span><a href="<?= url('/tasks/' . (int) $child['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex-1 truncate"><?= e($child['title']) ?></a><?php if (!empty($child['deadline'])): ?><span class="text-xs <?= $childOverdue ? 'text-red-600' : 'text-gray-400' ?> flex-shrink-0"><?= date('d.m', strtotime($child['deadline'])) ?></span><?php endif; ?><span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 <?= $statusColors[$child['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-600' ?>"><?= e($child['status_name'] ?? '') ?></span></div>
-        <?php endforeach; ?></div><?php endif; ?>
+        <?php if (empty($childrenTree)): ?><p class="text-sm text-gray-400">Доработок нет</p>
+        <?php else: ?><div class="space-y-1">
+            <?php if (!function_exists('renderSubtaskTree')) { include BASE_PATH . '/views/components/subtask-tree.php'; } ?>
+            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
+        </div><?php endif; ?>
     </div>
 
     <!-- Чат -->
@@ -437,7 +443,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <?php else: ?>
                 <p class="text-sm text-gray-800 mt-1"><?= $time_spent !== null ? e($time_spent) . ' ч' : '—' ?></p>
             <?php endif; ?>
-            <?php if (count($children) > 0): ?>
+            <?php if ($totalChildrenCount > 0): ?>
                 <div class="mt-2"><label class="text-xs text-gray-400">Суммарное время</label><p class="text-sm text-gray-800 mt-0.5"><?= $total_time > 0 ? e($total_time) . ' ч' : '—' ?></p></div>
             <?php endif; ?>
         </div>
@@ -456,7 +462,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <?php else: ?>
                 <p class="text-sm text-gray-800 mt-1"><?= $manager_time_spent !== null ? e($manager_time_spent) . ' ч' : '—' ?></p>
             <?php endif; ?>
-            <?php if (count($children) > 0): ?>
+            <?php if ($totalChildrenCount > 0): ?>
                 <div class="mt-2"><label class="text-xs text-gray-400">Суммарное (рук.)</label><p class="text-sm text-gray-800 mt-0.5"><?= $manager_total_time > 0 ? e($manager_total_time) . ' ч' : '—' ?></p></div>
             <?php endif; ?>
         </div>

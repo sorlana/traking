@@ -267,15 +267,35 @@ class TimeTrackingService
     }
 
     /**
-     * Получить суммарное время руководителя по задаче и дочерним
+     * Получить суммарное время руководителя по задаче и всем вложенным (рекурсивно)
      */
     public function getManagerTotalTime(int $taskId): float
     {
+        // Собираем все ID рекурсивно через модель Task
+        $allIds = $this->collectAllChildIds($taskId);
+        $allIds[] = $taskId;
+
         $db = Database::getInstance();
+        $placeholders = implode(',', array_fill(0, count($allIds), '?'));
         $result = $db->fetch(
-            "SELECT COALESCE(SUM(manager_time_spent), 0) as total FROM tasks WHERE id = ? OR parent_id = ?",
-            [$taskId, $taskId]
+            "SELECT COALESCE(SUM(manager_time_spent), 0) as total FROM tasks WHERE id IN ($placeholders)",
+            $allIds
         );
         return (float) ($result['total'] ?? 0);
+    }
+
+    /**
+     * Рекурсивный сбор ID всех дочерних задач
+     */
+    private function collectAllChildIds(int $parentId): array
+    {
+        $db = Database::getInstance();
+        $children = $db->fetchAll("SELECT id FROM tasks WHERE parent_id = ?", [$parentId]);
+        $ids = [];
+        foreach ($children as $child) {
+            $ids[] = (int) $child['id'];
+            $ids = array_merge($ids, $this->collectAllChildIds((int) $child['id']));
+        }
+        return $ids;
     }
 }
