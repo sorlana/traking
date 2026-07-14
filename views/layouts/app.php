@@ -53,7 +53,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=22">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=23">
 </head>
 <body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
@@ -257,12 +257,27 @@ if ($currentUser) {
     (function() {
         const meta = document.querySelector('meta[name="theme-color"]');
         if (!meta) return;
-        const originalColor = '#ffffff';
-        const modalColor = '#000000';
         
         const observer = new MutationObserver(() => {
-            const hasModal = document.querySelector('.fixed.inset-0:not([style*="display: none"]):not([style*="display:none"])');
-            meta.content = hasModal ? modalColor : originalColor;
+            // Ищем видимую модалку (fixed inset-0, не скрытую)
+            const modals = document.querySelectorAll('[class*="fixed"][class*="inset-0"]');
+            let hasVisible = false;
+            modals.forEach(el => {
+                if (el.offsetParent !== null || el.style.display !== 'none') {
+                    const style = window.getComputedStyle(el);
+                    if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                        hasVisible = true;
+                    }
+                }
+            });
+            
+            if (hasVisible) {
+                document.body.classList.add('modal-open');
+                meta.content = '#000000';
+            } else {
+                document.body.classList.remove('modal-open');
+                meta.content = '#ffffff';
+            }
         });
         
         observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });

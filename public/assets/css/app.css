@@ -494,6 +494,12 @@ nav[class*="fixed"] {
     bottom: 0 !important;
 }
 
+/* Скрываем навигацию когда модалка открыта (body.modal-open) */
+body.modal-open nav.fixed,
+body.modal-open .mobile-bottom-nav {
+    display: none !important;
+}
+
 .mobile-bottom-nav > div > a,
 .mobile-bottom-nav > div > button {
     min-width: 0;
