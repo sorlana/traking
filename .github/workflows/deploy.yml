@@ -29,4 +29,3 @@ jobs:
             .kiro/**
             storage/logs/*
             storage/uploads/**
-            config/database.php
