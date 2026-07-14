@@ -326,6 +326,7 @@ function urlBase64ToUint8Array(base64String) {
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Push Диагностика</title></head>
 <body style="font-family:system-ui;padding:20px;max-width:600px;margin:0 auto;">
 <h2>Диагностика Push</h2>
+<a href="{$baseUrl}/settings" style="display:inline-flex;align-items:center;gap:4px;margin-bottom:16px;font-size:14px;color:#2563eb;text-decoration:none;">← Назад к настройкам</a>
 <button onclick="runDiag()" style="padding:12px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;width:100%;">Проверить и подписаться</button>
 <button onclick="resetAndSubscribe()" style="padding:12px 24px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;width:100%;margin-top:8px;">Сбросить и подписаться заново</button>
 <pre id="log" style="margin-top:16px;background:#f3f4f6;padding:12px;border-radius:8px;font-size:11px;overflow:auto;white-space:pre-wrap;min-height:200px;"></pre>
