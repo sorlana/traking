@@ -239,7 +239,7 @@ if ($currentUser) {
     <?php endif; ?>
 
     <!-- Основное содержимое -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-20 md:pb-4 pt-14 md:pt-20">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-24 md:pb-4 pt-14 md:pt-20">
         <?= $content ?>
     </main>
 

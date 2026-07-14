@@ -97,15 +97,23 @@ async function activatePush() {
             const perm = await Notification.requestPermission();
             if (perm !== 'granted') return false;
         } else if (Notification.permission === 'denied') {
+            alert('Уведомления заблокированы в настройках браузера. Разрешите их вручную.');
             return false;
         }
 
-        // Регистрируем SW
-        await navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' });
-        const registration = await Promise.race([
-            navigator.serviceWorker.ready,
-            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
-        ]);
+        // Регистрируем SW и не ждём ready — используем registration напрямую
+        const registration = await navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' });
+        
+        // Ждём пока SW станет active (до 15 сек)
+        let attempts = 0;
+        while (!registration.active && attempts < 30) {
+            await new Promise(r => setTimeout(r, 500));
+            attempts++;
+        }
+        if (!registration.active) {
+            console.error('[Push] SW did not activate after 15s');
+            return false;
+        }
 
         // Получаем VAPID key
         const resp = await fetch(BASE_URL + '/push/vapid-key', { headers: {'X-Requested-With':'XMLHttpRequest'} });
@@ -127,6 +135,7 @@ async function activatePush() {
         return saveResp.ok;
     } catch(e) {
         console.error('[Push] activatePush error:', e);
+        alert('Ошибка подписки: ' + e.message);
         return false;
     }
 }
