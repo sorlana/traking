@@ -241,6 +241,10 @@ window.PushNotifications = {
             scope: BASE_URL + '/',
         });
 
+        // Принудительно обновляем SW если есть старая версия
+        const reg = await navigator.serviceWorker.getRegistration(BASE_URL + '/');
+        if (reg) await reg.update();
+
         return Promise.race([
             navigator.serviceWorker.ready,
             new Promise((_, reject) => {
