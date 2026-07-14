@@ -86,6 +86,15 @@ class PushController extends Controller
 function log(msg) { document.getElementById("log").textContent += msg + "\\n"; }
 
 async function doSubscribe() {
+    log("=== Диагностика ===");
+    log("navigator.serviceWorker: " + ("serviceWorker" in navigator));
+    log("window.PushManager: " + ("PushManager" in window));
+    log("window.Notification: " + ("Notification" in window));
+    log("display-mode standalone: " + window.matchMedia("(display-mode: standalone)").matches);
+    log("navigator.standalone (iOS): " + (navigator.standalone === true));
+    log("User-Agent: " + navigator.userAgent.substring(0, 80));
+    log("==================");
+    log("");
     log("Starting...");
     
     if (!("serviceWorker" in navigator)) { log("ERROR: No serviceWorker support"); return; }
