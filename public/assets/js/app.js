@@ -215,15 +215,164 @@ function showToast(message, type = 'success') {
 }
 
 /**
- * Регистрация Service Worker для PWA
+ * Web Push: фактическая подписка браузера является источником истины.
+ * Серверная настройка push_enabled лишь разрешает или запрещает отправку.
  */
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' }).catch((e) => {
-            console.warn('[SW] Registration failed:', e);
+window.PushNotifications = {
+    isSupported() {
+        return 'serviceWorker' in navigator
+            && 'PushManager' in window
+            && 'Notification' in window;
+    },
+
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        return Uint8Array.from(rawData, char => char.charCodeAt(0));
+    },
+
+    async getRegistration() {
+        if (!this.isSupported()) {
+            throw new Error('Push-уведомления не поддерживаются этим браузером');
+        }
+
+        await navigator.serviceWorker.register(BASE_URL + '/service-worker.js', {
+            scope: BASE_URL + '/',
         });
-    });
-}
+
+        return Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Service Worker не активировался')), 15000);
+            }),
+        ]);
+    },
+
+    async getState() {
+        if (!this.isSupported()) {
+            return { supported: false, permission: 'unsupported', subscribed: false };
+        }
+
+        const registration = await this.getRegistration();
+        const subscription = await registration.pushManager.getSubscription();
+        return {
+            supported: true,
+            permission: Notification.permission,
+            subscribed: Boolean(subscription),
+            subscription,
+        };
+    },
+
+    async saveSubscription(subscription) {
+        const data = subscription.toJSON();
+        if (!data.endpoint || !data.keys?.p256dh || !data.keys?.auth) {
+            throw new Error('Браузер вернул неполные данные push-подписки');
+        }
+
+        const formData = new FormData();
+        formData.append('endpoint', data.endpoint);
+        formData.append('p256dh', data.keys.p256dh);
+        formData.append('auth', data.keys.auth);
+
+        const response = await fetch(BASE_URL + '/push/subscribe', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            body: formData,
+        });
+
+        const result = await response.json().catch(() => null);
+        if (!response.ok || !result?.success) {
+            throw new Error(result?.error || 'Сервер не сохранил push-подписку');
+        }
+    },
+
+    async ensureSubscription({ requestPermission = false } = {}) {
+        if (!this.isSupported()) {
+            throw new Error('Push-уведомления не поддерживаются этим браузером');
+        }
+
+        let permission = Notification.permission;
+        if (permission === 'default' && requestPermission) {
+            // Этот вызов должен выполняться непосредственно после действия пользователя.
+            permission = await Notification.requestPermission();
+        }
+
+        if (permission === 'denied') {
+            throw new Error('Уведомления заблокированы в настройках браузера');
+        }
+        if (permission !== 'granted') {
+            throw new Error('Разрешите уведомления, чтобы подключить это устройство');
+        }
+
+        const registration = await this.getRegistration();
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+            const keyResponse = await fetch(BASE_URL + '/push/vapid-key', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            const keyData = await keyResponse.json().catch(() => null);
+            if (!keyResponse.ok || !keyData?.publicKey) {
+                throw new Error('Не удалось получить ключ push-подписки');
+            }
+
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(keyData.publicKey),
+            });
+        }
+
+        // Повторно сохраняем даже существующую подписку: после переустановки,
+        // повторного входа или смены пользователя сервер мог потерять её связь.
+        await this.saveSubscription(subscription);
+        window.dispatchEvent(new CustomEvent('pushstatechange', {
+            detail: { subscribed: true },
+        }));
+        return subscription;
+    },
+
+    async unsubscribe() {
+        if (!this.isSupported()) return;
+
+        const registration = await this.getRegistration();
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return;
+
+        const formData = new FormData();
+        formData.append('endpoint', subscription.endpoint);
+        const response = await fetch(BASE_URL + '/push/unsubscribe', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            body: formData,
+        });
+        if (!response.ok) {
+            throw new Error('Сервер не отключил push-подписку');
+        }
+
+        await subscription.unsubscribe();
+        window.dispatchEvent(new CustomEvent('pushstatechange', {
+            detail: { subscribed: false },
+        }));
+    },
+};
+
+// После переустановки автоматически восстанавливаем подписку, если пользователь
+// уже дал браузеру разрешение. Само разрешение автоматически не запрашиваем.
+window.addEventListener('load', () => {
+    if (!window.PushNotifications.isSupported() || !PUSH_ENABLED) return;
+
+    window.PushNotifications.getRegistration()
+        .then(() => {
+            if (Notification.permission === 'granted') {
+                return window.PushNotifications.ensureSubscription();
+            }
+        })
+        .catch(error => console.warn('[Push] Automatic recovery failed:', error));
+});
 
 /**
  * Мигающая фавиконка при непрочитанных уведомлениях

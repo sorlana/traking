@@ -4,7 +4,7 @@
  * - Offline-fallback страница
  */
 
-const CACHE_NAME = 'traking-v75';
+const CACHE_NAME = 'traking-v76';
 const OFFLINE_URL = '/offline.html';
 
 // Ресурсы для предварительного кэширования
@@ -111,6 +111,59 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
         self.registration.showNotification(data.title, options)
     );
+});
+
+// Браузер может заменить push endpoint после обновления, очистки данных или
+// восстановления приложения. Синхронизируем новую подписку с сервером.
+self.addEventListener('pushsubscriptionchange', (event) => {
+    event.waitUntil((async () => {
+        try {
+            let subscription = event.newSubscription;
+
+            if (!subscription) {
+                let applicationServerKey = event.oldSubscription?.options?.applicationServerKey;
+
+                if (!applicationServerKey) {
+                    const basePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+                    const keyResponse = await fetch(basePath + '/push/vapid-key', {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin',
+                    });
+                    const keyData = await keyResponse.json();
+                    const padding = '='.repeat((4 - keyData.publicKey.length % 4) % 4);
+                    const base64 = (keyData.publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = atob(base64);
+                    applicationServerKey = Uint8Array.from(rawData, char => char.charCodeAt(0));
+                }
+
+                subscription = await self.registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey,
+                });
+            }
+
+            const data = subscription.toJSON();
+            const formData = new FormData();
+            formData.append('endpoint', data.endpoint);
+            formData.append('p256dh', data.keys.p256dh);
+            formData.append('auth', data.keys.auth);
+
+            const basePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+            const response = await fetch(basePath + '/push/subscribe', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                body: formData,
+            });
+
+            const result = await response.json().catch(() => null);
+            if (!response.ok || !result?.success) {
+                throw new Error('Subscription sync failed: HTTP ' + response.status);
+            }
+        } catch (error) {
+            console.error('[SW] Push subscription recovery failed:', error);
+        }
+    })());
 });
 
 // Клик по push-уведомлению — открыть задачу

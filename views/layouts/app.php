@@ -11,13 +11,16 @@ $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 
 // Получаем настройку звука для текущего пользователя
 $_soundEnabled = 0;
+$_pushEnabled = 0;
 if ($currentUser) {
     try {
         $db = \Helpers\Database::getInstance();
-        $_userSettings = $db->fetch("SELECT sound_enabled FROM user_settings WHERE user_id = ?", [(int)$currentUser['id']]);
+        $_userSettings = $db->fetch("SELECT sound_enabled, push_enabled FROM user_settings WHERE user_id = ?", [(int)$currentUser['id']]);
         $_soundEnabled = (int) ($_userSettings['sound_enabled'] ?? 0);
+        $_pushEnabled = (int) ($_userSettings['push_enabled'] ?? 1);
     } catch (\Throwable $e) {
         $_soundEnabled = 0;
+        $_pushEnabled = 1;
     }
 }
 ?>
@@ -247,10 +250,13 @@ if ($currentUser) {
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
     <!-- Base URL для JS-компонентов -->
-    <script>const BASE_URL = '<?= rtrim(url('/'), '/') ?>';</script>
+    <script>
+    const BASE_URL = '<?= rtrim(url('/'), '/') ?>';
+    const PUSH_ENABLED = <?= $_pushEnabled ? 'true' : 'false' ?>;
+    </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=7"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=8"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>
@@ -327,107 +333,5 @@ if ($currentUser) {
     };
     </script>
 
-    <!-- Подписка на Web Push уведомления -->
-    <script>
-    // Подписка на push-уведомления
-    async function subscribeToPush() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn('[Push] ServiceWorker or PushManager not available');
-            return;
-        }
-        
-        try {
-            // Ждём готовности SW с таймаутом 10 сек
-            const registration = await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('SW ready timeout')), 10000))
-            ]);
-            console.log('[Push] SW ready, subscribing...');
-            
-            // Получаем VAPID public key
-            const response = await fetch(BASE_URL + '/push/vapid-key', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const { publicKey } = await response.json();
-            if (!publicKey || publicKey === 'ВСТАВЬ_СВОЙ_PUBLIC_KEY') {
-                console.warn('[Push] Invalid VAPID key');
-                return;
-            }
-            
-            // Конвертируем base64url в Uint8Array
-            const applicationServerKey = urlBase64ToUint8Array(publicKey);
-            
-            // Подписываемся
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: applicationServerKey,
-            });
-            
-            const sub = subscription.toJSON();
-            console.log('[Push] Subscribed, sending to server...');
-            
-            // Отправляем подписку на сервер
-            const formData = new FormData();
-            formData.append('endpoint', sub.endpoint);
-            formData.append('p256dh', sub.keys.p256dh);
-            formData.append('auth', sub.keys.auth);
-            
-            const saveRes = await fetch(BASE_URL + '/push/subscribe', {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData,
-            });
-            console.log('[Push] Subscribe saved:', saveRes.status);
-        } catch(e) {
-            console.error('[Push] Subscribe error:', e.message);
-            // Если SW не готов — повторяем через 5 сек
-            if (e.message === 'SW ready timeout') {
-                console.log('[Push] Retrying in 5s...');
-                setTimeout(() => subscribeToPush(), 5000);
-            }
-        }
-    }
-
-    function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
-
-    // Запрашиваем разрешение и подписываемся
-    if ('Notification' in window && Notification.permission === 'default') {
-        // Подписываемся через 3 секунды после загрузки (не сразу, чтобы не раздражать)
-        setTimeout(() => {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    subscribeToPush();
-                }
-            });
-        }, 3000);
-    } else if ('Notification' in window && Notification.permission === 'granted') {
-        // Подписываемся после готовности SW (с таймаутом)
-        setTimeout(() => subscribeToPush(), 2000);
-    }
-
-    // Диагностика push-подписки — показывает статус в консоли
-    setTimeout(async () => {
-        console.log('[Push] Notification.permission:', Notification.permission);
-        console.log('[Push] serviceWorker in navigator:', 'serviceWorker' in navigator);
-        console.log('[Push] PushManager in window:', 'PushManager' in window);
-        if ('serviceWorker' in navigator) {
-            const reg = await navigator.serviceWorker.getRegistration();
-            console.log('[Push] SW registration:', reg ? reg.scope : 'NONE');
-            if (reg) {
-                const sub = await reg.pushManager.getSubscription();
-                console.log('[Push] Existing subscription:', sub ? sub.endpoint.substring(0, 60) : 'NONE');
-            }
-        }
-    }, 5000);
-    </script>
 </body>
 </html>

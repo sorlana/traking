@@ -15,16 +15,18 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
         <?= csrf_field() ?>
 
         <!-- Push-уведомления -->
-        <div x-data="{ pushActive: <?= $settings['push_enabled'] ? 'true' : 'false' ?>, subscribing: false, pushStatus: '' }">
+        <div x-data="pushSettings(<?= $settings['push_enabled'] ? 'true' : 'false' ?>)" x-init="init()">
             <h3 class="text-sm font-medium text-gray-700 mb-3">Push-уведомления</h3>
             <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="push_enabled" value="1"
                        x-model="pushActive"
-                       @change="if(pushActive) { subscribing=true; pushStatus='Подписка...'; activatePush().then(ok => { subscribing=false; pushStatus=ok?'✓ Подключено':'✗ Ошибка'; }); } else { pushStatus=''; }"
+                       @change="toggle()"
+                       :disabled="subscribing || !supported"
                        class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                 <span class="text-sm text-gray-700">Получать push-уведомления на устройство</span>
             </label>
-            <span x-show="pushStatus" x-text="pushStatus" class="text-xs ml-7 mt-1 block" :class="pushStatus.includes('✓') ? 'text-green-600' : pushStatus.includes('✗') ? 'text-red-600' : 'text-gray-500'"></span>
+            <span x-show="pushStatus" x-text="pushStatus" class="text-xs ml-7 mt-1 block"
+                  :class="pushState === 'connected' ? 'text-green-600' : pushState === 'error' ? 'text-red-600' : 'text-gray-500'"></span>
         </div>
 
         <!-- Звуковые уведомления -->
@@ -88,55 +90,88 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
 </div>
 
 <script>
-async function activatePush() {
-    try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+function pushSettings(serverEnabled) {
+    return {
+        // До завершения проверки сохраняем серверное значение, чтобы ранняя
+        // отправка формы случайно не выключила push.
+        pushActive: serverEnabled,
+        subscribing: true,
+        supported: true,
+        pushStatus: 'Проверка подписки...',
+        pushState: 'checking',
 
-        // Запрашиваем разрешение если ещё не дано
-        if (Notification.permission === 'default') {
-            const perm = await Notification.requestPermission();
-            if (perm !== 'granted') return false;
-        } else if (Notification.permission === 'denied') {
-            alert('Уведомления заблокированы в настройках браузера. Разрешите их вручную.');
-            return false;
-        }
+        async init() {
+            this.supported = window.PushNotifications?.isSupported() ?? false;
+            if (!this.supported) {
+                this.subscribing = false;
+                this.pushStatus = 'Push-уведомления не поддерживаются этим браузером';
+                this.pushState = 'error';
+                return;
+            }
 
-        // Регистрируем SW и не ждём ready — используем registration напрямую
-        const registration = await navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' });
-        
-        // Ждём пока SW станет active (до 15 сек)
-        let attempts = 0;
-        while (!registration.active && attempts < 30) {
-            await new Promise(r => setTimeout(r, 500));
-            attempts++;
-        }
-        if (!registration.active) {
-            console.error('[Push] SW did not activate after 15s');
-            return false;
-        }
+            try {
+                let state = await window.PushNotifications.getState();
 
-        // Получаем VAPID key
-        const resp = await fetch(BASE_URL + '/push/vapid-key', { headers: {'X-Requested-With':'XMLHttpRequest'} });
-        const { publicKey } = await resp.json();
-        if (!publicKey) return false;
+                // Разрешение браузера сохранилось, но endpoint мог исчезнуть
+                // после переустановки PWA. В этом случае восстанавливаем его
+                // без повторного системного запроса.
+                if (serverEnabled && state.permission === 'granted' && !state.subscribed) {
+                    await window.PushNotifications.ensureSubscription();
+                    state = await window.PushNotifications.getState();
+                }
 
-        // Подписываемся
-        const applicationServerKey = urlBase64ToUint8Array(publicKey);
-        const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
-        const sub = subscription.toJSON();
+                this.pushActive = serverEnabled && state.subscribed;
 
-        // Отправляем на сервер
-        const formData = new FormData();
-        formData.append('endpoint', sub.endpoint);
-        formData.append('p256dh', sub.keys.p256dh);
-        formData.append('auth', sub.keys.auth);
-        const saveResp = await fetch(BASE_URL + '/push/subscribe', { method: 'POST', headers: {'X-Requested-With':'XMLHttpRequest'}, body: formData });
+                if (this.pushActive) {
+                    this.pushStatus = '✓ Подключено на этом устройстве';
+                    this.pushState = 'connected';
+                } else if (state.permission === 'denied') {
+                    this.pushStatus = '✗ Уведомления заблокированы в настройках браузера';
+                    this.pushState = 'error';
+                } else if (serverEnabled) {
+                    // Настройка сохранилась на сервере, но после переустановки
+                    // этому устройству требуется новая браузерная подписка.
+                    this.pushStatus = 'Требуется повторное подключение на этом устройстве';
+                    this.pushState = 'needs-action';
+                } else {
+                    this.pushStatus = '';
+                    this.pushState = 'idle';
+                }
+            } catch (error) {
+                console.error('[Push] State check failed:', error);
+                this.pushStatus = '✗ Не удалось проверить подписку';
+                this.pushState = 'error';
+            } finally {
+                this.subscribing = false;
+            }
+        },
 
-        return saveResp.ok;
-    } catch(e) {
-        console.error('[Push] activatePush error:', e);
-        alert('Ошибка подписки: ' + e.message);
-        return false;
-    }
+        async toggle() {
+            this.subscribing = true;
+
+            try {
+                if (this.pushActive) {
+                    this.pushStatus = 'Подключение...';
+                    this.pushState = 'checking';
+                    await window.PushNotifications.ensureSubscription({ requestPermission: true });
+                    this.pushStatus = '✓ Подключено на этом устройстве';
+                    this.pushState = 'connected';
+                } else {
+                    this.pushStatus = 'Отключение...';
+                    this.pushState = 'checking';
+                    await window.PushNotifications.unsubscribe();
+                    this.pushStatus = 'Отключено на этом устройстве';
+                    this.pushState = 'idle';
+                }
+            } catch (error) {
+                console.error('[Push] Toggle failed:', error);
+                this.pushActive = false;
+                this.pushStatus = error.message || '✗ Ошибка подключения';
+                this.pushState = 'error';
+            } finally {
+                this.subscribing = false;
+            }
+        },
+    };
 }
 </script>
