@@ -326,7 +326,7 @@ function urlBase64ToUint8Array(base64String) {
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Push Диагностика</title>
 <style>
 .push-actions{display:grid;grid-template-columns:1fr;gap:8px}
-.push-action{box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:100%;margin:0;padding:12px 16px;border:0;border-radius:8px;color:#fff;font:16px/1.25 system-ui;cursor:pointer;text-align:center;text-decoration:none}
+.push-action{box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:100%;margin:0;padding:12px 8px;border:0;border-radius:8px;color:#fff;font:14px/1.25 system-ui;cursor:pointer;text-align:center;text-decoration:none;white-space:nowrap}
 .back-link{box-sizing:border-box;display:flex;align-items:center;width:fit-content;min-height:44px;margin:0 0 24px;padding:10px 8px;color:#2563eb;font:16px/1.25 system-ui;text-decoration:none}
 @media(min-width:640px){.push-actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style></head>
@@ -335,7 +335,7 @@ function urlBase64ToUint8Array(base64String) {
 <a class="back-link" href="{$baseUrl}/settings">← Назад к настройкам</a>
 <div class="push-actions">
 <button class="push-action" onclick="runDiag()" style="background:#2563eb;">Проверить и подписаться</button>
-<button class="push-action" onclick="resetAndSubscribe()" style="background:#dc2626;">Сбросить и подписаться заново</button>
+<button class="push-action" onclick="resetAndSubscribe()" style="background:#dc2626;">Сбросить и подписаться</button>
 <a class="push-action" href="{$baseUrl}/push/test" style="background:#2563eb;">Тест Push</a>
 </div>
 <pre id="log" style="margin-top:16px;background:#f3f4f6;padding:12px;border-radius:8px;font-size:11px;overflow:auto;white-space:pre-wrap;min-height:200px;"></pre>
