@@ -398,6 +398,21 @@ if ($currentUser) {
     } else if ('Notification' in window && Notification.permission === 'granted') {
         subscribeToPush();
     }
+
+    // Диагностика push-подписки — показывает статус в консоли
+    setTimeout(async () => {
+        console.log('[Push] Notification.permission:', Notification.permission);
+        console.log('[Push] serviceWorker in navigator:', 'serviceWorker' in navigator);
+        console.log('[Push] PushManager in window:', 'PushManager' in window);
+        if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.getRegistration();
+            console.log('[Push] SW registration:', reg ? reg.scope : 'NONE');
+            if (reg) {
+                const sub = await reg.pushManager.getSubscription();
+                console.log('[Push] Existing subscription:', sub ? sub.endpoint.substring(0, 60) : 'NONE');
+            }
+        }
+    }, 5000);
     </script>
 </body>
 </html>
