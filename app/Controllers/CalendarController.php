@@ -17,11 +17,15 @@ class CalendarController extends Controller
 
         $monthStart = $month->modify('first day of this month');
         $monthEnd = $month->modify('last day of this month');
+        $user = Auth::user();
+        $roleId = (int) ($user['role_id'] ?? 0);
+        $visibleTimeType = $roleId === 2 ? 'manager' : ($roleId === 3 ? 'executor' : null);
         $service = new TimeTrackingService();
         $entries = $service->getCalendarEntries(
             (int) Auth::id(),
             $monthStart->format('Y-m-d'),
-            $monthEnd->format('Y-m-d')
+            $monthEnd->format('Y-m-d'),
+            $visibleTimeType
         );
 
         $days = [];
@@ -76,6 +80,7 @@ class CalendarController extends Controller
             'previousMonth' => $month->modify('-1 month')->format('Y-m'),
             'nextMonth' => $month->modify('+1 month')->format('Y-m'),
             'currentMonth' => $month->format('Y-m'),
+            'visibleTimeType' => $visibleTimeType,
         ]);
     }
 }

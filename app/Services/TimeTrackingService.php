@@ -115,19 +115,27 @@ class TimeTrackingService
     }
 
     /** Дневные затраты текущего пользователя за выбранный период. */
-    public function getCalendarEntries(int $userId, string $dateFrom, string $dateTo): array
+    public function getCalendarEntries(int $userId, string $dateFrom, string $dateTo, ?string $timeType = null): array
     {
         $this->ensureTimeEntriesTable();
+        $typeFilter = in_array($timeType, ['executor', 'manager'], true)
+            ? ' AND te.time_type = ?'
+            : '';
+        $params = [$userId, $dateFrom, $dateTo];
+        if ($typeFilter !== '') {
+            $params[] = $timeType;
+        }
+
         return Database::getInstance()->fetchAll(
             "SELECT te.task_id, te.time_type, te.entry_date, SUM(te.hours) AS hours,
                     t.title AS task_title, t.parent_id, p.title AS project_title
              FROM time_entries te
              JOIN tasks t ON t.id = te.task_id
              JOIN projects p ON p.id = t.project_id
-             WHERE te.user_id = ? AND te.entry_date BETWEEN ? AND ?
+             WHERE te.user_id = ? AND te.entry_date BETWEEN ? AND ?{$typeFilter}
              GROUP BY te.task_id, te.time_type, te.entry_date, t.title, t.parent_id, p.title
              ORDER BY p.title, t.title, te.time_type, te.entry_date",
-            [$userId, $dateFrom, $dateTo]
+            $params
         );
     }
 

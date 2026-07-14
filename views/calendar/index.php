@@ -4,7 +4,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Календарь времени</h1>
-            <p class="text-sm text-gray-500 mt-1">Дневные затраты текущего пользователя</p>
+            <p class="text-sm text-gray-500 mt-1">
+                Только ваше время <?= $visibleTimeType === 'manager' ? 'как руководителя' : ($visibleTimeType === 'executor' ? 'как исполнителя' : '') ?>
+            </p>
         </div>
         <div class="flex items-center gap-2">
             <a href="<?= url('/calendar?month=' . $previousMonth) ?>" class="ui-btn ui-btn-secondary" aria-label="Предыдущий месяц">←</a>
@@ -85,7 +87,11 @@
 
     <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">
         <span class="font-medium">Легенда:</span>
-        <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-blue-300"></i> время исполнителя</span>
-        <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-purple-300"></i> время руководителя</span>
+        <?php if ($visibleTimeType !== 'manager'): ?>
+            <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-blue-300"></i> ваше время исполнителя</span>
+        <?php endif; ?>
+        <?php if ($visibleTimeType !== 'executor'): ?>
+            <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-purple-300"></i> ваше время руководителя</span>
+        <?php endif; ?>
     </div>
 </div>
