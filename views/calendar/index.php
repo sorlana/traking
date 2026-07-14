@@ -29,7 +29,7 @@
 
         <div class="grid grid-cols-7 bg-gray-200 gap-px">
             <?php for ($i = 0; $i < $leadingBlankDays; $i++): ?>
-                <div class="min-h-[88px] sm:min-h-[125px] bg-gray-50"></div>
+                <div class="min-h-[64px] sm:min-h-[90px] bg-gray-50"></div>
             <?php endfor; ?>
 
             <?php foreach ($days as $day): ?>
@@ -37,7 +37,7 @@
                 $dayEntries = $entriesByDate[$day['date']] ?? [];
                 $dayTotal = (float) ($dayTotals[$day['date']] ?? 0);
                 ?>
-                <div class="min-w-0 min-h-[88px] sm:min-h-[125px] p-1 sm:p-2 <?= $day['today'] ? 'bg-blue-50 ring-2 ring-inset ring-blue-400' : ($day['weekend'] ? 'bg-gray-50' : 'bg-white') ?>">
+                <div class="min-w-0 min-h-[64px] sm:min-h-[90px] p-1 sm:p-1.5 <?= $day['today'] ? 'bg-blue-50 ring-2 ring-inset ring-blue-400' : ($day['weekend'] ? 'bg-gray-50' : 'bg-white') ?>">
                     <div class="flex items-center justify-between gap-1 mb-1.5">
                         <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold <?= $day['today'] ? 'bg-blue-600 text-white' : ($day['weekend'] ? 'text-gray-400' : 'text-gray-700') ?>">
                             <?= e($day['day']) ?>
@@ -64,7 +64,7 @@
             <?php endforeach; ?>
 
             <?php for ($i = 0; $i < $trailingBlankDays; $i++): ?>
-                <div class="min-h-[88px] sm:min-h-[125px] bg-gray-50"></div>
+                <div class="min-h-[64px] sm:min-h-[90px] bg-gray-50"></div>
             <?php endfor; ?>
         </div>
     </div>
