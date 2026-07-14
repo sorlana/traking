@@ -485,13 +485,12 @@ nav[class*="fixed"] {
     backface-visibility: hidden;
 }
 
-/* Модалки — покрывают весь экран */
-.fixed.inset-0,
-[class*="fixed"][class*="inset-0"] {
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+/* Модалки — покрывают весь экран, убираем margin от space-y родителя */
+.space-y-4 > .fixed,
+.space-y-3 > .fixed,
+.space-y-2 > .fixed,
+[class*="space-y"] > [class*="fixed"][class*="inset-0"] {
+    margin-top: 0 !important;
 }
 
 .mobile-bottom-nav > div > a,
