@@ -7,11 +7,11 @@
  */
 
 return [
-    'host'     => '127.0.0.1',
+    'host'     => 'localhost',
     'port'     => 3306,
-    'database' => 'traking',
-    'username' => 'root',
-    'password' => '',
+    'database' => 's265300_traking',
+    'username' => 'c985833i_bd',
+    'password' => '%NX9LDn*b%vH',
     'charset'  => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
     'options'  => [
