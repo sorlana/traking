@@ -78,9 +78,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-blue-200 mt-1 text-right flex items-center justify-end gap-1">
                                 <span x-text="formatTime(msg.created_at)"></span>
-                                <!-- Галочки прочтения -->
-                                <span x-show="msg.read_by_others" class="text-blue-200 font-bold">✓✓</span>
-                                <span x-show="!msg.read_by_others" class="text-blue-300 opacity-70">✓</span>
+                                <!-- Галочки прочтения (WhatsApp-стиль) -->
+                                <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-200" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg x-show="!msg.read_by_others" class="w-4 h-4 text-blue-300 opacity-70" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                         </div>
                         <!-- Прикреплённые файлы (без фона для изображений) -->
@@ -122,9 +122,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <!-- Время (если есть файлы/ссылки — показываем отдельно) + галочки -->
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right flex items-center justify-end gap-1">
                             <span x-text="formatTime(msg.created_at)"></span>
-                            <!-- Галочки прочтения -->
-                            <span x-show="msg.read_by_others" class="text-blue-400 font-bold">✓✓</span>
-                            <span x-show="!msg.read_by_others" class="text-gray-300">✓</span>
+                            <!-- Галочки прочтения (WhatsApp-стиль) -->
+                            <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                     </div>
                 </div>
