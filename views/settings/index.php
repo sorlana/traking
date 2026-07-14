@@ -15,14 +15,16 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
         <?= csrf_field() ?>
 
         <!-- Push-уведомления -->
-        <div>
+        <div x-data="{ pushActive: <?= $settings['push_enabled'] ? 'true' : 'false' ?>, subscribing: false, pushStatus: '' }">
             <h3 class="text-sm font-medium text-gray-700 mb-3">Push-уведомления</h3>
             <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="push_enabled" value="1"
-                       <?= $settings['push_enabled'] ? 'checked' : '' ?>
+                       x-model="pushActive"
+                       @change="if(pushActive) { subscribing=true; pushStatus='Подписка...'; activatePush().then(ok => { subscribing=false; pushStatus=ok?'✓ Подключено':'✗ Ошибка'; }); } else { pushStatus=''; }"
                        class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                 <span class="text-sm text-gray-700">Получать push-уведомления на устройство</span>
             </label>
+            <span x-show="pushStatus" x-text="pushStatus" class="text-xs ml-7 mt-1 block" :class="pushStatus.includes('✓') ? 'text-green-600' : pushStatus.includes('✗') ? 'text-red-600' : 'text-gray-500'"></span>
         </div>
 
         <!-- Звуковые уведомления -->
@@ -84,3 +86,48 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
         </div>
     </form>
 </div>
+
+<script>
+async function activatePush() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+
+        // Запрашиваем разрешение если ещё не дано
+        if (Notification.permission === 'default') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') return false;
+        } else if (Notification.permission === 'denied') {
+            return false;
+        }
+
+        // Регистрируем SW
+        await navigator.serviceWorker.register(BASE_URL + '/service-worker.js', { scope: BASE_URL + '/' });
+        const registration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+        ]);
+
+        // Получаем VAPID key
+        const resp = await fetch(BASE_URL + '/push/vapid-key', { headers: {'X-Requested-With':'XMLHttpRequest'} });
+        const { publicKey } = await resp.json();
+        if (!publicKey) return false;
+
+        // Подписываемся
+        const applicationServerKey = urlBase64ToUint8Array(publicKey);
+        const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+        const sub = subscription.toJSON();
+
+        // Отправляем на сервер
+        const formData = new FormData();
+        formData.append('endpoint', sub.endpoint);
+        formData.append('p256dh', sub.keys.p256dh);
+        formData.append('auth', sub.keys.auth);
+        const saveResp = await fetch(BASE_URL + '/push/subscribe', { method: 'POST', headers: {'X-Requested-With':'XMLHttpRequest'}, body: formData });
+
+        return saveResp.ok;
+    } catch(e) {
+        console.error('[Push] activatePush error:', e);
+        return false;
+    }
+}
+</script>
