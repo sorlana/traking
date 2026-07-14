@@ -5,6 +5,7 @@
     # PWA, Service Worker и Web Push работают только в secure context.
     # Канонизируем весь проект на HTTPS до внутренних rewrite-правил.
     RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteRule ^ https://unique-style.ru%{REQUEST_URI} [R=301,L,NE]
 
     # Запрет прямого доступа к служебным папкам

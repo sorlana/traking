@@ -20,8 +20,10 @@ $GLOBALS['config'] = $config;
 // Защитный HTTPS-редирект на уровне приложения. Основной редирект выполняет
 // корневой .htaccess, но этот fallback не даст запустить PHP в insecure context,
 // если конфигурация веб-сервера изменится.
+$forwardedProto = strtolower(trim(explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''))[0]));
 $isHttps = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
-    || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+    || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443
+    || $forwardedProto === 'https';
 
 if (!$isHttps && PHP_SAPI !== 'cli') {
     $canonical = parse_url($config['url'] ?? '');
