@@ -341,7 +341,7 @@ class PushService
             return null;
         }
 
-        $shared = openssl_pkey_derive($localPrivateKey, $peerKey);
+        $shared = openssl_pkey_derive($peerKey, $localPrivateKey);
         if ($shared === false) {
             error_log('PushService: openssl_pkey_derive failed: ' . openssl_error_string());
             return null;
