@@ -4,7 +4,7 @@
  * - Offline-fallback страница
  */
 
-const CACHE_NAME = 'traking-v72';
+const CACHE_NAME = 'traking-v73';
 const OFFLINE_URL = '/offline.html';
 
 // Ресурсы для предварительного кэширования
@@ -99,8 +99,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
         body: data.body,
-        icon: '/favicon.svg',
-        badge: '/favicon.svg',
+        icon: '/traking/favicon.svg',
+        badge: '/traking/favicon.svg',
         data: { url: data.url || '/' },
         vibrate: [200, 100, 200],
         requireInteraction: true,
