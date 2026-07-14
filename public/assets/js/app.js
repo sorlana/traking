@@ -221,8 +221,7 @@ function showToast(message, type = 'success') {
 window.PushNotifications = {
     isSupported() {
         return 'serviceWorker' in navigator
-            && 'PushManager' in window
-            && 'Notification' in window;
+            && 'PushManager' in window;
     },
 
     urlBase64ToUint8Array(base64String) {
@@ -262,7 +261,7 @@ window.PushNotifications = {
         const subscription = await registration.pushManager.getSubscription();
         return {
             supported: true,
-            permission: Notification.permission,
+            permission: 'Notification' in window ? Notification.permission : 'default',
             subscribed: Boolean(subscription),
             subscription,
         };
@@ -297,16 +296,22 @@ window.PushNotifications = {
             throw new Error('Push-уведомления не поддерживаются этим браузером');
         }
 
-        let permission = Notification.permission;
-        if (permission === 'default' && requestPermission) {
-            // Этот вызов должен выполняться непосредственно после действия пользователя.
-            permission = await Notification.requestPermission();
+        // iOS Safari PWA не имеет глобального Notification, используем Notification если есть
+        let permission = 'default';
+        if ('Notification' in window) {
+            permission = Notification.permission;
+            if (permission === 'default' && requestPermission) {
+                permission = await Notification.requestPermission();
+            }
+        } else if (requestPermission) {
+            // На iOS разрешение запрашивается через pushManager.subscribe() автоматически
+            permission = 'granted';
         }
 
         if (permission === 'denied') {
             throw new Error('Уведомления заблокированы в настройках браузера');
         }
-        if (permission !== 'granted') {
+        if (permission !== 'granted' && 'Notification' in window) {
             throw new Error('Разрешите уведомления, чтобы подключить это устройство');
         }
 
@@ -371,7 +376,8 @@ window.addEventListener('load', () => {
 
     window.PushNotifications.getRegistration()
         .then(() => {
-            if (Notification.permission === 'granted') {
+            const perm = 'Notification' in window ? Notification.permission : 'default';
+            if (perm === 'granted') {
                 return window.PushNotifications.ensureSubscription();
             }
         })
