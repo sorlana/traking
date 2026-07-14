@@ -326,17 +326,24 @@ if ($currentUser) {
     <script>
     // Подписка на push-уведомления
     async function subscribeToPush() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('[Push] ServiceWorker or PushManager not available');
+            return;
+        }
         
         try {
             const registration = await navigator.serviceWorker.ready;
+            console.log('[Push] SW ready, subscribing...');
             
             // Получаем VAPID public key
             const response = await fetch(BASE_URL + '/push/vapid-key', {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const { publicKey } = await response.json();
-            if (!publicKey || publicKey === 'ВСТАВЬ_СВОЙ_PUBLIC_KEY') return;
+            if (!publicKey || publicKey === 'ВСТАВЬ_СВОЙ_PUBLIC_KEY') {
+                console.warn('[Push] Invalid VAPID key');
+                return;
+            }
             
             // Конвертируем base64url в Uint8Array
             const applicationServerKey = urlBase64ToUint8Array(publicKey);
@@ -348,6 +355,7 @@ if ($currentUser) {
             });
             
             const sub = subscription.toJSON();
+            console.log('[Push] Subscribed, sending to server...');
             
             // Отправляем подписку на сервер
             const formData = new FormData();
@@ -355,13 +363,14 @@ if ($currentUser) {
             formData.append('p256dh', sub.keys.p256dh);
             formData.append('auth', sub.keys.auth);
             
-            await fetch(BASE_URL + '/push/subscribe', {
+            const saveRes = await fetch(BASE_URL + '/push/subscribe', {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData,
             });
+            console.log('[Push] Subscribe response:', saveRes.status);
         } catch(e) {
-            // Пользователь отклонил или ошибка — молча пропускаем
+            console.error('[Push] Subscribe error:', e);
         }
     }
 
