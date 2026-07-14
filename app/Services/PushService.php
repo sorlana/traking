@@ -471,44 +471,90 @@ class PushService
 
         $signingInput = $header . '.' . $payload;
 
-        // Декодируем приватный ключ
+        // Декодируем приватный ключ (32 байта raw P-256)
         $privateKeyRaw = $this->base64urlDecode($this->config['private_key']);
-        
-        // Создаём EC key из raw bytes (32 байта приватный ключ P-256)
-        $pem = $this->createEcPem($privateKeyRaw);
-        if (!$pem) return null;
+        if (strlen($privateKeyRaw) !== 32) {
+            error_log('PushService: VAPID private key invalid length: ' . strlen($privateKeyRaw));
+            return null;
+        }
+
+        // Вычисляем публичный ключ из приватного для полного PEM
+        $pem = $this->createFullEcPem($privateKeyRaw);
+        if (!$pem) {
+            error_log('PushService: Failed to create EC PEM');
+            return null;
+        }
 
         $key = openssl_pkey_get_private($pem);
-        if (!$key) return null;
+        if (!$key) {
+            error_log('PushService: openssl_pkey_get_private failed: ' . openssl_error_string());
+            return null;
+        }
 
         $signature = '';
         if (!openssl_sign($signingInput, $signature, $key, OPENSSL_ALGO_SHA256)) {
+            error_log('PushService: openssl_sign failed: ' . openssl_error_string());
             return null;
         }
 
         // Конвертируем DER-подпись в raw R+S (64 байта)
         $rawSig = $this->derToRaw($signature);
-        if (!$rawSig) return null;
+        if (!$rawSig) {
+            error_log('PushService: derToRaw failed');
+            return null;
+        }
 
         return $signingInput . '.' . $this->base64url($rawSig);
     }
 
     /**
-     * Создать PEM-формат EC-ключа из raw-байтов приватного ключа P-256
+     * Создать полный PEM EC private key (с вычислением публичного ключа)
      */
-    private function createEcPem(string $privateKeyRaw): ?string
+    private function createFullEcPem(string $privateKeyRaw): ?string
     {
-        if (strlen($privateKeyRaw) !== 32) return null;
+        // Способ 1: Создаём через openssl и импортируем
+        // DER: SEQUENCE { version=1, privateKey, [0] oid(P-256), [1] publicKey }
+        // Минимальная структура без publicKey
+        $der_minimal = "\x30\x77\x02\x01\x01\x04\x20" . $privateKeyRaw
+            . "\xa0\x0a\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
 
-        // Формируем DER-структуру для EC private key (P-256)
-        $der = "\x30\x77\x02\x01\x01\x04\x20" . $privateKeyRaw
-             . "\xa0\x0a\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+        $pem_minimal = "-----BEGIN EC PRIVATE KEY-----\n"
+            . chunk_split(base64_encode($der_minimal), 64, "\n")
+            . "-----END EC PRIVATE KEY-----";
 
-        $pem = "-----BEGIN EC PRIVATE KEY-----\n"
-             . chunk_split(base64_encode($der), 64, "\n")
-             . "-----END EC PRIVATE KEY-----";
+        // Проверяем — если OpenSSL принимает минимальный PEM
+        $key = @openssl_pkey_get_private($pem_minimal);
+        if ($key) {
+            // Экспортируем полный PEM (OpenSSL добавит publicKey)
+            $fullPem = '';
+            if (openssl_pkey_export($key, $fullPem)) {
+                return $fullPem;
+            }
+            return $pem_minimal;
+        }
 
-        return $pem;
+        // Способ 2: Используем PKCS#8 формат
+        // EC parameters OID for prime256v1
+        $ecOid = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+        $algoId = "\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01" . $ecOid;
+        
+        // Wrap private key in OCTET STRING for PKCS#8
+        $ecPrivKey = "\x04\x20" . $privateKeyRaw;
+        $innerSeq = "\x30" . chr(strlen($ecPrivKey) + 2) . "\x02\x01\x01" . $ecPrivKey;
+        $octet = "\x04" . chr(strlen($innerSeq)) . $innerSeq;
+        
+        $pkcs8 = "\x30" . chr(strlen($algoId) + strlen($octet) + 3) 
+               . "\x02\x01\x00" . $algoId . $octet;
+
+        $pem_pkcs8 = "-----BEGIN PRIVATE KEY-----\n"
+            . chunk_split(base64_encode($pkcs8), 64, "\n")
+            . "-----END PRIVATE KEY-----";
+
+        $key2 = @openssl_pkey_get_private($pem_pkcs8);
+        if ($key2) return $pem_pkcs8;
+
+        error_log('PushService: Both PEM formats failed. OpenSSL: ' . openssl_error_string());
+        return null;
     }
 
     /**
