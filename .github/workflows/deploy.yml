@@ -21,7 +21,6 @@ jobs:
           username: ${{ secrets.HOSTIMAN_FTP_USERNAME }}
           password: ${{ secrets.HOSTIMAN_FTP_PASSWORD }}
           server-dir: /var/www/s265300/data/www/unique-style.ru/traking/
-          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.git*/**
