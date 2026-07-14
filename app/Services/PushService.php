@@ -257,6 +257,7 @@ class PushService
         $headers = [
             'Content-Type: application/octet-stream',
             'Content-Encoding: aes128gcm',
+            'Content-Length: ' . strlen($encrypted),
             'TTL: 86400',
         ];
 
