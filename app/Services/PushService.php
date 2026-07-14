@@ -545,52 +545,68 @@ class PushService
     }
 
     /**
-     * Создать полный PEM EC private key (с вычислением публичного ключа)
+     * Создать полный PEM EC private key
+     * Используем правильную DER-структуру для SEC1 EC private key (RFC 5915)
      */
     private function createFullEcPem(string $privateKeyRaw): ?string
     {
-        // Способ 1: Создаём через openssl и импортируем
-        // DER: SEQUENCE { version=1, privateKey, [0] oid(P-256), [1] publicKey }
-        // Минимальная структура без publicKey
-        $der_minimal = "\x30\x77\x02\x01\x01\x04\x20" . $privateKeyRaw
-            . "\xa0\x0a\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+        if (strlen($privateKeyRaw) !== 32) return null;
 
-        $pem_minimal = "-----BEGIN EC PRIVATE KEY-----\n"
-            . chunk_split(base64_encode($der_minimal), 64, "\n")
+        // Вычисляем публичный ключ из приватного через временный ключ
+        // Способ: генерируем EC-ключ OpenSSL, экспортируем, подставляем наш приватный
+        
+        // SEC1 EC private key DER (RFC 5915):
+        // SEQUENCE {
+        //   INTEGER 1 (version)
+        //   OCTET STRING (32 bytes private key)
+        //   [0] OID prime256v1
+        // }
+        // Точные байты:
+        $oid = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07"; // OID 1.2.840.10045.3.1.7 (prime256v1)
+        $oidTagged = "\xa0" . chr(strlen($oid)) . $oid; // context [0]
+        $privKeyOctet = "\x04\x20" . $privateKeyRaw; // OCTET STRING, 32 bytes
+        $version = "\x02\x01\x01"; // INTEGER 1
+        
+        $innerLen = strlen($version) + strlen($privKeyOctet) + strlen($oidTagged);
+        $der = "\x30" . chr($innerLen) . $version . $privKeyOctet . $oidTagged;
+
+        $pem = "-----BEGIN EC PRIVATE KEY-----\n"
+            . chunk_split(base64_encode($der), 64, "\n")
             . "-----END EC PRIVATE KEY-----";
 
-        // Проверяем — если OpenSSL принимает минимальный PEM
-        $key = @openssl_pkey_get_private($pem_minimal);
+        $key = @openssl_pkey_get_private($pem);
         if ($key) {
-            // Экспортируем полный PEM (OpenSSL добавит publicKey)
+            // Экспортируем полный PEM
             $fullPem = '';
             if (openssl_pkey_export($key, $fullPem)) {
                 return $fullPem;
             }
-            return $pem_minimal;
+            return $pem;
         }
 
-        // Способ 2: Используем PKCS#8 формат
-        // EC parameters OID for prime256v1
-        $ecOid = "\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
-        $algoId = "\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01" . $ecOid;
+        // Способ 2: PKCS#8 DER
+        // PrivateKeyInfo ::= SEQUENCE {
+        //   version INTEGER (0),
+        //   privateKeyAlgorithm AlgorithmIdentifier,
+        //   privateKey OCTET STRING (contains ECPrivateKey)
+        // }
+        $ecPrivKey = "\x30\x2e\x02\x01\x01\x04\x20" . $privateKeyRaw 
+                   . "\xa0\x0a\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+        $algoIdentifier = "\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48\xce\x3d\x03\x01\x07";
+        $privateKeyOctet = "\x04" . chr(strlen($ecPrivKey)) . $ecPrivKey;
+        $pkcs8Version = "\x02\x01\x00";
         
-        // Wrap private key in OCTET STRING for PKCS#8
-        $ecPrivKey = "\x04\x20" . $privateKeyRaw;
-        $innerSeq = "\x30" . chr(strlen($ecPrivKey) + 2) . "\x02\x01\x01" . $ecPrivKey;
-        $octet = "\x04" . chr(strlen($innerSeq)) . $innerSeq;
-        
-        $pkcs8 = "\x30" . chr(strlen($algoId) + strlen($octet) + 3) 
-               . "\x02\x01\x00" . $algoId . $octet;
+        $pkcs8Inner = $pkcs8Version . $algoIdentifier . $privateKeyOctet;
+        $pkcs8 = "\x30" . chr(strlen($pkcs8Inner)) . $pkcs8Inner;
 
-        $pem_pkcs8 = "-----BEGIN PRIVATE KEY-----\n"
+        $pem2 = "-----BEGIN PRIVATE KEY-----\n"
             . chunk_split(base64_encode($pkcs8), 64, "\n")
             . "-----END PRIVATE KEY-----";
 
-        $key2 = @openssl_pkey_get_private($pem_pkcs8);
-        if ($key2) return $pem_pkcs8;
+        $key2 = @openssl_pkey_get_private($pem2);
+        if ($key2) return $pem2;
 
-        error_log('PushService: Both PEM formats failed. OpenSSL: ' . openssl_error_string());
+        error_log('PushService: Both EC PEM formats failed. OpenSSL: ' . openssl_error_string());
         return null;
     }
 
