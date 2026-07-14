@@ -221,7 +221,7 @@ class PushService
             'title' => $title,
             'body' => $body,
             'url' => $url,
-            'icon' => '/traking/favicon.svg',
+            'icon' => '/traking/icons/push-icon.php',
         ], JSON_UNESCAPED_UNICODE);
 
         $endpoint = $subscription['endpoint'];
@@ -280,7 +280,7 @@ class PushService
             'title' => $title,
             'body' => $body,
             'url' => $url,
-            'icon' => '/traking/favicon.svg',
+            'icon' => '/traking/icons/push-icon.php',
         ], JSON_UNESCAPED_UNICODE);
 
         $endpoint = $subscription['endpoint'];
