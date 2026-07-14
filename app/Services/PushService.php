@@ -203,7 +203,11 @@ class PushService
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        // Логируем результат для отладки
+        error_log("PushService: endpoint={$endpoint}, httpCode={$httpCode}, response={$response}, curlError={$curlError}");
 
         // Если подписка протухла (410 Gone) — удаляем
         if ($httpCode === 410 || $httpCode === 404) {

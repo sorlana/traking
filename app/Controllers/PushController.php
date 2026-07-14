@@ -65,11 +65,30 @@ class PushController extends Controller
     public function test(): void
     {
         $userId = Auth::id();
+        $db = \Helpers\Database::getInstance();
+        
+        // Проверяем подписки в БД
+        $subscriptions = $db->fetchAll(
+            "SELECT id, endpoint, created_at FROM push_subscriptions WHERE user_id = ?",
+            [$userId]
+        );
+        
+        if (empty($subscriptions)) {
+            $this->json(['success' => false, 'error' => 'Нет подписок для текущего пользователя (user_id=' . $userId . '). Разреши уведомления в приложении.']);
+            return;
+        }
+
         $pushService = new PushService();
         
         try {
             $pushService->sendToUser($userId, 'Тест уведомления', 'Если видишь это — push работает!', url('/dashboard'));
-            $this->json(['success' => true, 'message' => 'Push отправлен']);
+            $this->json([
+                'success' => true,
+                'message' => 'Push отправлен',
+                'subscriptions_count' => count($subscriptions),
+                'endpoints' => array_map(fn($s) => substr($s['endpoint'], 0, 80) . '...', $subscriptions),
+                'hint' => 'Проверь error_log на сервере для HTTP-кодов ответа от FCM',
+            ]);
         } catch (\Throwable $e) {
             $this->json(['success' => false, 'error' => $e->getMessage()]);
         }
