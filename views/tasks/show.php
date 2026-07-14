@@ -378,10 +378,10 @@ $isClosed = ($task['status_code'] === 'closed');
             <button @click="tab = 'chat'"
                     :class="tab === 'chat' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
                     class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Чат</button>
-            <?php if ($totalChildrenCount > 0): ?>
+            <?php if ($totalChildrenCount > 0 || $canEdit): ?>
             <button @click="tab = 'subtasks'"
                     :class="tab === 'subtasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Доработки <?= $totalChildrenCount ?></button>
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition">Доработки<?php if ($totalChildrenCount > 0): ?> <?= $totalChildrenCount ?><?php endif; ?></button>
             <?php endif; ?>
             <button @click="tab = 'info'"
                     :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
