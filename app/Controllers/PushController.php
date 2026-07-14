@@ -162,13 +162,16 @@ function urlBase64ToUint8Array(base64String) {
         $pushService = new PushService();
         
         try {
+            // Диагностика VAPID JWT
+            $jwtDebug = $pushService->debugVapidJwt($subscriptions[0]['endpoint']);
+            
             // Отправляем и собираем результат с HTTP-кодами
             $results = $pushService->sendToUserDebug($userId, 'Тест уведомления', 'Если видишь это — push работает!', url('/dashboard'));
             $this->json([
                 'success' => true,
                 'message' => 'Push отправлен',
                 'subscriptions_count' => count($subscriptions),
-                'endpoints' => array_map(fn($s) => substr($s['endpoint'], 0, 80) . '...', $subscriptions),
+                'vapid_debug' => $jwtDebug,
                 'push_results' => $results,
             ]);
         } catch (\Throwable $e) {

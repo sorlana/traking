@@ -86,6 +86,43 @@ class PushService
     }
 
     /**
+     * Debug: диагностика VAPID JWT
+     */
+    public function debugVapidJwt(string $endpoint): array
+    {
+        $privateKeyRaw = $this->base64urlDecode($this->config['private_key']);
+        $info = [
+            'private_key_length' => strlen($privateKeyRaw),
+            'private_key_hex_prefix' => bin2hex(substr($privateKeyRaw, 0, 4)),
+        ];
+
+        $pem = $this->createFullEcPem($privateKeyRaw);
+        $info['pem_created'] = $pem !== null;
+        if ($pem) {
+            $info['pem_first_line'] = explode("\n", $pem)[0];
+            $key = @openssl_pkey_get_private($pem);
+            $info['key_loaded'] = $key !== false;
+            if ($key) {
+                $details = openssl_pkey_get_details($key);
+                $info['key_type'] = $details['type'] ?? 'unknown';
+                $info['key_bits'] = $details['bits'] ?? 0;
+            } else {
+                $info['openssl_error'] = openssl_error_string();
+            }
+        } else {
+            $info['openssl_error'] = openssl_error_string();
+        }
+
+        $jwt = $this->createVapidJwt($endpoint);
+        $info['jwt_created'] = $jwt !== null;
+        if ($jwt) {
+            $info['jwt_length'] = strlen($jwt);
+        }
+
+        return $info;
+    }
+
+    /**
      * Отправить push участникам задачи (кроме отправителя)
      * Обёрнуто в try-catch — если таблица не существует, просто пропускаем
      */
