@@ -96,6 +96,7 @@ $dayNames = [1 => 'Пн', 2 => 'Вт', 3 => 'Ср', 4 => 'Чт', 5 => 'Пт', 6 
                 Сохранить
             </button>
             <a href="<?= url('/push/diag') ?>" class="ml-4 text-xs text-gray-400 hover:text-blue-600">Диагностика push</a>
+            <a href="<?= url('/push/test') ?>" class="ml-4 text-xs text-blue-600 hover:text-blue-800">Тест push</a>
         </div>
     </form>
 </div>
