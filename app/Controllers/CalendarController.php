@@ -39,30 +39,26 @@ class CalendarController extends Controller
             ];
         }
 
-        $rows = [];
+        $entriesByDate = [];
         $dayTotals = [];
         $grandTotal = 0.0;
         foreach ($entries as $entry) {
-            $key = $entry['task_id'] . ':' . $entry['time_type'];
-            if (!isset($rows[$key])) {
-                $rows[$key] = [
-                    'task_id' => (int) $entry['task_id'],
-                    'task_title' => $entry['task_title'],
-                    'project_title' => $entry['project_title'],
-                    'is_subtask' => !empty($entry['parent_id']),
-                    'time_type' => $entry['time_type'],
-                    'days' => [],
-                    'total' => 0.0,
-                ];
-            }
-
             $hours = (float) $entry['hours'];
             $date = $entry['entry_date'];
-            $rows[$key]['days'][$date] = $hours;
-            $rows[$key]['total'] += $hours;
+            $entriesByDate[$date][] = [
+                'task_id' => (int) $entry['task_id'],
+                'task_title' => $entry['task_title'],
+                'project_title' => $entry['project_title'],
+                'is_subtask' => !empty($entry['parent_id']),
+                'time_type' => $entry['time_type'],
+                'hours' => $hours,
+            ];
             $dayTotals[$date] = ($dayTotals[$date] ?? 0) + $hours;
             $grandTotal += $hours;
         }
+
+        $leadingBlankDays = (int) $monthStart->format('N') - 1;
+        $trailingBlankDays = (7 - (($leadingBlankDays + count($days)) % 7)) % 7;
 
         $monthNames = [
             1 => 'Январь', 2 => 'Февраль', 3 => 'Март', 4 => 'Апрель',
@@ -73,9 +69,11 @@ class CalendarController extends Controller
         $this->view('calendar/index', [
             'title' => 'Календарь — Flowtask',
             'days' => $days,
-            'rows' => array_values($rows),
+            'entriesByDate' => $entriesByDate,
             'dayTotals' => $dayTotals,
             'grandTotal' => $grandTotal,
+            'leadingBlankDays' => $leadingBlankDays,
+            'trailingBlankDays' => $trailingBlankDays,
             'monthTitle' => $monthNames[(int) $month->format('n')] . ' ' . $month->format('Y'),
             'previousMonth' => $month->modify('-1 month')->format('Y-m'),
             'nextMonth' => $month->modify('+1 month')->format('Y-m'),

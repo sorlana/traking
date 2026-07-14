@@ -8,9 +8,9 @@
                 Только ваше время <?= $visibleTimeType === 'manager' ? 'как руководителя' : ($visibleTimeType === 'executor' ? 'как исполнителя' : '') ?>
             </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2">
             <a href="<?= url('/calendar?month=' . $previousMonth) ?>" class="ui-btn ui-btn-secondary" aria-label="Предыдущий месяц">←</a>
-            <span class="min-w-[150px] text-center text-sm font-medium text-gray-700"><?= e($monthTitle) ?></span>
+            <span class="min-w-[145px] text-center text-sm font-semibold text-gray-700"><?= e($monthTitle) ?></span>
             <a href="<?= url('/calendar?month=' . $nextMonth) ?>" class="ui-btn ui-btn-secondary" aria-label="Следующий месяц">→</a>
             <?php if ($currentMonth !== date('Y-m')): ?>
                 <a href="<?= url('/calendar') ?>" class="ui-btn ui-btn-light">Сегодня</a>
@@ -18,84 +18,67 @@
         </div>
     </div>
 
-    <div class="bg-white border rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-                <table class="border-collapse text-xs" style="min-width:<?= 260 + count($days) * 54 ?>px">
-                    <thead>
-                        <tr class="bg-gray-50 border-b">
-                            <th class="sticky left-0 z-20 bg-gray-50 w-[260px] min-w-[260px] px-3 py-2 text-left text-gray-600 border-r">Задача</th>
-                            <?php foreach ($days as $day): ?>
-                                <th class="w-[54px] min-w-[54px] px-1 py-2 text-center border-r <?= $day['today'] ? 'bg-blue-100 text-blue-700' : ($day['weekend'] ? 'bg-gray-100 text-gray-400' : 'text-gray-500') ?>">
-                                    <div><?= e($day['weekday']) ?></div>
-                                    <div class="font-semibold mt-0.5"><?= e($day['day']) ?></div>
-                                </th>
-                            <?php endforeach; ?>
-                            <th class="w-[70px] min-w-[70px] px-2 py-2 text-center text-gray-600">Итого</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($rows)): ?>
-                            <tr class="border-b">
-                                <td class="sticky left-0 z-10 bg-white px-3 py-4 border-r text-gray-400">
-                                    Нет записей времени
-                                </td>
-                                <?php foreach ($days as $day): ?>
-                                    <td class="h-12 border-r <?= $day['weekend'] ? 'bg-gray-50' : '' ?>"></td>
-                                <?php endforeach; ?>
-                                <td></td>
-                            </tr>
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+            <?php foreach (['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as $index => $weekday): ?>
+                <div class="py-2 text-center text-xs font-semibold <?= $index >= 5 ? 'text-gray-400' : 'text-gray-600' ?>">
+                    <?= $weekday ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <div class="grid grid-cols-7 bg-gray-200 gap-px">
+            <?php for ($i = 0; $i < $leadingBlankDays; $i++): ?>
+                <div class="min-h-[88px] sm:min-h-[125px] bg-gray-50"></div>
+            <?php endfor; ?>
+
+            <?php foreach ($days as $day): ?>
+                <?php
+                $dayEntries = $entriesByDate[$day['date']] ?? [];
+                $dayTotal = (float) ($dayTotals[$day['date']] ?? 0);
+                ?>
+                <div class="min-w-0 min-h-[88px] sm:min-h-[125px] p-1 sm:p-2 <?= $day['today'] ? 'bg-blue-50 ring-2 ring-inset ring-blue-400' : ($day['weekend'] ? 'bg-gray-50' : 'bg-white') ?>">
+                    <div class="flex items-center justify-between gap-1 mb-1.5">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold <?= $day['today'] ? 'bg-blue-600 text-white' : ($day['weekend'] ? 'text-gray-400' : 'text-gray-700') ?>">
+                            <?= e($day['day']) ?>
+                        </span>
+                        <?php if ($dayTotal > 0): ?>
+                            <span class="text-[10px] sm:text-xs font-semibold text-blue-700 whitespace-nowrap">
+                                <?= e(rtrim(rtrim(number_format($dayTotal, 2, '.', ''), '0'), '.')) ?>ч
+                            </span>
                         <?php endif; ?>
-                        <?php foreach ($rows as $row): ?>
-                            <tr class="border-b last:border-b-0 hover:bg-gray-50/50">
-                                <td class="sticky left-0 z-10 bg-white px-3 py-2 border-r">
-                                    <a href="<?= url('/tasks/' . $row['task_id']) ?>" class="font-medium text-gray-700 hover:text-blue-600 block truncate" title="<?= e($row['task_title']) ?>">
-                                        <?= $row['is_subtask'] ? '↳ ' : '' ?><?= e($row['task_title']) ?>
-                                    </a>
-                                    <div class="text-[10px] text-gray-400 truncate mt-0.5">
-                                        <?= e($row['project_title']) ?> · <?= $row['time_type'] === 'manager' ? 'Руководитель' : 'Исполнитель' ?>
-                                    </div>
-                                </td>
-                                <?php foreach ($days as $day): ?>
-                                    <?php
-                                    $hours = (float) ($row['days'][$day['date']] ?? 0);
-                                    $intensity = $hours >= 6 ? 'bg-blue-600 text-white' : ($hours >= 4 ? 'bg-blue-500 text-white' : ($hours >= 2 ? 'bg-blue-300 text-blue-900' : ($hours > 0 ? 'bg-blue-100 text-blue-700' : '')));
-                                    if ($row['time_type'] === 'manager' && $hours > 0) {
-                                        $intensity = $hours >= 4 ? 'bg-purple-500 text-white' : ($hours >= 2 ? 'bg-purple-300 text-purple-900' : 'bg-purple-100 text-purple-700');
-                                    }
-                                    ?>
-                                    <td class="h-11 p-1 border-r text-center <?= $day['weekend'] && $hours === 0.0 ? 'bg-gray-50' : '' ?>">
-                                        <?php if ($hours > 0): ?>
-                                            <div class="h-full min-h-[34px] rounded flex items-center justify-center font-semibold <?= $intensity ?>" title="<?= e($day['date']) ?>: <?= e($hours) ?> ч">
-                                                <?= e(rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.')) ?>ч
-                                            </div>
-                                        <?php endif; ?>
-                                    </td>
-                                <?php endforeach; ?>
-                                <td class="px-2 py-2 text-center font-semibold text-gray-700"><?= e(rtrim(rtrim(number_format($row['total'], 2, '.', ''), '0'), '.')) ?>ч</td>
-                            </tr>
+                    </div>
+
+                    <div class="space-y-1">
+                        <?php foreach ($dayEntries as $entry): ?>
+                            <?php $entryClass = $entry['time_type'] === 'manager' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'; ?>
+                            <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
+                               class="block min-w-0 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
+                               title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
+                                <span class="font-semibold"><?= e(rtrim(rtrim(number_format($entry['hours'], 2, '.', ''), '0'), '.')) ?>ч</span>
+                                <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
+                            </a>
                         <?php endforeach; ?>
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-gray-50 border-t font-semibold text-gray-600">
-                            <td class="sticky left-0 z-10 bg-gray-50 px-3 py-2 border-r">Всего за день</td>
-                            <?php foreach ($days as $day): ?>
-                                <?php $total = (float) ($dayTotals[$day['date']] ?? 0); ?>
-                                <td class="px-1 py-2 text-center border-r"><?= $total > 0 ? e(rtrim(rtrim(number_format($total, 2, '.', ''), '0'), '.')) : '—' ?></td>
-                            <?php endforeach; ?>
-                            <td class="px-2 py-2 text-center text-blue-700"><?= e(rtrim(rtrim(number_format($grandTotal, 2, '.', ''), '0'), '.')) ?>ч</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+            <?php for ($i = 0; $i < $trailingBlankDays; $i++): ?>
+                <div class="min-h-[88px] sm:min-h-[125px] bg-gray-50"></div>
+            <?php endfor; ?>
         </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-        <span class="font-medium">Легенда:</span>
-        <?php if ($visibleTimeType !== 'manager'): ?>
-            <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-blue-300"></i> ваше время исполнителя</span>
-        <?php endif; ?>
-        <?php if ($visibleTimeType !== 'executor'): ?>
-            <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-purple-300"></i> ваше время руководителя</span>
-        <?php endif; ?>
+    <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+        <div class="flex flex-wrap items-center gap-4">
+            <span class="font-medium">Легенда:</span>
+            <?php if ($visibleTimeType !== 'manager'): ?>
+                <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-blue-300"></i> ваше время исполнителя</span>
+            <?php endif; ?>
+            <?php if ($visibleTimeType !== 'executor'): ?>
+                <span class="flex items-center gap-1"><i class="w-3 h-3 rounded bg-purple-300"></i> ваше время руководителя</span>
+            <?php endif; ?>
+        </div>
+        <span class="font-semibold text-gray-700">За месяц: <?= e(rtrim(rtrim(number_format($grandTotal, 2, '.', ''), '0'), '.')) ?>ч</span>
     </div>
 </div>
