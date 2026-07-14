@@ -337,7 +337,11 @@ if ($currentUser) {
         }
         
         try {
-            const registration = await navigator.serviceWorker.ready;
+            // Ждём готовности SW с таймаутом 10 сек
+            const registration = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('SW ready timeout')), 10000))
+            ]);
             console.log('[Push] SW ready, subscribing...');
             
             // Получаем VAPID public key
@@ -373,9 +377,14 @@ if ($currentUser) {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: formData,
             });
-            console.log('[Push] Subscribe response:', saveRes.status);
+            console.log('[Push] Subscribe saved:', saveRes.status);
         } catch(e) {
-            console.error('[Push] Subscribe error:', e);
+            console.error('[Push] Subscribe error:', e.message);
+            // Если SW не готов — повторяем через 5 сек
+            if (e.message === 'SW ready timeout') {
+                console.log('[Push] Retrying in 5s...');
+                setTimeout(() => subscribeToPush(), 5000);
+            }
         }
     }
 
@@ -401,7 +410,8 @@ if ($currentUser) {
             });
         }, 3000);
     } else if ('Notification' in window && Notification.permission === 'granted') {
-        subscribeToPush();
+        // Подписываемся после готовности SW (с таймаутом)
+        setTimeout(() => subscribeToPush(), 2000);
     }
 
     // Диагностика push-подписки — показывает статус в консоли
