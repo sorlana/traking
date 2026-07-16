@@ -13,7 +13,7 @@
 $layout = 'layouts/app';
 ?>
 
-<div x-data="dashboard" class="space-y-4">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden">
 
     <!-- Сообщение при отсутствии проектов -->
     <template x-if="projects.length === 0">
@@ -23,7 +23,10 @@ $layout = 'layouts/app';
     </template>
 
     <template x-if="projects.length > 0">
-        <div class="space-y-4">
+        <div class="flex flex-col flex-1 min-h-0 gap-3">
+
+            <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
+            <div class="flex-shrink-0 space-y-3">
 
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border">
@@ -142,8 +145,10 @@ $layout = 'layouts/app';
                     </template>
                 </div>
             </div>
+            </div><!-- /flex-shrink-0 фиксированная часть -->
 
-            <!-- Task_Board: десктоп — три колонки, мобильный — вкладки -->
+            <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
+            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
             <!-- Мобильные вкладки (md:hidden) -->
             <div class="md:hidden" x-data="{ boardTab: 'in_progress' }">
@@ -201,14 +206,14 @@ $layout = 'layouts/app';
                 </div>
             </div>
 
-            <!-- Десктоп: три колонки (hidden на мобильном) -->
-            <div class="hidden md:flex gap-4">
+            <!-- Десктоп: четыре колонки (hidden на мобильном) -->
+            <div class="hidden md:flex gap-4 h-full min-h-0">
 
                 <!-- Колонка «В работе» -->
-                <div class="flex-1 min-w-0">
-                    <div class="bg-amber-50 rounded-lg p-3">
-                        <h3 class="text-sm font-medium text-amber-800 mb-3">В работе</h3>
-                        <div class="space-y-2">
+                <div class="flex-1 min-w-0 flex flex-col min-h-0">
+                    <div class="bg-amber-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-amber-800 mb-3 flex-shrink-0">В работе</h3>
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
                             <template x-for="task in currentBoard.in_progress" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -236,10 +241,10 @@ $layout = 'layouts/app';
                 </div>
 
                 <!-- Колонка «Доработки» -->
-                <div class="flex-1 min-w-0">
-                    <div class="bg-orange-50 rounded-lg p-3">
-                        <h3 class="text-sm font-medium text-orange-800 mb-3">Доработки</h3>
-                        <div class="space-y-2">
+                <div class="flex-1 min-w-0 flex flex-col min-h-0">
+                    <div class="bg-orange-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-orange-800 mb-3 flex-shrink-0">Доработки</h3>
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
                             <template x-for="task in currentBoard.revision" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -267,10 +272,10 @@ $layout = 'layouts/app';
                 </div>
 
                 <!-- Колонка «Готово» -->
-                <div class="flex-1 min-w-0">
-                    <div class="bg-green-50 rounded-lg p-3">
-                        <h3 class="text-sm font-medium text-green-800 mb-3">Готово</h3>
-                        <div class="space-y-2">
+                <div class="flex-1 min-w-0 flex flex-col min-h-0">
+                    <div class="bg-green-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-green-800 mb-3 flex-shrink-0">Готово</h3>
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
                             <template x-for="task in currentBoard.done" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -298,10 +303,10 @@ $layout = 'layouts/app';
                 </div>
 
                 <!-- Колонка «Закрыто» (принято руководителем) -->
-                <div class="flex-1 min-w-0">
-                    <div class="bg-indigo-50 rounded-lg p-3">
-                        <h3 class="text-sm font-medium text-indigo-800 mb-3">Закрыто</h3>
-                        <div class="space-y-2">
+                <div class="flex-1 min-w-0 flex flex-col min-h-0">
+                    <div class="bg-indigo-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-indigo-800 mb-3 flex-shrink-0">Закрыто</h3>
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
                             <template x-for="task in currentBoard.closed" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -329,6 +334,8 @@ $layout = 'layouts/app';
                 </div>
 
             </div>
+
+            </div><!-- /прокручиваемая часть -->
         </div>
     </template>
 
