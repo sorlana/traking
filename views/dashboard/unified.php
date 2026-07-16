@@ -157,23 +157,23 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
             <div class="md:hidden flex border-b flex-shrink-0">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                    В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
+                    В работе<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
                 </button>
                 <button @click="boardTab = 'revision'"
                         :class="boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                    Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
+                    Доработки<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
                 </button>
                 <button @click="boardTab = 'done'"
                         :class="boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                    Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
+                    Готово<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
                 </button>
                 <button @click="boardTab = 'closed'"
                         :class="boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                    Закрыто <span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
+                    Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
                 </button>
             </div>
 
