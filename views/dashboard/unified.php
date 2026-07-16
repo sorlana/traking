@@ -18,8 +18,11 @@ $layout = 'layouts/app';
 body { height: 100vh; overflow: hidden; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
-.dashboard-page .dashboard-fixed-header { flex-shrink: 0; }
-.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
+.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+@media (min-width: 768px) {
+    .dashboard-page .dashboard-scroll { overflow-y: hidden; display: flex; gap: 1rem; }
+}
 @media (max-width: 767px) {
     .dashboard-page { height: calc(100vh - 3.5rem - 3.5rem - 1rem); }
     .dashboard-fixed-header .rounded-lg {
@@ -189,7 +192,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
             </div>
 
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="dashboard-scroll md:overflow-hidden md:flex md:gap-4 md:h-full">
+            <div class="dashboard-scroll">
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
