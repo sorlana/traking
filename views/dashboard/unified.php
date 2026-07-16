@@ -572,7 +572,6 @@ document.addEventListener('alpine:init', () => {
                 html += `<div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 relative">`;
                 html += `<span class="w-2 h-2 rounded-full flex-shrink-0 ${statusDot(node.status_code)}"></span>`;
                 html += `<a href="${BASE_URL}/tasks/${node.id}" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate">${this.esc(node.title)}</a>`;
-                html += statusBadge(node.status_code, node.status_name || '');
                 html += `</div>`;
                 if (hasChildren) {
                     html += this.renderTree(node.children, depth + 1);
