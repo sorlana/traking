@@ -16,8 +16,8 @@ $layout = 'layouts/app';
 <style>
 /* Дашборд: фиксированная шапка, прокрутка только контента */
 body { height: 100vh; overflow: hidden; }
-main { overflow: hidden !important; padding-bottom: 0 !important; }
-.dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
+main { overflow: hidden !important; padding-bottom: 0 !important; height: calc(100vh - 5rem) !important; }
+.dashboard-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 .dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
 .dashboard-page .dashboard-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
@@ -25,7 +25,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
     .dashboard-page .dashboard-scroll { overflow-y: hidden; display: flex; gap: 1rem; }
 }
 @media (max-width: 767px) {
-    .dashboard-page { height: calc(100vh - 3.5rem - 3.5rem - 1rem); }
+    main { height: calc(100vh - 2.5rem - 3.5rem) !important; }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
