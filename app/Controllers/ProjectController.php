@@ -895,6 +895,103 @@ class ProjectController extends Controller
     }
 
     /**
+     * AJAX: редактирование задачи (название + исполнитель)
+     * POST /ajax/projects/{id}/edit-task/{taskId}
+     */
+    public function editTask(string $id, string $taskId): void
+    {
+        $projectId = (int) $id;
+        $taskId = (int) $taskId;
+
+        if (!ProjectAccessMiddleware::check($projectId)) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        if (!can('create_task', $projectId)) {
+            $this->json(['error' => 'Недостаточно прав'], 403);
+            return;
+        }
+
+        $db = Database::getInstance();
+
+        // Проверяем что задача принадлежит проекту
+        $task = $db->fetch("SELECT id FROM tasks WHERE id = ? AND project_id = ?", [$taskId, $projectId]);
+        if (!$task) {
+            $this->json(['error' => 'Задача не найдена'], 404);
+            return;
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        $assignedTo = !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null;
+
+        if ($title === '') {
+            $this->json(['error' => 'Укажите название задачи'], 400);
+            return;
+        }
+
+        $db->query(
+            "UPDATE tasks SET title = ?, assigned_to = ? WHERE id = ?",
+            [$title, $assignedTo, $taskId]
+        );
+
+        // Возвращаем обновлённую задачу
+        $updated = $db->fetch(
+            "SELECT t.*, ts.name as status_name, ts.code as status_code, u.name as assigned_name
+             FROM tasks t
+             JOIN task_statuses ts ON t.status_id = ts.id
+             LEFT JOIN users u ON t.assigned_to = u.id
+             WHERE t.id = ?",
+            [$taskId]
+        );
+
+        $this->json(['success' => true, 'task' => $updated]);
+    }
+
+    /**
+     * AJAX: удаление задачи
+     * POST /ajax/projects/{id}/delete-task/{taskId}
+     */
+    public function deleteTask(string $id, string $taskId): void
+    {
+        $projectId = (int) $id;
+        $taskId = (int) $taskId;
+
+        if (!ProjectAccessMiddleware::check($projectId)) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        if (!can('create_task', $projectId)) {
+            $this->json(['error' => 'Недостаточно прав'], 403);
+            return;
+        }
+
+        $db = Database::getInstance();
+
+        // Проверяем что задача принадлежит проекту
+        $task = $db->fetch("SELECT id, title FROM tasks WHERE id = ? AND project_id = ?", [$taskId, $projectId]);
+        if (!$task) {
+            $this->json(['error' => 'Задача не найдена'], 404);
+            return;
+        }
+
+        // Удаляем файлы с диска
+        $files = $db->fetchAll("SELECT file_path FROM task_files WHERE task_id = ?", [$taskId]);
+        foreach ($files as $file) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Удаляем задачу (CASCADE удалит связанные записи)
+        $db->query("DELETE FROM tasks WHERE id = ?", [$taskId]);
+
+        $this->json(['success' => true]);
+    }
+
+    /**
      * Валидация данных проекта
      *
      * @param array $data Данные формы

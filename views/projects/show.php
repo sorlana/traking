@@ -354,25 +354,52 @@ $layout = 'layouts/app';
                 $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
                 ?>
                 <template x-for="task in taskList" :key="task.id">
-                    <div class="p-4 hover:bg-gray-50 flex items-center gap-3 cursor-grab active:cursor-grabbing task-sortable-item" :data-id="task.id">
-                        <!-- Ручка перетаскивания -->
-                        <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z"/></svg>
-                        </span>
-                        <!-- Точка статуса -->
-                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                              :class="{
-                                  'bg-yellow-400': task.status_code === 'in_progress',
-                                  'bg-orange-400': task.status_code === 'revision',
-                                  'bg-green-400': task.status_code === 'done',
-                                  'bg-indigo-400': task.status_code === 'closed',
-                                  'bg-gray-400': !task.status_code
-                              }"></span>
-                        <!-- Название -->
-                        <a :href="BASE_URL + '/tasks/' + task.id" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate flex-1 min-w-0" x-text="task.title"></a>
-                        <!-- Статус и исполнитель -->
-                        <span class="text-xs text-gray-500 flex-shrink-0" x-text="task.status_name"></span>
-                        <span x-show="task.assigned_name" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex-shrink-0" x-text="task.assigned_name"></span>
+                    <div class="p-3 hover:bg-gray-50 task-sortable-item" :data-id="task.id">
+                        <!-- Режим просмотра -->
+                        <div x-show="editingId !== task.id" class="flex items-center gap-3">
+                            <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z"/></svg>
+                            </span>
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                  :class="{
+                                      'bg-yellow-400': task.status_code === 'in_progress',
+                                      'bg-orange-400': task.status_code === 'revision',
+                                      'bg-green-400': task.status_code === 'done',
+                                      'bg-indigo-400': task.status_code === 'closed',
+                                      'bg-gray-400': !task.status_code
+                                  }"></span>
+                            <a :href="BASE_URL + '/tasks/' + task.id" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate flex-1 min-w-0" x-text="task.title"></a>
+                            <span class="text-xs text-gray-500 flex-shrink-0" x-text="task.status_name"></span>
+                            <span x-show="task.assigned_name" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex-shrink-0" x-text="task.assigned_name"></span>
+                            <?php if (can('create_task', (int) $project['id'])): ?>
+                            <button @click.prevent="startEdit(task)" class="flex-shrink-0 p-1 text-gray-300 hover:text-blue-600 transition" title="Редактировать">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                        <!-- Режим редактирования -->
+                        <div x-show="editingId === task.id" x-cloak class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <input type="text" x-model="editTitle" @keydown.enter="saveEdit(task)" @keydown.escape="cancelEdit()"
+                                   x-ref="editInput"
+                                   class="ui-control flex-1 min-w-0 text-sm py-1.5">
+                            <select x-model="editAssigned" class="ui-control w-full sm:w-40 text-sm py-1.5">
+                                <option value="">Не назначен</option>
+                                <?php foreach ($users as $u): ?>
+                                    <option value="<?= (int) $u['id'] ?>"><?= e($u['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="flex gap-1">
+                                <button @click="saveEdit(task)" class="p-1.5 text-green-600 hover:text-green-700" title="Сохранить">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </button>
+                                <button @click="cancelEdit()" class="p-1.5 text-gray-400 hover:text-gray-600" title="Отмена">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                                <button @click="deleteTask(task)" class="p-1.5 text-red-400 hover:text-red-600" title="Удалить">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -424,6 +451,9 @@ document.addEventListener('alpine:init', () => {
         ?>',
         adding: false,
         sortable: null,
+        editingId: null,
+        editTitle: '',
+        editAssigned: '',
 
         init() {
             this.$nextTick(() => {
@@ -437,6 +467,60 @@ document.addEventListener('alpine:init', () => {
                     });
                 }
             });
+        },
+
+        startEdit(task) {
+            this.editingId = task.id;
+            this.editTitle = task.title;
+            this.editAssigned = task.assigned_to ? String(task.assigned_to) : '';
+            this.$nextTick(() => {
+                const input = this.$el.querySelector('input[x-model="editTitle"]');
+                if (input) input.focus();
+            });
+        },
+
+        cancelEdit() {
+            this.editingId = null;
+            this.editTitle = '';
+            this.editAssigned = '';
+        },
+
+        async saveEdit(task) {
+            if (!this.editTitle.trim()) return;
+
+            const form = new FormData();
+            form.append('title', this.editTitle.trim());
+            form.append('assigned_to', this.editAssigned);
+
+            try {
+                const res = await fetch(BASE_URL + '/ajax/projects/' + projectId + '/edit-task/' + task.id, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: form
+                });
+                const data = await res.json();
+                if (data.success && data.task) {
+                    const idx = this.taskList.findIndex(t => t.id === task.id);
+                    if (idx !== -1) this.taskList[idx] = data.task;
+                }
+            } catch (e) {}
+            this.editingId = null;
+        },
+
+        async deleteTask(task) {
+            if (!confirm('Удалить задачу «' + task.title + '»?')) return;
+
+            try {
+                const res = await fetch(BASE_URL + '/ajax/projects/' + projectId + '/delete-task/' + task.id, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.taskList = this.taskList.filter(t => t.id !== task.id);
+                }
+            } catch (e) {}
+            this.editingId = null;
         },
 
         async addTask() {
