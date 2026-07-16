@@ -189,11 +189,8 @@ setTimeout(adjustDashboardPadding, 500);
             </div>
             </div><!-- /flex-shrink-0 фиксированная часть -->
 
-            <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-
-            <!-- Мобильный переключатель вкладок -->
-            <div class="md:hidden flex border-b">
+            <!-- Мобильный переключатель вкладок (часть fixed-блока) -->
+            <div class="md:hidden flex border-b flex-shrink-0">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
@@ -217,8 +214,11 @@ setTimeout(adjustDashboardPadding, 500);
             </div>
             </div><!-- /dashboard-fixed-header -->
 
+            <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
+            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden dashboard-mobile-content">
+
             <!-- Мобильный контент задач (md:hidden) -->
-            <div class="md:hidden dashboard-mobile-content">
+            <div class="md:hidden">
                 <div class="space-y-2">
                     <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
