@@ -245,7 +245,7 @@ main { overflow: hidden; }
             <?php if (empty($users)): ?>
                 <div class="p-6 text-center text-gray-500 text-sm">Участников нет</div>
             <?php else: ?>
-                <div class="divide-y pb-4">
+                <div class="divide-y">
                     <?php foreach ($users as $u): ?>
                         <div class="p-4 flex items-center justify-between hover:bg-gray-50 gap-3">
                             <div class="flex items-center gap-2 flex-wrap min-w-0">
@@ -306,7 +306,7 @@ main { overflow: hidden; }
             <?php if (empty($documents)): ?>
                 <div class="p-6 text-center text-gray-500 text-sm">Документов нет</div>
             <?php else: ?>
-                <div class="divide-y pb-4">
+                <div class="divide-y">
                     <?php foreach ($documents as $doc): ?>
                         <div class="p-4 hover:bg-gray-50">
                             <div class="flex items-center gap-3 flex-wrap">
@@ -369,7 +369,7 @@ main { overflow: hidden; }
             <?php if (empty($tasks)): ?>
                 <div x-show="taskList.length === 0" class="p-6 text-center text-gray-500 text-sm">Задач нет</div>
             <?php endif; ?>
-            <div class="divide-y overflow-y-auto flex-1 min-h-0 pb-4" id="taskSortable">
+            <div class="divide-y overflow-y-auto flex-1 min-h-0" id="taskSortable">
                 <?php
                 $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
                 ?>
