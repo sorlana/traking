@@ -54,6 +54,27 @@ $createExecutorOptions = ['' => 'Не назначен'];
 foreach ($executors ?? [] as $exec) {
     $createExecutorOptions[(string) $exec['id']] = $exec['name'];
 }
+
+// Автовыбор исполнителя: если в проекте один исполнитель, выбрать его
+$createExecutorValue = '';
+$createExecutorLabel = 'Не назначен';
+if ($project ?? null) {
+    // Проект определён — ищем исполнителей проекта
+    $db = \Helpers\Database::getInstance();
+    $projectExecutors = $db->fetchAll(
+        "SELECT u.id, u.name FROM project_users pu JOIN users u ON pu.user_id = u.id WHERE pu.project_id = ? AND pu.project_role = 'executor'",
+        [(int) $project['id']]
+    );
+    if (count($projectExecutors) === 1) {
+        $createExecutorValue = (string) $projectExecutors[0]['id'];
+        $createExecutorLabel = $projectExecutors[0]['name'];
+    }
+} elseif (count($createExecutorOptions) === 2) {
+    // Всего один исполнитель в системе (первый элемент — 'Не назначен')
+    $keys = array_keys($createExecutorOptions);
+    $createExecutorValue = $keys[1];
+    $createExecutorLabel = $createExecutorOptions[$keys[1]];
+}
 ?>
 
 <div class="space-y-4" x-data="{ showFilters: false, showCreate: false }">
@@ -292,15 +313,15 @@ foreach ($executors ?? [] as $exec) {
                 <?php if ($roleId <= 2): ?>
                     <div class="mobile-filter-field">
                         <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
-                        <input type="hidden" name="assigned_to" value="">
+                        <input type="hidden" name="assigned_to" value="<?= e($createExecutorValue) ?>">
                         <details class="mobile-filter-details">
                             <summary class="mobile-filter-trigger">
-                                <span class="mobile-filter-label"><?= e($createExecutorOptions['']) ?></span>
+                                <span class="mobile-filter-label"><?= e($createExecutorLabel) ?></span>
                                 <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </summary>
                             <div class="mobile-filter-menu">
                                 <?php foreach ($createExecutorOptions as $value => $label): ?>
-                                    <button type="button" class="mobile-filter-option <?= (string) $value === '' ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                    <button type="button" class="mobile-filter-option <?= (string) $value === $createExecutorValue ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
                                 <?php endforeach; ?>
                             </div>
                         </details>
