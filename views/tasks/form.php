@@ -19,6 +19,14 @@ $fieldStatusId = $oldData['status_id'] ?? ($task['status_id'] ?? '');
 $fieldAssignedTo = $oldData['assigned_to'] ?? ($task['assigned_to'] ?? '');
 $fieldProjectId = $oldData['project_id'] ?? ($project['id'] ?? ($_GET['project_id'] ?? ''));
 $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_id'] ?? ($_GET['parent_id'] ?? '')));
+
+// Автовыбор исполнителя: если создание задачи и в проекте один исполнитель
+if (!$isEdit && empty($fieldAssignedTo) && !empty($projectUsers)) {
+    $executors = array_filter($projectUsers, fn($pu) => $pu['project_role'] === 'executor');
+    if (count($executors) === 1) {
+        $fieldAssignedTo = (int) reset($executors)['id'];
+    }
+}
 ?>
 
 <div class="max-w-3xl mx-auto">
