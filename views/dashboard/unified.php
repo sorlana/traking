@@ -35,14 +35,14 @@ main { overflow: hidden; height: 100%; }
     </template>
 
     <template x-if="projects.length > 0">
-        <div class="flex flex-col flex-1 min-h-0 gap-3">
+        <div class="flex flex-col flex-1 min-h-0">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
 
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div class="overflow-x-auto md:overflow-x-auto">
+                <div class="md:overflow-x-auto">
                     <div class="flex items-center gap-4 p-3 md:min-w-max">
                         <template x-for="project in projects" :key="project.id">
                             <button
