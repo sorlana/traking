@@ -69,11 +69,14 @@ if ($project ?? null) {
         $createExecutorValue = (string) $projectExecutors[0]['id'];
         $createExecutorLabel = $projectExecutors[0]['name'];
     }
-} elseif (count($createExecutorOptions) === 2) {
-    // Всего один исполнитель в системе (первый элемент — 'Не назначен')
-    $keys = array_keys($createExecutorOptions);
-    $createExecutorValue = $keys[1];
-    $createExecutorLabel = $createExecutorOptions[$keys[1]];
+} else {
+    // Проект не выбран — если в системе один исполнитель (role_id=3), выбрать его
+    $db = \Helpers\Database::getInstance();
+    $allExecutors = $db->fetchAll("SELECT id, name FROM users WHERE status = 'active' AND role_id = 3");
+    if (count($allExecutors) === 1) {
+        $createExecutorValue = (string) $allExecutors[0]['id'];
+        $createExecutorLabel = $allExecutors[0]['name'];
+    }
 }
 ?>
 
