@@ -167,7 +167,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
             </div><!-- /flex-shrink-0 фиксированная часть -->
 
             <!-- Мобильный переключатель вкладок (часть fixed-блока) -->
-            <div class="md:hidden flex border-b flex-shrink-0">
+            <div class="md:hidden flex border-b flex-shrink-0 !mt-0">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
