@@ -187,7 +187,7 @@ main { padding-bottom: 0 !important; }
             </div>
 
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style="-webkit-overflow-scrolling: touch; touch-action: pan-y;">
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
