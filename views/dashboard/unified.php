@@ -32,14 +32,14 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2 md:pt-2">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-5.5rem)] pb-2 md:pt-2">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
         <p class="text-sm text-gray-400">Нет проектов</p>
     </div>
 
-    <div x-show="projects.length > 0" x-cloak class="flex flex-col flex-1 min-h-0 gap-3">
+    <div x-show="projects.length > 0" x-cloak class="flex flex-col flex-1 min-h-0 gap-3 overflow-hidden">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
