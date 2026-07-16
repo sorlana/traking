@@ -13,6 +13,12 @@
 $layout = 'layouts/app';
 ?>
 
+<style>
+/* Дашборд: убираем общую прокрутку страницы */
+body { height: 100vh; overflow: hidden; }
+main { overflow: hidden; }
+</style>
+
 <div x-data="dashboard" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden">
 
     <!-- Сообщение при отсутствии проектов -->
