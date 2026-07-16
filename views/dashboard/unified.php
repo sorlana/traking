@@ -27,12 +27,12 @@ $layout = 'layouts/app';
         right: 0;
         z-index: 41;
         background: white;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1rem;
         border-bottom: 1px solid #e5e7eb;
     }
     .dashboard-mobile-tabs {
         position: fixed;
-        top: 7rem;
+        top: 7.25rem;
         left: 0;
         right: 0;
         z-index: 40;
@@ -40,7 +40,7 @@ $layout = 'layouts/app';
         border-bottom: 1px solid #e5e7eb;
     }
     .dashboard-mobile-content {
-        padding-top: 7.5rem;
+        padding-top: 11rem;
     }
 }
 </style>
