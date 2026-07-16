@@ -372,7 +372,7 @@ main { padding-bottom: 0 !important; }
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="grid grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 gap-2">
                 <div class="bg-white rounded-lg border border-t-4 border-t-amber-400 p-2">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.in_progress"></div>
