@@ -19,6 +19,7 @@ body { height: 100vh; overflow: hidden !important; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-fixed-header { flex-shrink: 0; }
 @media (max-width: 767px) {
+    main { padding-top: 3.75rem !important; }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
