@@ -211,7 +211,7 @@ $layout = 'layouts/app';
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
-                        <select name="user_id" required class="ui-control flex-1 min-w-0">
+                        <select name="user_id" required class="ui-control sm:max-w-xs">
                             <option value="">Выберите пользователя...</option>
                             <?php foreach ($allUsers as $u): ?>
                                 <option value="<?= e($u['id']) ?>"><?= e($u['name']) ?> (<?= e($u['login']) ?>)</option>
@@ -235,9 +235,9 @@ $layout = 'layouts/app';
                                 <span class="text-sm font-medium text-gray-800"><?= e($u['name']) ?></span>
                                 <span class="text-xs text-gray-500"><?= e($u['email']) ?></span>
                                 <?php if ($u['project_role'] === 'manager'): ?>
-                                    <span class="text-xs font-medium bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Рук.</span>
+                                    <span class="text-xs font-medium bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Руководитель</span>
                                 <?php else: ?>
-                                    <span class="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Исп.</span>
+                                    <span class="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Исполнитель</span>
                                 <?php endif; ?>
                             </div>
                             <?php if (can('edit_project', (int) $project['id']) && (int) $u['id'] !== (int) $project['created_by']): ?>
