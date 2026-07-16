@@ -17,7 +17,7 @@ $layout = 'layouts/app';
 /* Дашборд: фиксированная шапка, прокрутка только контента */
 body { height: 100vh; overflow: hidden !important; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
-.dashboard-fixed-header { flex-shrink: 0; }
+.dashboard-fixed-header { flex-shrink: 0; position: relative; z-index: 10; }
 @media (max-width: 767px) {
     main { padding-top: 3.5rem !important; padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
     .dashboard-fixed-header .rounded-lg {
