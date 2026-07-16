@@ -19,7 +19,7 @@ body { height: 100vh; overflow: hidden !important; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-fixed-header { flex-shrink: 0; }
 @media (max-width: 767px) {
-    main { padding-top: 3.75rem !important; }
+    main { padding-top: 3.5rem !important; padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
@@ -29,7 +29,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-[calc(100vh-4.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2 pt-2">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
