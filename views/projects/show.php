@@ -7,10 +7,25 @@
 $layout = 'layouts/app';
 ?>
 
-<div x-data="{ tab: 'info', showProject: false }">
+<style>
+/* Страница проекта: фиксированная шапка, прокручиваемый контент */
+@media (min-width: 1024px) {
+    .project-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
+    .project-page .project-header { flex-shrink: 0; }
+    .project-page .project-content { flex: 1; min-height: 0; overflow-y: auto; }
+}
+@media (max-width: 1023px) {
+    .project-page { display: flex; flex-direction: column; height: calc(100vh - 6.5rem); overflow: hidden; }
+    .project-page .project-header { flex-shrink: 0; }
+    .project-page .project-content { flex: 1; min-height: 0; overflow-y: auto; }
+}
+</style>
 
+<div x-data="{ tab: 'info', showProject: false }" class="project-page">
+
+  <div class="project-header">
     <!-- ДЕСКТОП: Шапка проекта (lg+) -->
-    <div class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <div class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-4">
         <div class="flex items-center justify-between mb-3">
             <h1 class="text-xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
             <a href="<?= url('/projects') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все проекты</a>
@@ -70,7 +85,7 @@ $layout = 'layouts/app';
     </div>
 
     <!-- Навигация вкладок (общая) -->
-    <div class="border-b border-gray-200 mb-6">
+    <div class="border-b border-gray-200 mb-4">
         <nav class="flex gap-4 -mb-px overflow-x-auto">
             <button @click="tab = 'info'"
                     :class="tab === 'info' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
@@ -86,7 +101,9 @@ $layout = 'layouts/app';
                     class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Задачи <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= $taskStats['total'] ?></span></button>
         </nav>
     </div>
+  </div><!-- /project-header -->
 
+  <div class="project-content">
     <!-- ============================================================ -->
     <!-- Вкладка: Информация -->
     <!-- ============================================================ -->
@@ -319,11 +336,11 @@ $layout = 'layouts/app';
     <!-- ============================================================ -->
     <!-- Вкладка: Задачи -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)">
-        <div class="bg-white rounded-lg shadow-sm border">
-            <!-- Форма быстрого создания задачи -->
+    <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)" class="flex flex-col h-full">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
+            <!-- Форма быстрого создания задачи (фиксированная) -->
             <?php if (can('create_task', (int) $project['id'])): ?>
-            <div class="p-4 border-b bg-gray-50 rounded-t-lg">
+            <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                 <form @submit.prevent="addTask()" class="flex flex-col sm:flex-row gap-2">
                     <input type="text" x-model="newTaskTitle" placeholder="Название задачи..." required
                            class="ui-control flex-1 min-w-0" @keydown.enter="addTask()">
@@ -349,7 +366,7 @@ $layout = 'layouts/app';
             <?php if (empty($tasks)): ?>
                 <div x-show="taskList.length === 0" class="p-6 text-center text-gray-500 text-sm">Задач нет</div>
             <?php endif; ?>
-            <div class="divide-y" id="taskSortable">
+            <div class="divide-y overflow-y-auto flex-1 min-h-0" id="taskSortable">
                 <?php
                 $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
                 ?>
@@ -405,6 +422,8 @@ $layout = 'layouts/app';
             </div>
         </div>
     </div>
+
+  </div><!-- /project-content -->
 
     <!-- ===== Модалка: Проект ===== -->
     <div x-show="showProject" x-transition.opacity
