@@ -15,7 +15,7 @@ $layout = 'layouts/app';
 
 <style>
 /* Дашборд: фиксированная шапка, прокрутка только контента */
-body { height: 100vh; overflow: hidden !important; }
+body { height: 100vh; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-fixed-header { flex-shrink: 0; position: relative; z-index: 10; }
 @media (max-width: 767px) {
