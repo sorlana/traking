@@ -20,7 +20,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; padding-bottom: 0.5rem; }
 .dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
 .dashboard-page .dashboard-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow: hidden; }
+.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; }
 @media (max-width: 767px) {
     .dashboard-page { height: auto; overflow: visible; padding-bottom: 0; }
     .dashboard-page .dashboard-scroll { display: block; overflow-y: auto; height: calc(100vh - 14rem); -webkit-overflow-scrolling: touch; }
