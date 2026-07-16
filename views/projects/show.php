@@ -597,10 +597,23 @@ document.addEventListener('alpine:init', () => {
 <!-- Модалка просмотра DOCX -->
 <style>
 #docxContainer { overflow: auto; -webkit-overflow-scrolling: touch; }
-#docxContainer .docx-wrapper { padding: 0 !important; }
+#docxContainer .docx-wrapper { padding: 4px !important; overflow: hidden !important; }
 #docxContainer .docx-wrapper > section {
-    margin: 0 auto !important;
     box-shadow: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+#docxContainer .docx-wrapper > section img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+#docxContainer .docx-wrapper > section table {
+    max-width: 100% !important;
+    width: 100% !important;
 }
 </style>
 <div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-2 sm:p-4">
@@ -662,28 +675,12 @@ document.addEventListener('alpine:init', () => {
             await docx.renderAsync(blob, container, null, {
                 className: 'docx-preview-content',
                 inWrapper: true,
-                ignoreWidth: false,
+                ignoreWidth: true,
                 ignoreHeight: true,
                 ignoreFonts: false,
-                breakPages: true,
+                breakPages: false,
                 useBase64URL: true,
             });
-
-            // Масштабируем документ под ширину контейнера
-            const wrapper = container.querySelector('.docx-wrapper');
-            if (wrapper) {
-                const section = wrapper.querySelector('section');
-                if (section) {
-                    const docWidth = section.scrollWidth || section.offsetWidth;
-                    const containerWidth = container.clientWidth - 16;
-                    if (docWidth > containerWidth) {
-                        const scale = containerWidth / docWidth;
-                        wrapper.style.transformOrigin = 'top left';
-                        wrapper.style.transform = 'scale(' + scale + ')';
-                        wrapper.style.width = (100 / scale) + '%';
-                    }
-                }
-            }
         } catch (err) {
             loading.classList.add('hidden');
             container.classList.remove('hidden');
