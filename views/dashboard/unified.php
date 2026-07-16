@@ -62,11 +62,11 @@ main { padding-bottom: 0 !important; }
                             ></button>
                         </template>
                         <!-- Иконка Дерева задач (только мобильный) -->
-                        <button @click="showTreeModal = true; loadTree()" class="md:hidden ml-auto flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
+                        <button onclick="alert('tree')" @click="showTreeModal = true; loadTree()" class="md:hidden ml-auto flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16M10 12v6"/></svg>
                         </button>
                         <!-- Иконка Инфо (только мобильный) -->
-                        <button @click="showInfoModal = true" class="md:hidden flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Статистика">
+                        <button onclick="alert('info')" @click="showInfoModal = true" class="md:hidden flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Статистика">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                     </div>
