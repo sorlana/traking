@@ -13,11 +13,12 @@ foreach ($myTasks as $task) {
     $tasksByStatus[$code][] = $task;
 }
 
-$statusOrder = ['in_progress', 'revision', 'done'];
+$statusOrder = ['in_progress', 'revision', 'done', 'closed'];
 $statusLabels = [
     'in_progress' => ['label' => 'В работе', 'color' => 'border-yellow-400', 'bg' => 'bg-yellow-50'],
     'revision' => ['label' => 'Доработки', 'color' => 'border-orange-400', 'bg' => 'bg-orange-50'],
     'done' => ['label' => 'Готово', 'color' => 'border-green-400', 'bg' => 'bg-green-50'],
+    'closed' => ['label' => 'Закрыто', 'color' => 'border-indigo-400', 'bg' => 'bg-indigo-50'],
 ];
 ?>
 
@@ -25,7 +26,7 @@ $statusLabels = [
     <h1 class="text-2xl font-bold text-gray-800">Мои задачи</h1>
 
     <!-- Счётчики -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <?php foreach ($statusOrder as $code): ?>
             <?php
             $meta = $statusLabels[$code] ?? ['label' => $code, 'color' => 'border-gray-300', 'bg' => 'bg-gray-50'];
