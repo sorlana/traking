@@ -191,7 +191,7 @@ main { overflow: hidden; height: 100%; }
                 </div>
 
                 <!-- Содержимое вкладок -->
-                <div class="space-y-2 mobile-task-scroll">
+                <div class="space-y-2 mobile-task-scroll pb-4">
                     <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-2">
