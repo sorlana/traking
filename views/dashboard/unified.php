@@ -35,7 +35,7 @@ main { overflow: hidden; height: 100%; }
     </template>
 
     <template x-if="projects.length > 0">
-        <div class="flex flex-col flex-1 min-h-0">
+        <div class="flex flex-col flex-1 min-h-0 md:gap-3">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
