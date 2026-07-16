@@ -27,6 +27,13 @@ $layout = 'layouts/app';
         right: 0;
         z-index: 40;
         background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .dashboard-fixed-header .rounded-lg {
+        border-radius: 0 !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-top: 0 !important;
     }
 }
 </style>
@@ -44,6 +51,7 @@ function adjustDashboardPadding() {
 window.addEventListener('load', adjustDashboardPadding);
 window.addEventListener('resize', adjustDashboardPadding);
 setTimeout(adjustDashboardPadding, 100);
+setTimeout(adjustDashboardPadding, 500);
 </script>
 </style>
 
