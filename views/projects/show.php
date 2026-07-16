@@ -597,19 +597,10 @@ document.addEventListener('alpine:init', () => {
 <!-- Модалка просмотра DOCX -->
 <style>
 #docxContainer { overflow: auto; -webkit-overflow-scrolling: touch; }
-@media (max-width: 767px) {
-    #docxContainer > .docx-wrapper {
-        transform: scale(0.4);
-        transform-origin: top left;
-        width: 250%;
-    }
-}
-@media (min-width: 768px) and (max-width: 1023px) {
-    #docxContainer > .docx-wrapper {
-        transform: scale(0.65);
-        transform-origin: top left;
-        width: 154%;
-    }
+#docxContainer .docx-wrapper { padding: 0 !important; }
+#docxContainer .docx-wrapper > section {
+    margin: 0 auto !important;
+    box-shadow: none !important;
 }
 </style>
 <div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-2 sm:p-4">
@@ -677,6 +668,22 @@ document.addEventListener('alpine:init', () => {
                 breakPages: true,
                 useBase64URL: true,
             });
+
+            // Масштабируем документ под ширину контейнера
+            const wrapper = container.querySelector('.docx-wrapper');
+            if (wrapper) {
+                const section = wrapper.querySelector('section');
+                if (section) {
+                    const docWidth = section.scrollWidth || section.offsetWidth;
+                    const containerWidth = container.clientWidth - 16;
+                    if (docWidth > containerWidth) {
+                        const scale = containerWidth / docWidth;
+                        wrapper.style.transformOrigin = 'top left';
+                        wrapper.style.transform = 'scale(' + scale + ')';
+                        wrapper.style.width = (100 / scale) + '%';
+                    }
+                }
+            }
         } catch (err) {
             loading.classList.add('hidden');
             container.classList.remove('hidden');
