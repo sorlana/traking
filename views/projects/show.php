@@ -289,31 +289,25 @@ $layout = 'layouts/app';
             <?php else: ?>
                 <div class="divide-y">
                     <?php foreach ($documents as $doc): ?>
-                        <div class="p-4 hover:bg-gray-50 flex items-center justify-between gap-2">
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-sm font-medium text-gray-800"><?= e($doc['title']) ?></span>
-                                    <?php if ($doc['file_path']):
-                                        $docExt = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION));
-                                    ?>
-                                        <?php if ($docExt === 'docx'): ?>
-                                            <button type="button"
-                                                    class="js-docx-preview text-xs text-blue-600 hover:text-blue-700 hover:underline"
-                                                    data-url="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>"
-                                                    data-title="<?= e($doc['title']) ?>">Просмотр ↗</button>
-                                        <?php else: ?>
-                                            <a href="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Просмотр ↗</a>
-                                        <?php endif; ?>
+                        <div class="p-4 hover:bg-gray-50">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <span class="text-sm font-bold text-gray-800"><?= e($doc['title']) ?></span>
+                                <span class="text-xs text-gray-400"><?= e($doc['uploader_name']) ?> · <?= date('d.m.Y', strtotime($doc['created_at'])) ?></span>
+                                <?php if ($doc['file_path']):
+                                    $docExt = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION));
+                                ?>
+                                    <?php if ($docExt === 'docx'): ?>
+                                        <button type="button"
+                                                class="js-docx-preview text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                                                data-url="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>"
+                                                data-title="<?= e($doc['title']) ?>">Просмотр ↗</button>
+                                    <?php else: ?>
+                                        <a href="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Просмотр ↗</a>
                                     <?php endif; ?>
-                                    <?php if ($doc['external_url']): ?>
-                                        <a href="<?= e($doc['external_url']) ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Ссылка ↗</a>
-                                    <?php endif; ?>
-                                    <?php
-                                    $typeLabels = ['kp'=>'КП','brief'=>'Бриф','tz'=>'ТЗ','contract'=>'Договор','estimate'=>'Смета','presentation'=>'Презентация','figma_link'=>'Figma','cloud_link'=>'Облако','other'=>'Другое'];
-                                    ?>
-                                    <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"><?= $typeLabels[$doc['document_type']] ?? $doc['document_type'] ?></span>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-1"><?= e($doc['uploader_name']) ?> · <?= date('d.m.Y', strtotime($doc['created_at'])) ?></div>
+                                <?php endif; ?>
+                                <?php if ($doc['external_url']): ?>
+                                    <a href="<?= e($doc['external_url']) ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Ссылка ↗</a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
