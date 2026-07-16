@@ -20,9 +20,18 @@ $layout = 'layouts/app';
     main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
 }
 @media (max-width: 767px) {
-    .dashboard-mobile-tabs {
+    .dashboard-project-tabs {
         position: fixed;
         top: 3.5rem;
+        left: 0;
+        right: 0;
+        z-index: 41;
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+    }
+    .dashboard-mobile-tabs {
+        position: fixed;
+        top: 7rem;
         left: 0;
         right: 0;
         z-index: 40;
@@ -30,19 +39,7 @@ $layout = 'layouts/app';
         border-bottom: 1px solid #e5e7eb;
     }
     .dashboard-mobile-content {
-        padding-top: 8.5rem;
-    }
-    .dashboard-project-tabs {
-        position: fixed;
-        top: 3.5rem;
-        left: 0;
-        right: 0;
-        z-index: 41;
-        background: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .dashboard-mobile-tabs {
-        top: 6.5rem;
+        padding-top: 7rem;
     }
 }
 </style>
