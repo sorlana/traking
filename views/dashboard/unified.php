@@ -14,19 +14,14 @@ $layout = 'layouts/app';
 ?>
 
 <style>
-/* Дашборд: десктоп — фиксированная шапка, прокрутка колонок */
-@media (min-width: 768px) {
-    body { height: 100vh; overflow: hidden; }
-    main { overflow: hidden !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
-}
-.dashboard-fixed-header { flex-shrink: 0; position: relative; z-index: 10; }
+/* Дашборд: фиксированная шапка, прокрутка только контента */
+body { height: 100vh; overflow: hidden; }
+main { overflow: hidden !important; padding-bottom: 0 !important; }
+.dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
+.dashboard-page .dashboard-fixed-header { flex-shrink: 0; }
+.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 767px) {
-    .dashboard-fixed-header {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: white;
-    }
+    .dashboard-page { height: calc(100vh - 3.5rem - 3.5rem - 1rem); }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
@@ -39,14 +34,14 @@ $layout = 'layouts/app';
 }
 </style>
 
-<div x-data="dashboard" class="md:flex md:flex-col md:h-[calc(100vh-5.5rem)] md:overflow-hidden md:pb-2 md:pt-2">
+<div x-data="dashboard" class="dashboard-page">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
         <p class="text-sm text-gray-400">Нет проектов</p>
     </div>
 
-    <div x-show="projects.length > 0" class="md:flex md:flex-col md:flex-1 md:min-h-0 space-y-3 md:gap-3">
+    <div x-show="projects.length > 0" class="flex flex-col flex-1 min-h-0">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3 dashboard-fixed-header">
@@ -194,7 +189,7 @@ $layout = 'layouts/app';
             </div>
 
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="flex-1 min-h-0 md:overflow-y-auto md:overflow-hidden">
+            <div class="dashboard-scroll md:overflow-hidden md:flex md:gap-4 md:h-full">
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
