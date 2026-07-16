@@ -27,7 +27,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
         border-top: 0 !important;
     }
     .dashboard-project-inner {
-        padding: 0.5rem 0.75rem !important;
+        padding: 0.25rem 0.75rem 0.5rem !important;
     }
 }
 </style>
