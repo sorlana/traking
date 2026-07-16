@@ -42,10 +42,7 @@ main { padding-bottom: 0 !important; }
     <div x-show="projects.length > 0" class="flex flex-col flex-1 min-h-0 gap-3 overflow-hidden">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
-            <div class="flex-shrink-0 space-y-3">
-
-            <!-- На мобильном: плашка + переключатель в одном fixed-блоке -->
-            <div class="dashboard-fixed-header">
+            <div class="flex-shrink-0 space-y-3 dashboard-fixed-header">
 
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border md:rounded-lg md:shadow-sm md:border">
@@ -163,8 +160,7 @@ main { padding-bottom: 0 !important; }
                         </div>
                     </template>
                 </div>
-            </div>
-            </div><!-- /flex-shrink-0 фиксированная часть -->
+            </div><!-- /ФИКСИРОВАННАЯ ЧАСТЬ -->
 
             <!-- Мобильный переключатель вкладок (часть fixed-блока) -->
             <div class="md:hidden flex border-b flex-shrink-0 !mt-0">
@@ -189,7 +185,6 @@ main { padding-bottom: 0 !important; }
                     Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
                 </button>
             </div>
-            </div><!-- /dashboard-fixed-header -->
 
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
             <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
@@ -357,9 +352,6 @@ main { padding-bottom: 0 !important; }
             </div><!-- /прокручиваемая часть -->
         </div>
     </div>
-
-    <!-- DEBUG: тест Alpine scope -->
-    <div class="fixed top-16 right-2 z-[999] bg-red-500 text-white p-2 text-xs" x-text="'Projects: ' + projects.length + ' Active: ' + activeProjectId"></div>
 
     <!-- Модалка со статистикой (вне template) -->
     <div id="infoModal"
