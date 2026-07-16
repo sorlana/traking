@@ -322,7 +322,7 @@ $layout = 'layouts/app';
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <?php
-                                    $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-gray-400'];
+                                    $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
                                     $dotColor = $taskDots[$task['status_code'] ?? ''] ?? 'bg-gray-400';
                                     ?>
                                     <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>

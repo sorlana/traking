@@ -53,7 +53,7 @@ $layout = 'layouts/app';
 
 
             <!-- Stats_Panel: только десктоп -->
-            <div class="hidden md:grid grid-cols-4 gap-4">
+            <div class="hidden md:grid grid-cols-5 gap-4">
                 <!-- В работе — жёлтая/amber рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
@@ -66,19 +66,27 @@ $layout = 'layouts/app';
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- Готово — зелёная рамка -->
+                <!-- Готово (на проверку) — зелёная рамка -->
                 <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- 4-й столбец: Прогресс + Время -->
+                <!-- Закрыто (принято руководителем) — индиго рамка -->
+                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-indigo-500 p-2 md:p-4">
+                    <div class="text-xs text-gray-500 mb-1">Закрыто</div>
+                    <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.closed"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
+                </div>
+                <!-- 5-й столбец: Прогресс + Время -->
                 <div class="space-y-2">
                     <!-- Прогресс-бар -->
                     <div class="bg-white rounded-lg shadow-sm border p-2 md:p-3">
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500">Прогресс</span>
                             <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-indigo-500 transition-all duration-300"
+                                     :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
                                 <div class="h-full bg-green-500 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                                 <div class="h-full bg-orange-400 transition-all duration-300"
@@ -86,7 +94,7 @@ $layout = 'layouts/app';
                                 <div class="h-full bg-amber-400 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                             </div>
-                            <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
+                            <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round((currentStats.done + currentStats.closed) / currentStats.total * 100) : 0) + '%'"></span>
                         </div>
                     </div>
                     <!-- Время: план vs факт (компактный вид) -->
@@ -156,11 +164,16 @@ $layout = 'layouts/app';
                             class="flex-1 py-2.5 text-sm font-medium text-center transition">
                         Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
                     </button>
+                    <button @click="boardTab = 'closed'"
+                            :class="boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                        Закрыто <span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
+                    </button>
                 </div>
 
                 <!-- Содержимое вкладок -->
                 <div class="space-y-2">
-                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : currentBoard.done)" :key="task.id">
+                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-2">
                                 <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
@@ -182,7 +195,7 @@ $layout = 'layouts/app';
                             </div>
                         </a>
                     </template>
-                    <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : currentBoard.done).length === 0">
+                    <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
                         <p class="text-sm text-gray-400 text-center py-4">Нет задач</p>
                     </template>
                 </div>
@@ -284,6 +297,37 @@ $layout = 'layouts/app';
                     </div>
                 </div>
 
+                <!-- Колонка «Закрыто» (принято руководителем) -->
+                <div class="flex-1 min-w-0">
+                    <div class="bg-indigo-50 rounded-lg p-3">
+                        <h3 class="text-sm font-medium text-indigo-800 mb-3">Закрыто</h3>
+                        <div class="space-y-2">
+                            <template x-for="task in currentBoard.closed" :key="task.id">
+                                <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                                    <div class="flex items-start gap-2">
+                                        <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                                              :class="{
+                                                  'bg-red-500': task.priority === 'urgent',
+                                                  'bg-orange-500': task.priority === 'high',
+                                                  'bg-yellow-400': task.priority === 'medium',
+                                                  'bg-green-500': task.priority === 'low'
+                                              }"></span>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                            <div class="mt-1 flex items-center gap-2 flex-wrap">
+                                                <template x-if="task.deadline">
+                                                    <span class="text-xs text-gray-500" x-text="task.deadline"></span>
+                                                </template>
+                                                <span class="text-xs text-gray-400" x-text="task.assigned_name || 'Не назначен'"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </template>
@@ -307,7 +351,7 @@ $layout = 'layouts/app';
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-4 gap-2">
                 <div class="bg-white rounded-lg border border-t-4 border-t-amber-400 p-2">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.in_progress"></div>
@@ -323,16 +367,22 @@ $layout = 'layouts/app';
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
+                <div class="bg-white rounded-lg border border-t-4 border-t-indigo-500 p-2">
+                    <div class="text-xs text-gray-500 mb-1">Закрыто</div>
+                    <div class="text-lg font-bold text-gray-800" x-text="currentStats.closed"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
+                </div>
             </div>
             <div class="bg-white rounded-lg border p-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-gray-500">Прогресс</span>
                     <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                        <div class="h-full bg-indigo-500" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
                         <div class="h-full bg-green-500" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                         <div class="h-full bg-orange-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                         <div class="h-full bg-amber-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                     </div>
-                    <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></span>
+                    <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round((currentStats.done + currentStats.closed) / currentStats.total * 100) : 0) + '%'"></span>
                 </div>
             </div>
             <template x-if="currentTimeData.estimated > 0 || currentTimeData.actual > 0">
@@ -389,6 +439,7 @@ $layout = 'layouts/app';
                 <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
                 <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
                 <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Закрыто</span>
             </div>
             <!-- Загрузка -->
             <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
@@ -421,7 +472,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         get currentBoard() {
-            return this.boardData[this.activeProjectId] || { in_progress: [], revision: [], done: [] };
+            return this.boardData[this.activeProjectId] || { in_progress: [], revision: [], done: [], closed: [] };
         },
 
         get currentStats() {
@@ -429,11 +480,13 @@ document.addEventListener('alpine:init', () => {
             const inProgress = board.in_progress.length;
             const revision = board.revision.length;
             const done = board.done.length;
+            const closed = board.closed.length;
             return {
                 in_progress: inProgress,
                 revision: revision,
                 done: done,
-                total: inProgress + revision + done,
+                closed: closed,
+                total: inProgress + revision + done + closed,
             };
         },
 
@@ -469,6 +522,7 @@ document.addEventListener('alpine:init', () => {
                 if (code === 'in_progress') return 'bg-yellow-500';
                 if (code === 'revision') return 'bg-orange-500';
                 if (code === 'done') return 'bg-green-500';
+                if (code === 'closed') return 'bg-indigo-500';
                 return 'bg-gray-400';
             };
             const statusBadge = (code, name) => {
@@ -476,6 +530,7 @@ document.addEventListener('alpine:init', () => {
                 if (code === 'in_progress') cls = 'bg-yellow-100 text-yellow-800';
                 else if (code === 'revision') cls = 'bg-orange-100 text-orange-800';
                 else if (code === 'done') cls = 'bg-green-100 text-green-800';
+                else if (code === 'closed') cls = 'bg-indigo-100 text-indigo-800';
                 return `<span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${cls}">${this.esc(name)}</span>`;
             };
 

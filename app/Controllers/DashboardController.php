@@ -67,7 +67,7 @@ class DashboardController extends Controller
              LEFT JOIN users u ON t.assigned_to = u.id
              JOIN projects p ON t.project_id = p.id
              WHERE t.deadline < CURDATE()
-               AND ts.code NOT IN ('done')
+               AND ts.code NOT IN ('done', 'closed')
              ORDER BY t.deadline ASC
              LIMIT 10"
         );
@@ -147,7 +147,7 @@ class DashboardController extends Controller
              JOIN projects p ON t.project_id = p.id
              JOIN project_users pu ON pu.project_id = t.project_id AND pu.user_id = ?
              WHERE t.deadline < CURDATE()
-               AND ts.code NOT IN ('done')
+               AND ts.code NOT IN ('done', 'closed')
              ORDER BY t.deadline ASC
              LIMIT 10",
             [$userId]
@@ -191,7 +191,7 @@ class DashboardController extends Controller
              JOIN task_statuses ts ON t.status_id = ts.id
              JOIN projects p ON t.project_id = p.id
              WHERE t.assigned_to = ?
-               AND ts.code NOT IN ('done')
+               AND ts.code NOT IN ('done', 'closed')
              ORDER BY FIELD(ts.code, 'in_progress', 'revision'), t.deadline ASC",
             [$userId]
         );

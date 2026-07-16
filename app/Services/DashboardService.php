@@ -67,7 +67,7 @@ class DashboardService
      * @param int $projectId ID проекта
      * @param int $userId ID пользователя
      * @param int $roleId Роль (2 или 3)
-     * @return array ['in_progress' => [...], 'revision' => [...], 'done' => [...]]
+     * @return array ['in_progress' => [...], 'revision' => [...], 'done' => [...], 'closed' => [...]]
      */
     public function getProjectBoardTasks(int $projectId, int $userId, int $roleId): array
     {
@@ -80,7 +80,7 @@ class DashboardService
                 JOIN task_statuses ts ON t.status_id = ts.id
                 LEFT JOIN users u ON t.assigned_to = u.id
                 WHERE t.project_id = ?
-                  AND ts.code IN ('in_progress', 'revision', 'done')";
+                  AND ts.code IN ('in_progress', 'revision', 'done', 'closed')";
         $params = [$projectId];
 
         // Для Executor — только назначенные на него задачи
@@ -100,7 +100,7 @@ class DashboardService
      * Группировка задач по статусу
      *
      * @param array $tasks Плоский массив задач
-     * @return array ['in_progress' => [...], 'revision' => [...], 'done' => [...]]
+     * @return array ['in_progress' => [...], 'revision' => [...], 'done' => [...], 'closed' => [...]]
      */
     public function groupTasksByStatus(array $tasks): array
     {
@@ -108,6 +108,7 @@ class DashboardService
             'in_progress' => [],
             'revision' => [],
             'done' => [],
+            'closed' => [],
         ];
 
         foreach ($tasks as $task) {

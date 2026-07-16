@@ -217,7 +217,7 @@ class Task extends Model
         // Фильтр по сроку
         if (!empty($filters['deadline'])) {
             if ($filters['deadline'] === 'overdue') {
-                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
+                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
             } elseif ($filters['deadline'] === 'week') {
                 $sql .= " AND t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
             } elseif ($filters['deadline'] === 'today') {
@@ -227,7 +227,7 @@ class Task extends Model
 
         // Фильтр: только просроченные
         if (!empty($filters['overdue'])) {
-            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
+            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
         }
 
         $sql .= " ORDER BY t.created_at DESC";
@@ -276,7 +276,7 @@ class Task extends Model
         // Фильтр по сроку
         if (!empty($filters['deadline'])) {
             if ($filters['deadline'] === 'overdue') {
-                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
+                $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
             } elseif ($filters['deadline'] === 'week') {
                 $sql .= " AND t.deadline BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)";
             } elseif ($filters['deadline'] === 'today') {
@@ -286,7 +286,7 @@ class Task extends Model
 
         // Фильтр: только просроченные
         if (!empty($filters['overdue'])) {
-            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done')";
+            $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
         }
 
         $sql .= " ORDER BY t.created_at DESC";

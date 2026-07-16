@@ -736,7 +736,7 @@ function taskChat() {
                     // Обновляем бейдж статуса на странице (если есть)
                     const statusBadge = document.querySelector('[data-task-status]');
                     if (statusBadge) {
-                        const statusLabels = {in_progress: 'В работе', revision: 'Доработки', done: 'Готово', closed: 'Сделано'};
+                        const statusLabels = {in_progress: 'В работе', revision: 'Доработки', done: 'Готово', closed: 'Закрыто'};
                         statusBadge.textContent = statusLabels[data.task_status] || data.task_status;
                     }
                 }

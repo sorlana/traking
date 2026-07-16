@@ -20,6 +20,7 @@ $statusColors = [
     'in_progress' => 'bg-yellow-100 text-yellow-800',
     'revision' => 'bg-orange-100 text-orange-800',
     'done' => 'bg-green-100 text-green-800',
+    'closed' => 'bg-indigo-100 text-indigo-800',
 ];
 
 // Проверка: есть ли активные фильтры

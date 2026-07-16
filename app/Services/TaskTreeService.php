@@ -179,7 +179,7 @@ class TaskTreeService
              FROM tasks t
              JOIN task_statuses ts ON t.status_id = ts.id
              WHERE t.parent_id = ?
-               AND ts.code NOT IN ('done')",
+               AND ts.code NOT IN ('done', 'closed')",
             [$parentId]
         );
 
