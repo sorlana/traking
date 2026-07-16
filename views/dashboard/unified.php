@@ -219,7 +219,7 @@ main { overflow: hidden; }
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
                     <div class="bg-amber-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-amber-800 mb-3 flex-shrink-0">В работе</h3>
-                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.in_progress" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -250,7 +250,7 @@ main { overflow: hidden; }
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
                     <div class="bg-orange-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-orange-800 mb-3 flex-shrink-0">Доработки</h3>
-                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.revision" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -281,7 +281,7 @@ main { overflow: hidden; }
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
                     <div class="bg-green-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-green-800 mb-3 flex-shrink-0">Готово</h3>
-                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.done" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
@@ -312,7 +312,7 @@ main { overflow: hidden; }
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
                     <div class="bg-indigo-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-indigo-800 mb-3 flex-shrink-0">Закрыто</h3>
-                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0">
+                        <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.closed" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-2">
