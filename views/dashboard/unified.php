@@ -153,8 +153,11 @@ main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; pad
             </div>
             </div><!-- /flex-shrink-0 фиксированная часть -->
 
-            <!-- Мобильный переключатель вкладок (фиксированный) -->
-            <div class="md:hidden flex border-b flex-shrink-0">
+            <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
+            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+
+            <!-- Мобильный переключатель вкладок (sticky) -->
+            <div class="md:hidden flex border-b sticky top-0 bg-white z-10">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
@@ -176,9 +179,6 @@ main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; pad
                     Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
                 </button>
             </div>
-
-            <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
