@@ -230,19 +230,19 @@ $layout = 'layouts/app';
             <?php else: ?>
                 <div class="divide-y">
                     <?php foreach ($users as $u): ?>
-                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                            <div>
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50 gap-3">
+                            <div class="flex items-center gap-2 flex-wrap min-w-0">
                                 <span class="text-sm font-medium text-gray-800"><?= e($u['name']) ?></span>
-                                <span class="text-xs text-gray-500 ml-2"><?= e($u['email']) ?></span>
+                                <span class="text-xs text-gray-500"><?= e($u['email']) ?></span>
                                 <?php if ($u['project_role'] === 'manager'): ?>
-                                    <span class="ml-2 text-xs font-medium bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Рук.</span>
+                                    <span class="text-xs font-medium bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Рук.</span>
                                 <?php else: ?>
-                                    <span class="ml-2 text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Исп.</span>
+                                    <span class="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Исп.</span>
                                 <?php endif; ?>
                             </div>
                             <?php if (can('edit_project', (int) $project['id']) && (int) $u['id'] !== (int) $project['created_by']): ?>
                                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/remove-user') ?>"
-                                      onsubmit="return confirm('Удалить участника?')" class="inline">
+                                      onsubmit="return confirm('Удалить участника?')" class="inline flex-shrink-0">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="user_id" value="<?= e($u['id']) ?>">
                                     <button type="submit" class="text-red-600 hover:text-red-700 text-xs">Удалить</button>
