@@ -30,7 +30,19 @@ $layout = 'layouts/app';
         border-bottom: 1px solid #e5e7eb;
     }
     .dashboard-mobile-content {
-        padding-top: 4rem;
+        padding-top: 8.5rem;
+    }
+    .dashboard-project-tabs {
+        position: fixed;
+        top: 3.5rem;
+        left: 0;
+        right: 0;
+        z-index: 41;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .dashboard-mobile-tabs {
+        top: 6.5rem;
     }
 }
 </style>
@@ -48,7 +60,7 @@ $layout = 'layouts/app';
             <div class="flex-shrink-0 space-y-3">
 
             <!-- Project_Tabs: горизонтальная панель вкладок -->
-            <div class="bg-white rounded-lg shadow-sm border">
+            <div class="bg-white rounded-lg shadow-sm border dashboard-project-tabs">
                 <div class="overflow-x-auto">
                     <div class="flex items-center gap-4 p-3 min-w-max">
                         <template x-for="project in projects" :key="project.id">
