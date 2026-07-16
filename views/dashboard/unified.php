@@ -32,7 +32,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2 pt-2">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-3.5rem-3.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2 md:pt-2">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
