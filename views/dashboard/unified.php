@@ -358,6 +358,9 @@ main { padding-bottom: 0 !important; }
         </div>
     </div>
 
+    <!-- DEBUG: тест Alpine scope -->
+    <div class="fixed top-16 right-2 z-[999] bg-red-500 text-white p-2 text-xs" x-text="'Projects: ' + projects.length + ' Active: ' + activeProjectId"></div>
+
     <!-- Модалка со статистикой (вне template) -->
     <div id="infoModal"
          onclick="if(event.target===this)this.style.display='none'"
