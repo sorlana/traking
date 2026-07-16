@@ -39,7 +39,7 @@ main { padding-bottom: 0 !important; }
         <p class="text-sm text-gray-400">Нет проектов</p>
     </div>
 
-    <div x-show="projects.length > 0" x-cloak class="flex flex-col flex-1 min-h-0 gap-3 overflow-hidden">
+    <div x-show="projects.length > 0" class="flex flex-col flex-1 min-h-0 gap-3 overflow-hidden">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
