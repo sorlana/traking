@@ -14,21 +14,11 @@ $layout = 'layouts/app';
 ?>
 
 <style>
-/* Дашборд: убираем общую прокрутку страницы */
-@media (min-width: 768px) {
-    body { height: 100vh; overflow: hidden; }
-    main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
-}
+/* Дашборд: фиксированная шапка, прокрутка только контента */
+body { height: 100vh; overflow: hidden !important; }
+main { overflow: hidden !important; padding-bottom: 0 !important; }
+.dashboard-fixed-header { flex-shrink: 0; }
 @media (max-width: 767px) {
-    .dashboard-fixed-header {
-        position: fixed;
-        top: 3.5rem;
-        left: 0;
-        right: 0;
-        z-index: 40;
-        background: white;
-        border-bottom: 1px solid #e5e7eb;
-    }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
@@ -38,24 +28,7 @@ $layout = 'layouts/app';
 }
 </style>
 
-<script>
-// Динамический расчёт padding-top для мобильного контента дашборда
-function adjustDashboardPadding() {
-    if (window.innerWidth >= 768) return;
-    const header = document.querySelector('.dashboard-fixed-header');
-    const content = document.querySelector('.dashboard-mobile-content');
-    if (header && content) {
-        content.style.paddingTop = header.offsetHeight + 8 + 'px';
-    }
-}
-window.addEventListener('load', adjustDashboardPadding);
-window.addEventListener('resize', adjustDashboardPadding);
-setTimeout(adjustDashboardPadding, 100);
-setTimeout(adjustDashboardPadding, 500);
-</script>
-</style>
-
-<div x-data="dashboard" class="flex flex-col flex-1 min-h-0 md:overflow-hidden pb-4">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-4.5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-2">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
@@ -215,7 +188,7 @@ setTimeout(adjustDashboardPadding, 500);
             </div><!-- /dashboard-fixed-header -->
 
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
-            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden dashboard-mobile-content">
+            <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
