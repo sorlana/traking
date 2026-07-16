@@ -7,7 +7,16 @@
  */
 
 $currentUser = \Helpers\Auth::user();
+$basePath = rtrim($GLOBALS['config']['base_path'] ?? '', '/');
 $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
+// Убираем query string
+if (($qPos = strpos($currentPath, '?')) !== false) {
+    $currentPath = substr($currentPath, 0, $qPos);
+}
+// Убираем base_path
+if ($basePath !== '' && str_starts_with($currentPath, $basePath)) {
+    $currentPath = substr($currentPath, strlen($basePath)) ?: '/';
+}
 
 // Получаем настройку звука для текущего пользователя
 $_soundEnabled = 0;
