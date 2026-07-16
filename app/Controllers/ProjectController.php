@@ -600,6 +600,19 @@ class ProjectController extends Controller
             'application/pdf', 'video/mp4', 'video/quicktime',
         ];
         $isInline = in_array($mimeType, $inlineTypes);
+
+        // Офисные документы тоже отдаём inline — мобильные ОС
+        // откроют их через встроенный просмотрщик (Google Docs, iWork и т.д.)
+        $officeTypes = [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+        if (in_array($mimeType, $officeTypes)) {
+            $isInline = true;
+        }
+
         $disposition = $isInline ? 'inline' : 'attachment';
 
         // Формируем имя файла для скачивания
