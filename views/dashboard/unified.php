@@ -44,14 +44,14 @@ main { overflow: hidden; height: 100%; }
             <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div class="md:overflow-x-auto">
                     <div class="flex items-center gap-4 p-3 md:min-w-max">
-                        <div class="flex-1 min-w-0 truncate">
+                        <div class="flex-1 min-w-0 overflow-hidden">
                             <template x-for="project in projects" :key="project.id">
                                 <button
                                     x-on:click="selectProject(project.id)"
                                     :class="activeProjectId === project.id
                                         ? 'text-blue-600 font-semibold'
                                         : 'text-gray-600 hover:text-blue-600'"
-                                    class="text-sm whitespace-nowrap transition-colors mr-4"
+                                    class="text-sm transition-colors mr-4 truncate max-w-full"
                                     x-text="project.title"
                                 ></button>
                             </template>
