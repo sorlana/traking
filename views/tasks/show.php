@@ -311,11 +311,11 @@ $isClosed = ($task['status_code'] === 'closed');
     }
     @media (max-width: 1023px) {
         body { height: 100vh; overflow: hidden; }
-        main { overflow: hidden; height: calc(100vh - 2.5rem - 1rem); padding-bottom: 3.5rem !important; padding-left: 0 !important; padding-right: 0 !important; }
+        main { overflow: hidden; height: calc(100vh - 2.5rem); padding-bottom: 0 !important; padding-left: 0 !important; padding-right: 0 !important; display: flex !important; flex-direction: column !important; }
     }
 </style>
 
-<div class="lg:hidden flex flex-col h-full" x-data="{ tab: 'chat', reassignOpen: false }">
+<div class="lg:hidden flex flex-col flex-1 min-h-0" x-data="{ tab: 'chat', reassignOpen: false }">
 
     <!-- Заголовок задачи -->
     <div class="flex items-center justify-between mb-2 px-4">
