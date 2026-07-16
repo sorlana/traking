@@ -15,8 +15,8 @@ $layout = 'layouts/app';
 
 <style>
 /* Дашборд: фиксированная шапка, прокрутка только контента */
-body { height: 100vh; overflow: hidden; }
-html { overflow: hidden; }
+body { height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+html { overflow: hidden; height: 100%; }
 main { overflow: hidden !important; padding-bottom: 0 !important; height: calc(100vh - 5rem) !important; }
 .dashboard-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 .dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
