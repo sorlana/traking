@@ -841,12 +841,52 @@ class TaskController extends Controller
         }
 
         $projectId = (int) $task['project_id'];
+        $db = Database::getInstance();
 
-        // Удаляем задачу (CASCADE удалит подзадачи, комментарии, файлы)
+        // Собираем ID всех подзадач рекурсивно (они тоже удалятся каскадом)
+        $allTaskIds = $this->collectChildIds($taskId, $db);
+        $allTaskIds[] = $taskId;
+
+        // Удаляем физические файлы с диска
+        $placeholders = implode(',', array_fill(0, count($allTaskIds), '?'));
+        $taskFiles = $db->fetchAll(
+            "SELECT file_path FROM task_files WHERE task_id IN ({$placeholders})",
+            $allTaskIds
+        );
+
+        foreach ($taskFiles as $file) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Удаляем задачу (CASCADE удалит подзадачи, комментарии, записи файлов)
         $this->taskModel->delete($taskId);
 
         Session::flash('success', 'Задача «' . $task['title'] . '» удалена');
         $this->redirect('/projects/' . $projectId);
+    }
+
+    /**
+     * Рекурсивный сбор ID всех подзадач
+     *
+     * @param int $parentId ID родительской задачи
+     * @param Database $db Экземпляр БД
+     * @return array Массив ID подзадач
+     */
+    private function collectChildIds(int $parentId, Database $db): array
+    {
+        $children = $db->fetchAll("SELECT id FROM tasks WHERE parent_id = ?", [$parentId]);
+        $ids = [];
+
+        foreach ($children as $child) {
+            $childId = (int) $child['id'];
+            $ids[] = $childId;
+            $ids = array_merge($ids, $this->collectChildIds($childId, $db));
+        }
+
+        return $ids;
     }
 
     /**
