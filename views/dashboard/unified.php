@@ -49,8 +49,8 @@ main { padding-bottom: 0 !important; }
 
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border md:rounded-lg md:shadow-sm md:border">
-                <div class="overflow-x-auto">
-                    <div class="flex items-center gap-4 p-3 dashboard-project-inner">
+                <div class="md:overflow-x-auto">
+                    <div class="flex items-center gap-4 p-3 md:min-w-max dashboard-project-inner">
                         <template x-for="project in projects" :key="project.id">
                             <button
                                 x-on:click="selectProject(project.id)"
