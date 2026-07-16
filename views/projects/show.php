@@ -293,8 +293,17 @@ $layout = 'layouts/app';
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-sm font-medium text-gray-800"><?= e($doc['title']) ?></span>
-                                    <?php if ($doc['file_path']): ?>
-                                        <a href="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Просмотр ↗</a>
+                                    <?php if ($doc['file_path']):
+                                        $docExt = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION));
+                                    ?>
+                                        <?php if ($docExt === 'docx'): ?>
+                                            <button type="button"
+                                                    class="js-docx-preview text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                                                    data-url="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>"
+                                                    data-title="<?= e($doc['title']) ?>">Просмотр ↗</button>
+                                        <?php else: ?>
+                                            <a href="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Просмотр ↗</a>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <?php if ($doc['external_url']): ?>
                                         <a href="<?= e($doc['external_url']) ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 hover:underline">Ссылка ↗</a>
@@ -378,3 +387,89 @@ $layout = 'layouts/app';
     </div>
 
 </div>
+
+<!-- Модалка просмотра DOCX -->
+<div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b flex-shrink-0">
+            <h3 id="docxModalTitle" class="text-sm font-medium text-gray-700 truncate"></h3>
+            <div class="flex items-center gap-2">
+                <a id="docxModalDownload" href="#" class="text-xs text-blue-600 hover:text-blue-700">Скачать</a>
+                <button id="docxModalClose" class="p-1 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+        <div id="docxContainer" class="flex-1 overflow-auto p-4"></div>
+        <div id="docxLoading" class="hidden flex-1 flex items-center justify-center p-8">
+            <span class="text-gray-400 text-sm">Загрузка документа...</span>
+        </div>
+    </div>
+</div>
+
+<!-- docx-preview: рендеринг .docx в браузере без сервера -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.3/dist/docx-preview.min.js"></script>
+<script>
+(function() {
+    const modal = document.getElementById('docxModal');
+    const container = document.getElementById('docxContainer');
+    const loading = document.getElementById('docxLoading');
+    const titleEl = document.getElementById('docxModalTitle');
+    const downloadLink = document.getElementById('docxModalDownload');
+    const closeBtn = document.getElementById('docxModalClose');
+
+    if (!modal) return;
+
+    // Открытие модалки по клику на кнопку «Просмотр»
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.js-docx-preview');
+        if (!btn) return;
+
+        const url = btn.dataset.url;
+        const title = btn.dataset.title || 'Документ';
+
+        titleEl.textContent = title;
+        downloadLink.href = url;
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        loading.classList.remove('hidden');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const response = await fetch(url, { credentials: 'same-origin' });
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            const blob = await response.blob();
+
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            await docx.renderAsync(blob, container, null, {
+                className: 'docx-preview-content',
+                inWrapper: true,
+                ignoreWidth: false,
+                ignoreHeight: true,
+                ignoreFonts: false,
+                breakPages: true,
+                useBase64URL: true,
+            });
+        } catch (err) {
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+            container.innerHTML = '<p class="text-center text-red-500 text-sm py-8">Не удалось загрузить документ</p>';
+        }
+    });
+
+    // Закрытие
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        container.innerHTML = '';
+        document.body.style.overflow = '';
+    }
+})();
+</script>
