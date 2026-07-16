@@ -14,19 +14,17 @@ $layout = 'layouts/app';
 ?>
 
 <style>
-/* Дашборд: фиксированная шапка, прокрутка только контента */
-body { height: 100vh; overflow: hidden; position: fixed; width: 100%; }
-html { overflow: hidden; height: 100%; }
-main { overflow: hidden !important; padding-bottom: 0 !important; height: calc(100vh - 5rem) !important; }
-.dashboard-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-.dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
-.dashboard-page .dashboard-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+/* Дашборд */
 @media (min-width: 768px) {
-    .dashboard-page .dashboard-scroll { overflow-y: hidden; display: flex; gap: 1rem; }
+    body { height: 100vh; overflow: hidden; }
+    main { overflow: hidden !important; padding-bottom: 0 !important; }
+    .dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
+    .dashboard-page .dashboard-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: hidden; display: flex; gap: 1rem; }
 }
+.dashboard-page .dashboard-fixed-header { overflow: hidden; }
 @media (max-width: 767px) {
-    main { height: calc(100vh - 2.5rem - 3.5rem) !important; }
+    .dashboard-scroll { height: calc(100vh - 14rem); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .dashboard-fixed-header .rounded-lg {
         border-radius: 0 !important;
         border-left: 0 !important;
