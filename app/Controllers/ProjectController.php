@@ -616,8 +616,39 @@ class ProjectController extends Controller
             return;
         }
 
-        // Удаляем проект (CASCADE удалит связанные записи)
-        $this->projectModel->delete((int) $id);
+        $projectId = (int) $id;
+        $db = \Helpers\Database::getInstance();
+
+        // Удаляем физические файлы задач с диска
+        $taskFiles = $db->fetchAll(
+            "SELECT tf.file_path FROM task_files tf
+             JOIN tasks t ON tf.task_id = t.id
+             WHERE t.project_id = ?",
+            [$projectId]
+        );
+
+        foreach ($taskFiles as $file) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Удаляем физические файлы документов проекта с диска
+        $projectDocs = $db->fetchAll(
+            "SELECT file_path FROM project_documents WHERE project_id = ? AND file_path IS NOT NULL",
+            [$projectId]
+        );
+
+        foreach ($projectDocs as $doc) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $doc['file_path'];
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Удаляем проект (CASCADE удалит связанные записи в БД)
+        $this->projectModel->delete($projectId);
 
         Session::flash('success', 'Проект «' . $project['title'] . '» удалён');
         $this->redirect('/projects');
