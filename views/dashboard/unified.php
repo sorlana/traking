@@ -19,8 +19,8 @@ body { height: 100vh; overflow: hidden; }
 main { overflow: hidden !important; padding-bottom: 0 !important; }
 .dashboard-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
 .dashboard-page .dashboard-fixed-header { flex-shrink: 0; overflow: hidden; }
+.dashboard-page .dashboard-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .dashboard-page .dashboard-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-.dashboard-page > div[x-show] { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 @media (min-width: 768px) {
     .dashboard-page .dashboard-scroll { overflow-y: hidden; display: flex; gap: 1rem; }
 }
@@ -45,7 +45,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
         <p class="text-sm text-gray-400">Нет проектов</p>
     </div>
 
-    <div x-show="projects.length > 0" class="flex flex-col flex-1 min-h-0">
+    <div x-show="projects.length > 0" class="dashboard-content">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3 dashboard-fixed-header">
