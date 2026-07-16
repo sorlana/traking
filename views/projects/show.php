@@ -13,7 +13,8 @@ body { height: 100vh; overflow: hidden; }
 main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !important; }
 .project-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 1rem; }
 .project-page .project-header { flex-shrink: 0; }
-.project-page .project-content { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+.project-page .project-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.project-page .project-content > [x-show] { flex: 1; min-height: 0; }
 @media (max-width: 767px) {
     main { height: calc(100vh - 3.5rem - 3.5rem); }
 }
@@ -105,7 +106,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
     <!-- ============================================================ -->
     <!-- Вкладка: Информация -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'info'" x-transition class="absolute inset-0 overflow-y-auto">
+    <div x-show="tab === 'info'" x-transition class="overflow-y-auto">
         <div class="bg-white rounded-lg shadow-sm border p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
@@ -220,7 +221,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
     <!-- ============================================================ -->
     <!-- Вкладка: Участники -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'users'" x-transition class="absolute inset-0 flex flex-col">
+    <div x-show="tab === 'users'" x-transition class="flex flex-col min-h-0">
         <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
             <?php if (can('edit_project', (int) $project['id'])): ?>
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
@@ -275,7 +276,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
     <!-- ============================================================ -->
     <!-- Вкладка: Документы -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'documents'" x-transition class="absolute inset-0 flex flex-col">
+    <div x-show="tab === 'documents'" x-transition class="flex flex-col min-h-0">
         <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
             <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-document') ?>" enctype="multipart/form-data" class="space-y-3">
@@ -338,7 +339,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
     <!-- ============================================================ -->
     <!-- Вкладка: Задачи -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)" class="absolute inset-0 flex flex-col">
+    <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)" class="flex flex-col min-h-0">
         <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
             <!-- Форма быстрого создания задачи (фиксированная) -->
             <?php if (can('create_task', (int) $project['id'])): ?>
