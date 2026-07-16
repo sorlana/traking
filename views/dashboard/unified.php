@@ -15,7 +15,7 @@ $layout = 'layouts/app';
 
 <style>
 /* Дашборд: убираем общую прокрутку страницы */
-body { height: 100vh; overflow: hidden; }
+html, body { height: 100%; overflow: hidden; }
 main { overflow: hidden; }
 @media (max-width: 767px) {
     .mobile-task-scroll { max-height: calc(100vh - 15rem); overflow-y: auto; -webkit-overflow-scrolling: touch; }
