@@ -16,13 +16,13 @@ $layout = 'layouts/app';
 <style>
 /* Дашборд: убираем общую прокрутку страницы */
 body { height: 100vh; overflow: hidden; }
-main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !important; }
+main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
 @media (max-width: 767px) {
-    main { height: calc(100vh - 3.5rem - 3.5rem); }
+    main { height: calc(100vh - 3.5rem - 3.5rem) !important; }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-full overflow-hidden pb-4">
+<div x-data="dashboard" class="flex flex-col flex-1 min-h-0 overflow-hidden pb-4">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
