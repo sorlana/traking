@@ -26,6 +26,9 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
         border-right: 0 !important;
         border-top: 0 !important;
     }
+    .dashboard-project-inner {
+        padding: 0.5rem 0.75rem !important;
+    }
 }
 </style>
 
@@ -47,7 +50,7 @@ main { overflow: hidden !important; padding-bottom: 0 !important; }
             <!-- Project_Tabs: горизонтальная панель вкладок -->
             <div class="bg-white rounded-lg shadow-sm border md:rounded-lg md:shadow-sm md:border">
                 <div class="overflow-x-auto">
-                    <div class="flex items-center gap-4 p-3 min-w-max">
+                    <div class="flex items-center gap-4 p-3 min-w-max dashboard-project-inner">
                         <template x-for="project in projects" :key="project.id">
                             <button
                                 x-on:click="selectProject(project.id)"
