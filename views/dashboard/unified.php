@@ -62,11 +62,11 @@ main { padding-bottom: 0 !important; }
                             ></button>
                         </template>
                         <!-- Иконка Дерева задач (только мобильный) -->
-                        <button @click="showTreeModal = true; loadTree()" class="md:hidden ml-auto flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
+                        <button @click="showTreeModal = true; loadTree(); document.getElementById('treeModal').style.display='flex'" class="md:hidden ml-auto flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16M10 12v6"/></svg>
                         </button>
                         <!-- Иконка Инфо (только мобильный) -->
-                        <button @click="showInfoModal = true" class="md:hidden flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Статистика">
+                        <button @click="showInfoModal = true; document.getElementById('infoModal').style.display='flex'" class="md:hidden flex-shrink-0 p-1.5 text-gray-400 hover:text-blue-600 transition" title="Статистика">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </button>
                     </div>
@@ -359,10 +359,10 @@ main { padding-bottom: 0 !important; }
     </div>
 
     <!-- Модалка со статистикой (вне template) -->
-    <div x-show="showInfoModal"
-         @click.self="showInfoModal = false"
+    <div id="infoModal"
+         @click.self="showInfoModal = false; document.getElementById('infoModal').style.display='none'"
          class="project-stats-modal md:hidden fixed inset-0 z-[200] bg-black/50 flex items-end"
-         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -373,7 +373,7 @@ main { padding-bottom: 0 !important; }
              @click.stop>
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-medium text-gray-700">Статистика проекта</h3>
-                <button @click="showInfoModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                <button @click="showInfoModal = false; document.getElementById('infoModal').style.display='none'" class="p-1 text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -442,10 +442,10 @@ main { padding-bottom: 0 !important; }
     </div>
 
     <!-- Модалка с деревом задач (вне template для корректного fixed позиционирования) -->
-    <div x-show="showTreeModal"
-         @click.self="showTreeModal = false"
+    <div id="treeModal"
+         @click.self="showTreeModal = false; document.getElementById('treeModal').style.display='none'"
          class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
-         x-cloak
+         style="display: none;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
