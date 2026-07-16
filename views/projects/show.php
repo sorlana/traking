@@ -298,9 +298,14 @@ $layout = 'layouts/app';
                                 <span class="ml-2 text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"><?= $typeLabels[$doc['document_type']] ?? $doc['document_type'] ?></span>
                                 <div class="text-xs text-gray-500 mt-1"><?= e($doc['uploader_name']) ?> · <?= date('d.m.Y', strtotime($doc['created_at'])) ?></div>
                             </div>
-                            <?php if ($doc['external_url']): ?>
-                                <a href="<?= e($doc['external_url']) ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700">Открыть</a>
-                            <?php endif; ?>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <?php if ($doc['file_path']): ?>
+                                    <a href="<?= url('/projects/documents/' . (int) $doc['id'] . '/view') ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700">Просмотр</a>
+                                <?php endif; ?>
+                                <?php if ($doc['external_url']): ?>
+                                    <a href="<?= e($doc['external_url']) ?>" target="_blank" class="text-xs text-blue-600 hover:text-blue-700">Ссылка</a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>

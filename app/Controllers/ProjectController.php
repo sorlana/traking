@@ -539,6 +539,107 @@ class ProjectController extends Controller
     }
 
     /**
+     * Просмотр файла документа проекта в браузере
+     * GET /projects/documents/{id}/view
+     */
+    public function viewDocument(string $id): void
+    {
+        $docId = (int) $id;
+        $doc = $this->documentModel->find($docId);
+
+        if (!$doc) {
+            Response::notFound('Документ не найден');
+            return;
+        }
+
+        // Проверяем доступ к проекту
+        if (!ProjectAccessMiddleware::check((int) $doc['project_id'])) {
+            Response::forbidden('Нет доступа к документу');
+            return;
+        }
+
+        // Если это внешняя ссылка — редирект
+        if (!empty($doc['external_url'])) {
+            header('Location: ' . $doc['external_url']);
+            exit;
+        }
+
+        // Проверяем наличие файла
+        if (empty($doc['file_path'])) {
+            Response::notFound('У документа нет файла');
+            return;
+        }
+
+        $fullPath = BASE_PATH . '/storage/uploads/' . $doc['file_path'];
+
+        if (!file_exists($fullPath)) {
+            Response::notFound('Файл не найден на диске');
+            return;
+        }
+
+        $ext = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION));
+        $fileSize = filesize($fullPath);
+
+        // Определяем MIME-тип
+        $mimeTypes = [
+            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+            'gif' => 'image/gif', 'webp' => 'image/webp',
+            'pdf' => 'application/pdf',
+            'mp4' => 'video/mp4', 'mov' => 'video/quicktime',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'zip' => 'application/zip', 'rar' => 'application/x-rar-compressed',
+        ];
+        $mimeType = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+        // Типы, которые браузер умеет показывать inline
+        $inlineTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'application/pdf', 'video/mp4', 'video/quicktime',
+        ];
+        $isInline = in_array($mimeType, $inlineTypes);
+        $disposition = $isInline ? 'inline' : 'attachment';
+
+        // Формируем имя файла для скачивания
+        $fileName = $doc['title'] . '.' . $ext;
+
+        // Поддержка Range-запросов для видео (iOS/Android)
+        $videoTypes = ['video/mp4', 'video/quicktime'];
+        if (in_array($mimeType, $videoTypes) && isset($_SERVER['HTTP_RANGE'])) {
+            $range = $_SERVER['HTTP_RANGE'];
+            if (preg_match('/bytes=(\d+)-(\d*)/', $range, $matches)) {
+                $start = (int) $matches[1];
+                $end = $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
+                $end = min($end, $fileSize - 1);
+                $length = $end - $start + 1;
+
+                header('HTTP/1.1 206 Partial Content');
+                header('Content-Type: ' . $mimeType);
+                header('Content-Length: ' . $length);
+                header('Content-Range: bytes ' . $start . '-' . $end . '/' . $fileSize);
+                header('Accept-Ranges: bytes');
+
+                $fp = fopen($fullPath, 'rb');
+                fseek($fp, $start);
+                echo fread($fp, $length);
+                fclose($fp);
+                exit;
+            }
+        }
+
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: ' . $disposition . '; filename="' . $fileName . '"');
+        header('Content-Length: ' . $fileSize);
+        header('Accept-Ranges: bytes');
+        header('Cache-Control: public, max-age=86400');
+
+        readfile($fullPath);
+        exit;
+    }
+
+    /**
      * Смена статуса проекта
      * POST /projects/{id}/status
      */

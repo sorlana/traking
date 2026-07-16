@@ -103,6 +103,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/projects/{id}/add-user', [\Controllers\ProjectController::class, 'addUser']);
     $router->post('/projects/{id}/remove-user', [\Controllers\ProjectController::class, 'removeUser']);
     $router->post('/projects/{id}/add-document', [\Controllers\ProjectController::class, 'addDocument']);
+    $router->get('/projects/documents/{id}/view', [\Controllers\ProjectController::class, 'viewDocument']);
     $router->post('/projects/{id}/status', [\Controllers\ProjectController::class, 'changeStatus']);
     $router->post('/projects/{id}/delete', [\Controllers\ProjectController::class, 'delete']);
 
