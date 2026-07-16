@@ -15,14 +15,27 @@ $layout = 'layouts/app';
 
 <style>
 /* Дашборд: убираем общую прокрутку страницы */
-body { height: 100vh; overflow: hidden; }
-main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
+@media (min-width: 768px) {
+    body { height: 100vh; overflow: hidden; }
+    main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
+}
 @media (max-width: 767px) {
-    main { height: calc(100vh - 3.5rem - 3.5rem) !important; }
+    .dashboard-mobile-tabs {
+        position: fixed;
+        top: 3.5rem;
+        left: 0;
+        right: 0;
+        z-index: 40;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .dashboard-mobile-content {
+        padding-top: 4rem;
+    }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col flex-1 min-h-0 overflow-hidden pb-4">
+<div x-data="dashboard" class="flex flex-col flex-1 min-h-0 md:overflow-hidden pb-4">
 
     <!-- Сообщение при отсутствии проектов -->
     <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
@@ -156,8 +169,8 @@ main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; pad
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
             <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
-            <!-- Мобильный переключатель вкладок (sticky) -->
-            <div class="md:hidden flex border-b sticky top-0 bg-white z-10">
+            <!-- Мобильный переключатель вкладок (fixed на мобильном) -->
+            <div class="md:hidden flex border-b sticky top-0 bg-white z-10 dashboard-mobile-tabs">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
@@ -181,7 +194,7 @@ main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; pad
             </div>
 
             <!-- Мобильный контент задач (md:hidden) -->
-            <div class="md:hidden">
+            <div class="md:hidden dashboard-mobile-content">
                 <div class="space-y-2">
                     <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
