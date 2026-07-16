@@ -19,7 +19,7 @@ body { height: 100vh; overflow: hidden; }
 main { overflow: hidden; }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden">
+<div x-data="dashboard" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden pb-4">
 
     <!-- Сообщение при отсутствии проектов -->
     <template x-if="projects.length === 0">

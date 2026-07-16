@@ -11,7 +11,7 @@ $layout = 'layouts/app';
 /* Страница проекта: убираем общую прокрутку, фиксированная шапка */
 body { height: 100vh; overflow: hidden; }
 main { overflow: hidden; }
-.project-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; }
+.project-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; padding-bottom: 1rem; }
 .project-page .project-header { flex-shrink: 0; }
 .project-page .project-content { flex: 1; min-height: 0; overflow: hidden; }
 .project-page .project-content > div { height: 100%; overflow-y: auto; }
