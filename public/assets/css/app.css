@@ -9,6 +9,15 @@
 .scrollbar-hidden::-webkit-scrollbar { display: none; }
 .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Глобальное скрытие скроллбара на overflow-y-auto (канбан-колонки, контент) */
+.overflow-y-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.overflow-y-auto::-webkit-scrollbar {
+    display: none;
+}
+
 /* Глобальное скрытие горизонтального скроллбара на overflow-x-auto */
 .overflow-x-auto {
     -ms-overflow-style: none;
