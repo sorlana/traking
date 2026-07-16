@@ -595,9 +595,13 @@ document.addEventListener('alpine:init', () => {
 </script>
 
 <!-- Модалка просмотра DOCX -->
-<div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b flex-shrink-0">
+<style>
+#docxContainer .docx-wrapper { overflow-x: auto; }
+#docxContainer .docx-wrapper > section { width: 100% !important; min-width: 0 !important; padding: 1rem !important; box-shadow: none !important; }
+</style>
+<div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b flex-shrink-0">
             <h3 id="docxModalTitle" class="text-sm font-medium text-gray-700 truncate"></h3>
             <div class="flex items-center gap-2">
                 <a id="docxModalDownload" href="#" class="text-xs text-blue-600 hover:text-blue-700">Скачать</a>
@@ -606,7 +610,7 @@ document.addEventListener('alpine:init', () => {
                 </button>
             </div>
         </div>
-        <div id="docxContainer" class="flex-1 overflow-auto p-4"></div>
+        <div id="docxContainer" class="flex-1 overflow-auto p-2 sm:p-4"></div>
         <div id="docxLoading" class="hidden flex-1 flex items-center justify-center p-8">
             <span class="text-gray-400 text-sm">Загрузка документа...</span>
         </div>
@@ -654,7 +658,7 @@ document.addEventListener('alpine:init', () => {
             await docx.renderAsync(blob, container, null, {
                 className: 'docx-preview-content',
                 inWrapper: true,
-                ignoreWidth: false,
+                ignoreWidth: true,
                 ignoreHeight: true,
                 ignoreFonts: false,
                 breakPages: true,
