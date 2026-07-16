@@ -596,8 +596,22 @@ document.addEventListener('alpine:init', () => {
 
 <!-- Модалка просмотра DOCX -->
 <style>
-#docxContainer .docx-wrapper { overflow-x: auto; }
-#docxContainer .docx-wrapper > section { width: 100% !important; min-width: 0 !important; padding: 1rem !important; box-shadow: none !important; }
+#docxContainer .docx-wrapper { overflow: auto; -webkit-overflow-scrolling: touch; }
+#docxContainer .docx-wrapper > section { box-shadow: none !important; }
+@media (max-width: 767px) {
+    #docxContainer .docx-wrapper > section {
+        zoom: 0.4;
+        -moz-transform: scale(0.4);
+        -moz-transform-origin: top left;
+    }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    #docxContainer .docx-wrapper > section {
+        zoom: 0.65;
+        -moz-transform: scale(0.65);
+        -moz-transform-origin: top left;
+    }
+}
 </style>
 <div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
@@ -658,7 +672,7 @@ document.addEventListener('alpine:init', () => {
             await docx.renderAsync(blob, container, null, {
                 className: 'docx-preview-content',
                 inWrapper: true,
-                ignoreWidth: true,
+                ignoreWidth: false,
                 ignoreHeight: true,
                 ignoreFonts: false,
                 breakPages: true,
