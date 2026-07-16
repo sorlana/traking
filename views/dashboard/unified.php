@@ -360,7 +360,7 @@ main { padding-bottom: 0 !important; }
 
     <!-- Модалка со статистикой (вне template) -->
     <div id="infoModal"
-         @click.self="showInfoModal = false; document.getElementById('infoModal').style.display='none'"
+         onclick="if(event.target===this)this.style.display='none'"
          class="project-stats-modal md:hidden fixed inset-0 z-[200] bg-black/50 flex items-end"
          style="display: none;"
          x-transition:enter="transition ease-out duration-200"
@@ -373,7 +373,7 @@ main { padding-bottom: 0 !important; }
              @click.stop>
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-medium text-gray-700">Статистика проекта</h3>
-                <button @click="showInfoModal = false; document.getElementById('infoModal').style.display='none'" class="p-1 text-gray-400 hover:text-gray-600">
+                <button onclick="document.getElementById('infoModal').style.display='none'" class="p-1 text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -443,7 +443,7 @@ main { padding-bottom: 0 !important; }
 
     <!-- Модалка с деревом задач (вне template для корректного fixed позиционирования) -->
     <div id="treeModal"
-         @click.self="showTreeModal = false; document.getElementById('treeModal').style.display='none'"
+         onclick="if(event.target===this)this.style.display='none'"
          class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
          style="display: none;"
          x-transition:enter="transition ease-out duration-200"
@@ -456,7 +456,7 @@ main { padding-bottom: 0 !important; }
              @click.stop>
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-medium text-gray-700">Дерево задач</h3>
-                <button @click="showTreeModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                <button onclick="document.getElementById('treeModal').style.display='none'" class="p-1 text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
