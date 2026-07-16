@@ -794,6 +794,107 @@ class ProjectController extends Controller
     }
 
     /**
+     * AJAX: быстрое создание задачи (только название + исполнитель)
+     * POST /ajax/projects/{id}/quick-task
+     */
+    public function quickTask(string $id): void
+    {
+        $projectId = (int) $id;
+
+        if (!ProjectAccessMiddleware::check($projectId)) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        if (!can('create_task', $projectId)) {
+            $this->json(['error' => 'Недостаточно прав'], 403);
+            return;
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        $assignedTo = !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null;
+
+        if ($title === '') {
+            $this->json(['error' => 'Укажите название задачи'], 400);
+            return;
+        }
+
+        $db = Database::getInstance();
+
+        // Статус «В работе»
+        $inProgressStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'in_progress' LIMIT 1");
+        $statusId = $inProgressStatus ? (int) $inProgressStatus['id'] : 1;
+
+        // Определяем sort_order (следующий по порядку)
+        $maxOrder = $db->fetch(
+            "SELECT COALESCE(MAX(sort_order), 0) as max_order FROM tasks WHERE project_id = ? AND parent_id IS NULL",
+            [$projectId]
+        );
+        $sortOrder = (int) ($maxOrder['max_order'] ?? 0) + 1;
+
+        // Создаём задачу
+        $taskId = $db->insert('tasks', [
+            'project_id' => $projectId,
+            'title' => $title,
+            'status_id' => $statusId,
+            'priority' => 'medium',
+            'assigned_to' => $assignedTo,
+            'created_by' => Auth::id(),
+            'sort_order' => $sortOrder,
+        ]);
+
+        // Получаем созданную задачу
+        $task = $db->fetch(
+            "SELECT t.*, ts.name as status_name, ts.code as status_code, u.name as assigned_name
+             FROM tasks t
+             JOIN task_statuses ts ON t.status_id = ts.id
+             LEFT JOIN users u ON t.assigned_to = u.id
+             WHERE t.id = ?",
+            [$taskId]
+        );
+
+        $this->json(['success' => true, 'task' => $task]);
+    }
+
+    /**
+     * AJAX: сохранение порядка задач
+     * POST /ajax/projects/{id}/reorder-tasks
+     */
+    public function reorderTasks(string $id): void
+    {
+        $projectId = (int) $id;
+
+        if (!ProjectAccessMiddleware::check($projectId)) {
+            $this->json(['error' => 'Нет доступа'], 403);
+            return;
+        }
+
+        if (!can('create_task', $projectId)) {
+            $this->json(['error' => 'Недостаточно прав'], 403);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $order = $input['order'] ?? [];
+
+        if (empty($order) || !is_array($order)) {
+            $this->json(['error' => 'Не указан порядок'], 400);
+            return;
+        }
+
+        $db = Database::getInstance();
+
+        foreach ($order as $position => $taskId) {
+            $db->query(
+                "UPDATE tasks SET sort_order = ? WHERE id = ? AND project_id = ?",
+                [(int) $position + 1, (int) $taskId, $projectId]
+            );
+        }
+
+        $this->json(['success' => true]);
+    }
+
+    /**
      * Валидация данных проекта
      *
      * @param array $data Данные формы

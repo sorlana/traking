@@ -134,6 +134,8 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // AJAX-эндпоинты для задач
     $router->get('/ajax/tasks/{id}/tree', [\Controllers\TaskController::class, 'ajaxTree']);
     $router->get('/ajax/projects/{id}/tree', [\Controllers\ProjectController::class, 'ajaxTree']);
+    $router->post('/ajax/projects/{id}/quick-task', [\Controllers\ProjectController::class, 'quickTask']);
+    $router->post('/ajax/projects/{id}/reorder-tasks', [\Controllers\ProjectController::class, 'reorderTasks']);
 
     // Комментарии (AJAX)
     $router->get('/ajax/tasks/{id}/messages', [\Controllers\CommentController::class, 'pollMessages']);

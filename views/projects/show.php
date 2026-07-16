@@ -319,34 +319,63 @@ $layout = 'layouts/app';
     <!-- ============================================================ -->
     <!-- Вкладка: Задачи -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'tasks'" x-transition>
+    <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)">
         <div class="bg-white rounded-lg shadow-sm border">
-            <?php if (empty($tasks)): ?>
-                <div class="p-6 text-center text-gray-500 text-sm">Задач нет</div>
-            <?php else: ?>
-                <div class="divide-y">
-                    <?php foreach ($tasks as $task): ?>
-                        <div class="p-4 hover:bg-gray-50">
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <?php
-                                    $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
-                                    $dotColor = $taskDots[$task['status_code'] ?? ''] ?? 'bg-gray-400';
-                                    ?>
-                                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>
-                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate"><?= e($task['title']) ?></a>
-                                </div>
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    <span class="text-xs text-gray-500"><?= e($task['status_name']) ?></span>
-                                    <?php if ($task['assigned_name']): ?>
-                                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"><?= e($task['assigned_name']) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+            <!-- Форма быстрого создания задачи -->
+            <?php if (can('create_task', (int) $project['id'])): ?>
+            <div class="p-4 border-b bg-gray-50 rounded-t-lg">
+                <form @submit.prevent="addTask()" class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" x-model="newTaskTitle" placeholder="Название задачи..." required
+                           class="ui-control flex-1 min-w-0" @keydown.enter="addTask()">
+                    <select x-model="newTaskAssigned" class="ui-control w-full sm:w-44">
+                        <option value="">Не назначен</option>
+                        <?php foreach ($users as $u): ?>
+                            <option value="<?= (int) $u['id'] ?>" <?php
+                                // Автовыбор единственного исполнителя
+                                $projectExecutors = array_filter($users, fn($pu) => $pu['project_role'] === 'executor');
+                                if (count($projectExecutors) === 1 && $u['project_role'] === 'executor') echo 'selected';
+                            ?>><?= e($u['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="ui-btn ui-btn-primary whitespace-nowrap" :disabled="adding">
+                        <span x-show="!adding">Добавить</span>
+                        <span x-show="adding" x-cloak>...</span>
+                    </button>
+                </form>
+            </div>
             <?php endif; ?>
+
+            <!-- Список задач с drag-and-drop -->
+            <?php if (empty($tasks)): ?>
+                <div x-show="taskList.length === 0" class="p-6 text-center text-gray-500 text-sm">Задач нет</div>
+            <?php endif; ?>
+            <div class="divide-y" id="taskSortable">
+                <?php
+                $taskDots = ['in_progress'=>'bg-yellow-400','revision'=>'bg-orange-400','done'=>'bg-green-400','closed'=>'bg-indigo-400'];
+                ?>
+                <template x-for="task in taskList" :key="task.id">
+                    <div class="p-4 hover:bg-gray-50 flex items-center gap-3 cursor-grab active:cursor-grabbing task-sortable-item" :data-id="task.id">
+                        <!-- Ручка перетаскивания -->
+                        <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 10.001 4.001A2 2 0 007 2zm0 6a2 2 0 10.001 4.001A2 2 0 007 8zm0 6a2 2 0 10.001 4.001A2 2 0 007 14zm6-8a2 2 0 10-.001-4.001A2 2 0 0013 6zm0 2a2 2 0 10.001 4.001A2 2 0 0013 8zm0 6a2 2 0 10.001 4.001A2 2 0 0013 14z"/></svg>
+                        </span>
+                        <!-- Точка статуса -->
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              :class="{
+                                  'bg-yellow-400': task.status_code === 'in_progress',
+                                  'bg-orange-400': task.status_code === 'revision',
+                                  'bg-green-400': task.status_code === 'done',
+                                  'bg-indigo-400': task.status_code === 'closed',
+                                  'bg-gray-400': !task.status_code
+                              }"></span>
+                        <!-- Название -->
+                        <a :href="BASE_URL + '/tasks/' + task.id" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate flex-1 min-w-0" x-text="task.title"></a>
+                        <!-- Статус и исполнитель -->
+                        <span class="text-xs text-gray-500 flex-shrink-0" x-text="task.status_name"></span>
+                        <span x-show="task.assigned_name" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex-shrink-0" x-text="task.assigned_name"></span>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
 
@@ -381,6 +410,83 @@ $layout = 'layouts/app';
     </div>
 
 </div>
+
+<!-- SortableJS для drag-and-drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('projectTasks', (projectId) => ({
+        taskList: <?= json_encode($tasks ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+        newTaskTitle: '',
+        newTaskAssigned: '<?php
+            $projectExecutors = array_filter($users, fn($pu) => $pu['project_role'] === 'executor');
+            echo count($projectExecutors) === 1 ? (int) reset($projectExecutors)['id'] : '';
+        ?>',
+        adding: false,
+        sortable: null,
+
+        init() {
+            this.$nextTick(() => {
+                const el = document.getElementById('taskSortable');
+                if (el) {
+                    this.sortable = Sortable.create(el, {
+                        handle: '.drag-handle',
+                        animation: 150,
+                        ghostClass: 'bg-blue-50',
+                        onEnd: () => this.saveOrder()
+                    });
+                }
+            });
+        },
+
+        async addTask() {
+            if (!this.newTaskTitle.trim() || this.adding) return;
+            this.adding = true;
+
+            try {
+                const form = new FormData();
+                form.append('title', this.newTaskTitle.trim());
+                form.append('assigned_to', this.newTaskAssigned);
+
+                const res = await fetch(BASE_URL + '/ajax/projects/' + projectId + '/quick-task', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': csrfToken },
+                    body: form
+                });
+                const data = await res.json();
+
+                if (data.success && data.task) {
+                    this.taskList.push(data.task);
+                    this.newTaskTitle = '';
+                }
+            } catch (e) {}
+            this.adding = false;
+        },
+
+        async saveOrder() {
+            const items = document.querySelectorAll('.task-sortable-item');
+            const order = Array.from(items).map(el => el.dataset.id);
+
+            // Обновляем локальный массив
+            const map = {};
+            this.taskList.forEach(t => map[t.id] = t);
+            this.taskList = order.map(id => map[id]).filter(Boolean);
+
+            try {
+                await fetch(BASE_URL + '/ajax/projects/' + projectId + '/reorder-tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({ order: order })
+                });
+            } catch (e) {}
+        }
+    }));
+});
+</script>
 
 <!-- Модалка просмотра DOCX -->
 <div id="docxModal" class="fixed inset-0 z-[300] bg-black/60 hidden flex items-center justify-center p-4">

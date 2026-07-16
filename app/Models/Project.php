@@ -68,7 +68,7 @@ class Project extends Model
             $params[] = $parentId;
         }
 
-        $sql .= " ORDER BY t.created_at DESC";
+        $sql .= " ORDER BY t.sort_order ASC, t.created_at DESC";
 
         return $this->db()->fetchAll($sql, $params);
     }
