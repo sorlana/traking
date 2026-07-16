@@ -596,20 +596,19 @@ document.addEventListener('alpine:init', () => {
 
 <!-- Модалка просмотра DOCX -->
 <style>
-#docxContainer .docx-wrapper { overflow: auto; -webkit-overflow-scrolling: touch; }
-#docxContainer .docx-wrapper > section { box-shadow: none !important; }
+#docxContainer { overflow: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 767px) {
-    #docxContainer .docx-wrapper > section {
-        zoom: 0.4;
-        -moz-transform: scale(0.4);
-        -moz-transform-origin: top left;
+    #docxContainer > .docx-wrapper {
+        transform: scale(0.4);
+        transform-origin: top left;
+        width: 250%;
     }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-    #docxContainer .docx-wrapper > section {
-        zoom: 0.65;
-        -moz-transform: scale(0.65);
-        -moz-transform-origin: top left;
+    #docxContainer > .docx-wrapper {
+        transform: scale(0.65);
+        transform-origin: top left;
+        width: 154%;
     }
 }
 </style>
