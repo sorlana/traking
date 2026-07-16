@@ -388,7 +388,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                                       'bg-indigo-400': task.status_code === 'closed',
                                       'bg-gray-400': !task.status_code
                                   }"></span>
-                            <a :href="BASE_URL + '/tasks/' + task.id" class="text-sm font-medium text-gray-800 hover:text-blue-600 truncate flex-1 min-w-0" x-text="task.title"></a>
+                            <a :href="BASE_URL + '/tasks/' + task.id" class="text-sm font-medium text-gray-800 hover:text-blue-600 flex-1 min-w-0" x-text="task.title"></a>
                             <span class="text-xs text-gray-500 flex-shrink-0" x-text="task.status_name"></span>
                             <span x-show="task.assigned_name" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex-shrink-0" x-text="task.assigned_name"></span>
                             <?php if (can('create_task', (int) $project['id'])): ?>
