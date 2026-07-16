@@ -20,29 +20,31 @@ $layout = 'layouts/app';
     main { overflow: hidden !important; height: calc(100vh - 3.5rem) !important; padding-bottom: 0 !important; display: flex !important; flex-direction: column !important; }
 }
 @media (max-width: 767px) {
-    .dashboard-project-tabs {
+    .dashboard-fixed-header {
         position: fixed;
         top: 3.5rem;
         left: 0;
         right: 0;
-        z-index: 41;
-        background: white;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .dashboard-mobile-tabs {
-        position: fixed;
-        top: 7.25rem;
-        left: 0;
-        right: 0;
         z-index: 40;
         background: white;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .dashboard-mobile-content {
-        padding-top: 11rem;
     }
 }
+</style>
+
+<script>
+// Динамический расчёт padding-top для мобильного контента дашборда
+function adjustDashboardPadding() {
+    if (window.innerWidth >= 768) return;
+    const header = document.querySelector('.dashboard-fixed-header');
+    const content = document.querySelector('.dashboard-mobile-content');
+    if (header && content) {
+        content.style.paddingTop = header.offsetHeight + 8 + 'px';
+    }
+}
+window.addEventListener('load', adjustDashboardPadding);
+window.addEventListener('resize', adjustDashboardPadding);
+setTimeout(adjustDashboardPadding, 100);
+</script>
 </style>
 
 <div x-data="dashboard" class="flex flex-col flex-1 min-h-0 md:overflow-hidden pb-4">
@@ -57,8 +59,11 @@ $layout = 'layouts/app';
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
 
+            <!-- На мобильном: плашка + переключатель в одном fixed-блоке -->
+            <div class="dashboard-fixed-header">
+
             <!-- Project_Tabs: горизонтальная панель вкладок -->
-            <div class="bg-white rounded-lg shadow-sm border dashboard-project-tabs">
+            <div class="bg-white rounded-lg shadow-sm border md:rounded-lg md:shadow-sm md:border">
                 <div class="overflow-x-auto">
                     <div class="flex items-center gap-4 p-3 min-w-max">
                         <template x-for="project in projects" :key="project.id">
@@ -179,8 +184,8 @@ $layout = 'layouts/app';
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
             <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
-            <!-- Мобильный переключатель вкладок (fixed на мобильном) -->
-            <div class="md:hidden flex border-b sticky top-0 bg-white z-10 dashboard-mobile-tabs">
+            <!-- Мобильный переключатель вкладок -->
+            <div class="md:hidden flex border-b">
                 <button @click="boardTab = 'in_progress'"
                         :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
@@ -202,6 +207,7 @@ $layout = 'layouts/app';
                     Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
                 </button>
             </div>
+            </div><!-- /dashboard-fixed-header -->
 
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden dashboard-mobile-content">
