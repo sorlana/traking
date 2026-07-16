@@ -15,10 +15,13 @@ $layout = 'layouts/app';
 
 <style>
 /* Дашборд: убираем общую прокрутку страницы */
-html, body { height: 100%; overflow: hidden; }
-main { overflow: hidden; }
+html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
+main { overflow: hidden; height: 100%; }
 @media (max-width: 767px) {
-    .mobile-task-scroll { max-height: calc(100vh - 15rem); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .mobile-task-scroll { max-height: calc(100vh - 15rem); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+}
+@media (min-width: 768px) {
+    html, body { position: static; }
 }
 </style>
 
