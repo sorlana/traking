@@ -156,38 +156,37 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
             </div>
             </div><!-- /flex-shrink-0 фиксированная часть -->
 
+            <!-- Мобильный переключатель вкладок (фиксированный) -->
+            <div class="md:hidden flex border-b flex-shrink-0" x-data>
+                <button @click="$store.boardTab = 'in_progress'"
+                        :class="$store.boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                    В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
+                </button>
+                <button @click="$store.boardTab = 'revision'"
+                        :class="$store.boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                    Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
+                </button>
+                <button @click="$store.boardTab = 'done'"
+                        :class="$store.boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                    Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
+                </button>
+                <button @click="$store.boardTab = 'closed'"
+                        :class="$store.boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                        class="flex-1 py-2.5 text-sm font-medium text-center transition">
+                    Закрыто <span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
+                </button>
+            </div>
+
             <!-- ПРОКРУЧИВАЕМАЯ ЧАСТЬ: канбан-доска -->
             <div class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
-            <!-- Мобильные вкладки (md:hidden) -->
-            <div class="md:hidden" x-data="{ boardTab: 'in_progress' }">
-                <!-- Переключатель вкладок -->
-                <div class="flex border-b mb-3">
-                    <button @click="boardTab = 'in_progress'"
-                            :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                        В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
-                    </button>
-                    <button @click="boardTab = 'revision'"
-                            :class="boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                        Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
-                    </button>
-                    <button @click="boardTab = 'done'"
-                            :class="boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                        Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
-                    </button>
-                    <button @click="boardTab = 'closed'"
-                            :class="boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
-                            class="flex-1 py-2.5 text-sm font-medium text-center transition">
-                        Закрыто <span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
-                    </button>
-                </div>
-
-                <!-- Содержимое вкладок -->
+            <!-- Мобильный контент задач (md:hidden) -->
+            <div class="md:hidden">
                 <div class="space-y-2">
-                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
+                    <template x-for="task in ($store.boardTab === 'in_progress' ? currentBoard.in_progress : $store.boardTab === 'revision' ? currentBoard.revision : $store.boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-2">
                                 <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
@@ -198,7 +197,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
                                           'bg-green-500': task.priority === 'low'
                                       }"></span>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                    <div class="text-sm font-medium text-gray-800" x-text="task.title"></div>
                                     <div class="mt-1 flex items-center gap-2 flex-wrap">
                                         <template x-if="task.deadline">
                                             <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -209,7 +208,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
                             </div>
                         </a>
                     </template>
-                    <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
+                    <template x-if="($store.boardTab === 'in_progress' ? currentBoard.in_progress : $store.boardTab === 'revision' ? currentBoard.revision : $store.boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
                         <p class="text-sm text-gray-400 text-center py-4">Нет задач</p>
                     </template>
                 </div>
@@ -471,6 +470,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
 <!-- Alpine.js data-компонент dashboard -->
 <script>
 document.addEventListener('alpine:init', () => {
+    Alpine.store('boardTab', 'in_progress');
     Alpine.data('dashboard', () => ({
         projects: <?= json_encode($projects ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         boardData: <?= json_encode($boardData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
