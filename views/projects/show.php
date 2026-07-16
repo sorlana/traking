@@ -10,13 +10,13 @@ $layout = 'layouts/app';
 <style>
 /* Страница проекта: убираем общую прокрутку, фиксированная шапка */
 body { height: 100vh; overflow: hidden; }
-main { overflow: hidden; }
-.project-page { display: flex; flex-direction: column; height: calc(100vh - 5rem); overflow: hidden; padding-bottom: 1rem; }
+main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !important; }
+.project-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 1rem; }
 .project-page .project-header { flex-shrink: 0; }
 .project-page .project-content { flex: 1; min-height: 0; overflow: hidden; }
 .project-page .project-content > div { height: 100%; overflow-y: auto; }
-@media (max-width: 1023px) {
-    .project-page { height: calc(100vh - 6.5rem); }
+@media (max-width: 767px) {
+    main { height: calc(100vh - 3.5rem - 3.5rem); }
 }
 </style>
 
