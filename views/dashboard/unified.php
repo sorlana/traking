@@ -25,14 +25,11 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
 <div x-data="dashboard" class="flex flex-col h-full overflow-hidden pb-4">
 
     <!-- Сообщение при отсутствии проектов -->
-    <template x-if="projects.length === 0">
-        <div class="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <p class="text-sm text-gray-400">Нет проектов</p>
-        </div>
-    </template>
+    <div x-show="projects.length === 0" class="bg-white rounded-lg shadow-sm border p-8 text-center">
+        <p class="text-sm text-gray-400">Нет проектов</p>
+    </div>
 
-    <template x-if="projects.length > 0">
-        <div class="flex flex-col flex-1 min-h-0 gap-3">
+    <div x-show="projects.length > 0" x-cloak class="flex flex-col flex-1 min-h-0 gap-3">
 
             <!-- ФИКСИРОВАННАЯ ЧАСТЬ: вкладки проектов + статистика -->
             <div class="flex-shrink-0 space-y-3">
@@ -157,24 +154,24 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
             </div><!-- /flex-shrink-0 фиксированная часть -->
 
             <!-- Мобильный переключатель вкладок (фиксированный) -->
-            <div class="md:hidden flex border-b flex-shrink-0" x-data>
-                <button @click="$store.boardTab = 'in_progress'"
-                        :class="$store.boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+            <div class="md:hidden flex border-b flex-shrink-0">
+                <button @click="boardTab = 'in_progress'"
+                        :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition">
                     В работе <span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
                 </button>
-                <button @click="$store.boardTab = 'revision'"
-                        :class="$store.boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                <button @click="boardTab = 'revision'"
+                        :class="boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition">
                     Доработки <span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
                 </button>
-                <button @click="$store.boardTab = 'done'"
-                        :class="$store.boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                <button @click="boardTab = 'done'"
+                        :class="boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition">
                     Готово <span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
                 </button>
-                <button @click="$store.boardTab = 'closed'"
-                        :class="$store.boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
+                <button @click="boardTab = 'closed'"
+                        :class="boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                         class="flex-1 py-2.5 text-sm font-medium text-center transition">
                     Закрыто <span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
                 </button>
@@ -186,7 +183,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
             <!-- Мобильный контент задач (md:hidden) -->
             <div class="md:hidden">
                 <div class="space-y-2">
-                    <template x-for="task in ($store.boardTab === 'in_progress' ? currentBoard.in_progress : $store.boardTab === 'revision' ? currentBoard.revision : $store.boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
+                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
                         <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-2">
                                 <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
@@ -208,7 +205,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
                             </div>
                         </a>
                     </template>
-                    <template x-if="($store.boardTab === 'in_progress' ? currentBoard.in_progress : $store.boardTab === 'revision' ? currentBoard.revision : $store.boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
+                    <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
                         <p class="text-sm text-gray-400 text-center py-4">Нет задач</p>
                     </template>
                 </div>
@@ -345,7 +342,7 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
 
             </div><!-- /прокручиваемая часть -->
         </div>
-    </template>
+    </div>
 
     <!-- Модалка со статистикой (вне template) -->
     <div x-show="showInfoModal"
@@ -470,8 +467,8 @@ main { overflow: hidden; height: calc(100vh - 3.5rem); padding-bottom: 0 !import
 <!-- Alpine.js data-компонент dashboard -->
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.store('boardTab', 'in_progress');
     Alpine.data('dashboard', () => ({
+        boardTab: 'in_progress',
         projects: <?= json_encode($projects ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         boardData: <?= json_encode($boardData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
         timeData: <?= json_encode($timeData ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>,
