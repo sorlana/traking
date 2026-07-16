@@ -44,18 +44,20 @@ main { overflow: hidden; height: 100%; }
             <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
                 <div class="md:overflow-x-auto">
                     <div class="flex items-center gap-4 p-3 md:min-w-max">
-                        <template x-for="project in projects" :key="project.id">
-                            <button
-                                x-on:click="selectProject(project.id)"
-                                :class="activeProjectId === project.id
-                                    ? 'text-blue-600 font-semibold'
-                                    : 'text-gray-600 hover:text-blue-600'"
-                                class="text-sm whitespace-nowrap transition-colors"
-                                x-text="project.title"
-                            ></button>
-                        </template>
+                        <div class="flex-1 min-w-0 truncate">
+                            <template x-for="project in projects" :key="project.id">
+                                <button
+                                    x-on:click="selectProject(project.id)"
+                                    :class="activeProjectId === project.id
+                                        ? 'text-blue-600 font-semibold'
+                                        : 'text-gray-600 hover:text-blue-600'"
+                                    class="text-sm whitespace-nowrap transition-colors mr-4"
+                                    x-text="project.title"
+                                ></button>
+                            </template>
+                        </div>
                         <!-- Иконка Дерева задач (только мобильный) -->
-                        <button @click="showTreeModal = true; loadTree()" class="md:hidden ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
+                        <button @click="showTreeModal = true; loadTree()" class="md:hidden flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition" title="Дерево задач">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16M10 12v6"/></svg>
                         </button>
                         <!-- Иконка Инфо (только мобильный) -->
