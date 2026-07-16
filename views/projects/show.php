@@ -211,13 +211,13 @@ $layout = 'layouts/app';
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
-                        <select name="user_id" required class="ui-control flex-1">
+                        <select name="user_id" required class="ui-control flex-1 min-w-0">
                             <option value="">Выберите пользователя...</option>
                             <?php foreach ($allUsers as $u): ?>
                                 <option value="<?= e($u['id']) ?>"><?= e($u['name']) ?> (<?= e($u['login']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
-                        <select name="project_role" class="ui-control">
+                        <select name="project_role" class="ui-control w-full sm:w-44">
                             <option value="manager">Руководитель</option>
                             <option value="executor" selected>Исполнитель</option>
                         </select>
