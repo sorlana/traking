@@ -106,7 +106,7 @@ main { overflow: hidden; }
     <!-- ============================================================ -->
     <!-- Вкладка: Информация -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'info'" x-transition>
+    <div x-show="tab === 'info'" x-transition class="h-full overflow-y-auto">
         <div class="bg-white rounded-lg shadow-sm border p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
@@ -221,10 +221,10 @@ main { overflow: hidden; }
     <!-- ============================================================ -->
     <!-- Вкладка: Участники -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'users'" x-transition>
-        <div class="bg-white rounded-lg shadow-sm border">
+    <div x-show="tab === 'users'" x-transition class="flex flex-col h-full">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
             <?php if (can('edit_project', (int) $project['id'])): ?>
-                <div class="p-4 border-b bg-gray-50 rounded-t-lg">
+                <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
                         <select name="user_id" required class="ui-control sm:max-w-xs">
@@ -241,6 +241,7 @@ main { overflow: hidden; }
                     </form>
                 </div>
             <?php endif; ?>
+            <div class="flex-1 min-h-0 overflow-y-auto">
             <?php if (empty($users)): ?>
                 <div class="p-6 text-center text-gray-500 text-sm">Участников нет</div>
             <?php else: ?>
@@ -268,15 +269,16 @@ main { overflow: hidden; }
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            </div>
         </div>
     </div>
 
     <!-- ============================================================ -->
     <!-- Вкладка: Документы -->
     <!-- ============================================================ -->
-    <div x-show="tab === 'documents'" x-transition>
-        <div class="bg-white rounded-lg shadow-sm border">
-            <div class="p-4 border-b bg-gray-50 rounded-t-lg">
+    <div x-show="tab === 'documents'" x-transition class="flex flex-col h-full">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
+            <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-document') ?>" enctype="multipart/form-data" class="space-y-3">
                     <?= csrf_field() ?>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -300,6 +302,7 @@ main { overflow: hidden; }
                     </div>
                 </form>
             </div>
+            <div class="flex-1 min-h-0 overflow-y-auto">
             <?php if (empty($documents)): ?>
                 <div class="p-6 text-center text-gray-500 text-sm">Документов нет</div>
             <?php else: ?>
@@ -329,6 +332,7 @@ main { overflow: hidden; }
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            </div>
         </div>
     </div>
 
