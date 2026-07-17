@@ -83,7 +83,7 @@ if ($currentUser) {
                     </a>
 
                     <!-- Навигационные ссылки (десктоп) -->
-                    <div class="hidden md:flex items-center gap-4">
+                    <div class="hidden md:flex items-center gap-7">
                         <?php if (\Helpers\Auth::isAdmin()): ?>
                             <a href="<?= url('/admin/users') ?>"
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/admin/users') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
@@ -114,7 +114,7 @@ if ($currentUser) {
                 </div>
 
                 <!-- Правая часть: помощь + настройки + уведомления + пользователь + выход -->
-                <div class="hidden md:flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-1">
                     <!-- Помощь -->
                     <a href="<?= url('/help') ?>" class="desktop-header-icon p-1 relative" title="Помощь">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,17 +139,17 @@ if ($currentUser) {
                     ?>
                     <?php include BASE_PATH . '/views/components/notification-bell.php'; ?>
 
-                    <span class="text-sm text-gray-600">
+                    <span class="ml-6 text-sm text-gray-600">
                         <?= e($currentUser['name'] ?? $currentUser['login'] ?? '') ?>
                     </span>
-                    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
+                    <span class="ml-2 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
                         <?php
                         $roleLabels = [1 => 'Админ', 2 => 'Руководитель', 3 => 'Исполнитель'];
                         echo $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '';
                         ?>
                     </span>
                     <a href="<?= url('/logout') ?>"
-                       class="text-sm text-red-600 hover:text-red-700 font-medium">
+                       class="ml-2 text-sm text-red-600 hover:text-red-700 font-medium">
                         Выйти
                     </a>
                 </div>
