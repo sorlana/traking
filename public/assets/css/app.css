@@ -654,7 +654,7 @@ nav[class*="fixed"] {
 /* Restrained visual theme: neutral surfaces + one blue accent   */
 /* ============================================================ */
 :root {
-    --ui-canvas: #f4f5f6;
+    --ui-canvas: #ffffff;
     --ui-surface: #ffffff;
     --ui-surface-muted: #f1f2f3;
     --ui-surface-soft: #f7f7f8;
