@@ -790,3 +790,10 @@ nav[class*="fixed"] {
         background: #ffffff;
     }
 }
+
+/* `.ui-btn` uses an important display value, so restore responsive hiding. */
+@media (min-width: 1024px) {
+    .app-shell .ui-btn.lg\:hidden {
+        display: none !important;
+    }
+}
