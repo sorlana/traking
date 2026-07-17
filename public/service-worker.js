@@ -39,7 +39,7 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
         self.registration.showNotification(data.title || 'Flowtask', {
             body: data.body || 'Новое сообщение',
-            icon: data.icon || '/traking/icons/push-icon.php',
+            icon: data.icon || '/traking/icons/push-icon.php?v=2',
             badge: '/traking/icons/push-badge.php',
             data: { url: data.url || '/traking/' },
             vibrate: [200, 100, 200],

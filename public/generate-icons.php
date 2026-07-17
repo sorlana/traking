@@ -20,7 +20,7 @@ foreach ($sizes as $size) {
     imagealphablending($img, true);
 
     // Цвета
-    $blue = imagecolorallocate($img, 91, 127, 232);   // #5B7FE8
+    $blue = imagecolorallocate($img, 79, 107, 237);   // #4F6BED
     $white = imagecolorallocate($img, 255, 255, 255);
 
     // Заполняем синим фоном

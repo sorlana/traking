@@ -5,7 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход — Traking</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    blue: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
+                    indigo: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>?v=2">
 </head>
 <body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
 

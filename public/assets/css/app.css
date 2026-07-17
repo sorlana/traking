@@ -89,8 +89,8 @@ textarea {
 }
 
 .ui-control:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14) !important;
+    border-color: #4f6bed !important;
+    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14) !important;
     outline: none !important;
 }
 
@@ -118,16 +118,16 @@ textarea {
 
 .ui-btn:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.18);
 }
 
 .ui-btn-primary {
-    background-color: #2563eb;
+    background-color: #4f6bed;
     color: #fff;
 }
 
 .ui-btn-primary:hover {
-    background-color: #1d4ed8;
+    background-color: #4f6bed;
 }
 
 .ui-btn-dark {
@@ -188,7 +188,7 @@ textarea {
 @media (max-width: 768px) {
     body.app-loading-active .app-loading-screen {
         --loader-navy: #0E1B34;
-        --loader-blue: #526BEF;
+        --loader-blue: #4f6bed;
         --loader-gray: #BFC5CF;
 
         position: fixed;
@@ -577,8 +577,8 @@ nav[class*="fixed"] {
 }
 
 .mobile-filter-details[open] .mobile-filter-trigger {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14);
+    border-color: #4f6bed;
+    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14);
 }
 
 .mobile-filter-field-error .mobile-filter-trigger {
@@ -591,8 +591,8 @@ nav[class*="fixed"] {
 }
 
 .mobile-filter-trigger:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14);
+    border-color: #4f6bed;
+    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14);
     outline: none;
 }
 
@@ -631,8 +631,8 @@ nav[class*="fixed"] {
 
 .mobile-filter-option:hover,
 .mobile-filter-option.is-selected {
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #f1f2f3;
+    color: #4f6bed;
     font-weight: 600;
 }
 
@@ -663,7 +663,7 @@ nav[class*="fixed"] {
     --ui-text: #202328;
     --ui-text-muted: #6f747c;
     --ui-accent: #4f6bed;
-    --ui-accent-hover: #4059d9;
+    --ui-accent-hover: #4f6bed;
 }
 
 .app-shell {

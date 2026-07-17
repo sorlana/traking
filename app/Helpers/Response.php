@@ -125,7 +125,7 @@ class Response
         body { font-family: sans-serif; text-align: center; padding: 50px; background: #f9fafb; }
         h1 { font-size: 4rem; color: #374151; margin-bottom: 0.5rem; }
         p { font-size: 1.25rem; color: #6b7280; }
-        a { color: #2563eb; text-decoration: none; }
+        a { color: #4f6bed; text-decoration: none; }
         a:hover { text-decoration: underline; }
     </style>
 </head>

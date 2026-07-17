@@ -12,13 +12,13 @@
     "lang": "ru",
     "icons": [
         {
-            "src": "/traking/icons/push-icon.php",
+            "src": "/traking/icons/push-icon.php?v=2",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/traking/icons/push-icon.php",
+            "src": "/traking/icons/push-icon.php?v=2",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

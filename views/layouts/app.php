@@ -46,7 +46,9 @@ if ($currentUser) {
         theme: {
             extend: {
                 colors: {
-                    primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' }
+                    primary: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
+                    blue: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
+                    indigo: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
                 }
             }
         }
@@ -54,10 +56,10 @@ if ($currentUser) {
     </script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=5">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=6">
     <meta name="theme-color" content="#ffffff">
-    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/icons/push-icon.php') ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>?v=2">
+    <link rel="apple-touch-icon" href="<?= url('/icons/push-icon.php') ?>?v=2">
     <!-- iOS: белая заставка вместо авто-генерируемой с иконкой -->
     <link rel="apple-touch-startup-image" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect fill='%23fff' width='1' height='1'/></svg>">
     <meta name="mobile-web-app-capable" content="yes">
@@ -65,7 +67,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=32">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=33">
 </head>
 <body class="app-shell min-h-screen flex flex-col bg-white">
 
@@ -74,12 +76,12 @@ if ($currentUser) {
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-10 md:h-16">
                 <!-- Логотип -->
-                <div class="flex items-center gap-6">
+                <div class="flex items-center gap-10">
                     <a href="<?= url('/dashboard') ?>" class="hidden md:flex items-center" aria-label="Flowtask">
-                        <img src="<?= url('/icons/flowtask_logo.svg') ?>" alt="Flowtask" class="h-8 w-auto">
+                        <img src="<?= url('/icons/flowtask_logo.svg') ?>?v=2" alt="Flowtask" class="h-8 w-auto">
                     </a>
                     <a href="<?= url('/dashboard') ?>" class="md:hidden flex items-center" aria-label="Flowtask">
-                        <img src="<?= url('/favicon.svg') ?>" alt="Flowtask" class="h-8 w-8">
+                        <img src="<?= url('/favicon.svg') ?>?v=2" alt="Flowtask" class="h-8 w-8">
                     </a>
 
                     <!-- Навигационные ссылки (десктоп) -->

@@ -12,7 +12,7 @@ imagesavealpha($img, true);
 
 $white = imagecolorallocate($img, 255, 255, 255);
 $navy = imagecolorallocate($img, 14, 27, 52);
-$blue = imagecolorallocate($img, 82, 107, 239);
+$blue = imagecolorallocate($img, 79, 107, 237);
 $gray = imagecolorallocate($img, 191, 197, 207);
 
 imagefill($img, 0, 0, $white);
