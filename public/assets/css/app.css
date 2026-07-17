@@ -685,11 +685,15 @@ nav[class*="fixed"] {
 }
 
 .app-shell .shadow-sm {
-    box-shadow: 0 1px 2px rgba(20, 24, 30, 0.035), 0 0 0 1px rgba(20, 24, 30, 0.015);
+    box-shadow: none;
 }
 
 .app-shell .shadow-md {
-    box-shadow: 0 8px 24px rgba(20, 24, 30, 0.08);
+    box-shadow: none;
+}
+
+.app-shell .hover\:shadow-md:hover {
+    box-shadow: none;
 }
 
 .app-shell .rounded-lg {

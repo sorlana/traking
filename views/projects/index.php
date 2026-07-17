@@ -70,7 +70,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
     </div>
 
     <!-- Десктопные фильтры (lg+) -->
-    <form method="GET" action="<?= url('/projects') ?>" class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <form method="GET" action="<?= url('/projects') ?>" class="hidden lg:block mb-6">
         <div class="grid grid-cols-5 gap-4">
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
