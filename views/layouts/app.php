@@ -65,12 +65,12 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=28">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=29">
 </head>
-<body class="min-h-screen flex flex-col bg-white lg:bg-gray-100">
+<body class="app-shell min-h-screen flex flex-col bg-white lg:bg-gray-100">
 
     <!-- Навигация -->
-    <nav class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">
+    <nav class="app-header bg-white border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-10 md:h-16">
                 <!-- Логотип -->

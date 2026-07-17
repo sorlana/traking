@@ -71,26 +71,22 @@ main { overflow: hidden; height: 100%; }
 
             <!-- Stats_Panel: только десктоп -->
             <div class="hidden md:grid grid-cols-5 gap-4">
-                <!-- В работе — жёлтая/amber рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-2 border-t-gray-300 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.in_progress"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- Доработки — оранжевая рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-orange-500 p-2 md:p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-2 border-t-gray-300 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- Готово (на проверку) — зелёная рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-2 md:p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-2 border-t-gray-300 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <!-- Закрыто (принято руководителем) — индиго рамка -->
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-indigo-500 p-2 md:p-4">
+                <div class="bg-white rounded-lg shadow-sm border border-t-2 border-t-gray-300 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Закрыто</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.closed"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
@@ -102,13 +98,13 @@ main { overflow: hidden; height: 100%; }
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500">Прогресс</span>
                             <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
-                                <div class="h-full bg-indigo-500 transition-all duration-300"
+                                <div class="h-full bg-blue-600 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
-                                <div class="h-full bg-green-500 transition-all duration-300"
+                                <div class="h-full bg-blue-400 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
-                                <div class="h-full bg-orange-400 transition-all duration-300"
+                                <div class="h-full bg-gray-400 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
-                                <div class="h-full bg-amber-400 transition-all duration-300"
+                                <div class="h-full bg-gray-300 transition-all duration-300"
                                      :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                             </div>
                             <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round((currentStats.done + currentStats.closed) / currentStats.total * 100) : 0) + '%'"></span>
@@ -121,7 +117,7 @@ main { overflow: hidden; height: 100%; }
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs text-gray-500 w-10">План</span>
                                     <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
-                                        <div class="h-full bg-blue-400 rounded transition-all duration-300"
+                                        <div class="h-full bg-gray-400 rounded transition-all duration-300"
                                              :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div>
                                     </div>
                                     <span class="text-xs font-medium text-gray-700 w-12 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
@@ -130,26 +126,26 @@ main { overflow: hidden; height: 100%; }
                                     <span class="text-xs text-gray-500 w-10">Факт</span>
                                     <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
                                         <div class="h-full rounded transition-all duration-300"
-                                             :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'"
+                                             :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-blue-500'"
                                              :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div>
                                     </div>
                                     <span class="text-xs font-medium w-12 text-right"
-                                          :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'"
+                                          :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-gray-700'"
                                           x-text="currentTimeData.actual + ' ч'"></span>
                                 </div>
                                 <template x-if="currentTimeData.manager > 0">
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs text-gray-500 w-10">Рук.</span>
                                         <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
-                                            <div class="h-full rounded bg-purple-400 transition-all duration-300" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.manager / currentTimeData.maxHours * 100) : 0) + '%'"></div>
+                                            <div class="h-full rounded bg-gray-300 transition-all duration-300" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.manager / currentTimeData.maxHours * 100) : 0) + '%'"></div>
                                         </div>
-                                        <span class="text-xs font-medium text-purple-600 w-12 text-right" x-text="currentTimeData.manager + ' ч'"></span>
+                                        <span class="text-xs font-medium text-gray-600 w-12 text-right" x-text="currentTimeData.manager + ' ч'"></span>
                                     </div>
                                 </template>
                                 <template x-if="currentTimeData.estimated > 0">
                                     <div class="text-center pt-1 border-t">
                                         <span class="text-xs font-bold"
-                                              :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'"
+                                              :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-gray-700'"
                                               x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
                                         <span class="text-xs text-gray-400"> от плана</span>
                                     </div>
@@ -373,22 +369,22 @@ main { overflow: hidden; height: 100%; }
                 </button>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <div class="bg-white rounded-lg border border-t-4 border-t-amber-400 p-2">
+                <div class="bg-white rounded-lg border border-t-2 border-t-gray-300 p-2">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.in_progress"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-orange-500 p-2">
+                <div class="bg-white rounded-lg border border-t-2 border-t-gray-300 p-2">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-green-500 p-2">
+                <div class="bg-white rounded-lg border border-t-2 border-t-gray-300 p-2">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-indigo-500 p-2">
+                <div class="bg-white rounded-lg border border-t-2 border-t-gray-300 p-2">
                     <div class="text-xs text-gray-500 mb-1">Закрыто</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.closed"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
@@ -398,10 +394,10 @@ main { overflow: hidden; height: 100%; }
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-gray-500">Прогресс</span>
                     <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
-                        <div class="h-full bg-indigo-500" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
-                        <div class="h-full bg-green-500" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
-                        <div class="h-full bg-orange-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
-                        <div class="h-full bg-amber-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
+                        <div class="h-full bg-blue-600" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
+                        <div class="h-full bg-blue-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
+                        <div class="h-full bg-gray-400" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
+                        <div class="h-full bg-gray-300" :style="'width:' + (currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                     </div>
                     <span class="text-sm font-bold text-gray-700" x-text="(currentStats.total > 0 ? Math.round((currentStats.done + currentStats.closed) / currentStats.total * 100) : 0) + '%'"></span>
                 </div>
@@ -410,24 +406,24 @@ main { overflow: hidden; height: 100%; }
                 <div class="bg-white rounded-lg border p-3 space-y-1.5">
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-500 w-10">План</span>
-                        <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full bg-blue-400 rounded" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
+                        <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full bg-gray-400 rounded" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.estimated / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
                         <span class="text-xs font-medium text-gray-700 w-12 text-right" x-text="currentTimeData.estimated + ' ч'"></span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-500 w-10">Факт</span>
-                        <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full rounded" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-green-400'" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
-                        <span class="text-xs font-medium w-12 text-right" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-green-600'" x-text="currentTimeData.actual + ' ч'"></span>
+                        <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full rounded" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'bg-red-400' : 'bg-blue-500'" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.actual / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
+                        <span class="text-xs font-medium w-12 text-right" :class="currentTimeData.actual > currentTimeData.estimated && currentTimeData.estimated > 0 ? 'text-red-600' : 'text-gray-700'" x-text="currentTimeData.actual + ' ч'"></span>
                     </div>
                     <template x-if="currentTimeData.manager > 0">
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500 w-10">Рук.</span>
-                            <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full rounded bg-purple-400" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.manager / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
-                            <span class="text-xs font-medium text-purple-600 w-12 text-right" x-text="currentTimeData.manager + ' ч'"></span>
+                            <div class="flex-1 h-4 bg-gray-100 rounded overflow-hidden"><div class="h-full rounded bg-gray-300" :style="'width:' + (currentTimeData.maxHours > 0 ? Math.round(currentTimeData.manager / currentTimeData.maxHours * 100) : 0) + '%'"></div></div>
+                            <span class="text-xs font-medium text-gray-600 w-12 text-right" x-text="currentTimeData.manager + ' ч'"></span>
                         </div>
                     </template>
                     <template x-if="currentTimeData.estimated > 0">
                         <div class="text-center pt-1 border-t">
-                            <span class="text-xs font-bold" :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-green-600'" x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
+                            <span class="text-xs font-bold" :class="currentTimeData.actual > currentTimeData.estimated ? 'text-red-600' : 'text-gray-700'" x-text="Math.round(currentTimeData.actual / currentTimeData.estimated * 100) + '%'"></span>
                             <span class="text-xs text-gray-400"> от плана</span>
                         </div>
                     </template>
@@ -457,10 +453,10 @@ main { overflow: hidden; height: 100%; }
             </div>
             <!-- Легенда -->
             <div class="flex gap-3 mb-3 text-xs text-gray-500">
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Закрыто</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-300"></span>В работе</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-500"></span>Доработки</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Готово</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-600"></span>Закрыто</span>
             </div>
             <!-- Загрузка -->
             <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
@@ -540,18 +536,18 @@ document.addEventListener('alpine:init', () => {
             if (!nodes || nodes.length === 0) return '';
             let html = '';
             const statusDot = (code) => {
-                if (code === 'in_progress') return 'bg-yellow-500';
-                if (code === 'revision') return 'bg-orange-500';
-                if (code === 'done') return 'bg-green-500';
-                if (code === 'closed') return 'bg-indigo-500';
+                if (code === 'in_progress') return 'bg-gray-300';
+                if (code === 'revision') return 'bg-gray-500';
+                if (code === 'done') return 'bg-blue-400';
+                if (code === 'closed') return 'bg-blue-600';
                 return 'bg-gray-400';
             };
             const statusBadge = (code, name) => {
                 let cls = 'bg-gray-100 text-gray-600';
-                if (code === 'in_progress') cls = 'bg-yellow-100 text-yellow-800';
-                else if (code === 'revision') cls = 'bg-orange-100 text-orange-800';
-                else if (code === 'done') cls = 'bg-green-100 text-green-800';
-                else if (code === 'closed') cls = 'bg-indigo-100 text-indigo-800';
+                if (code === 'in_progress') cls = 'bg-gray-100 text-gray-700';
+                else if (code === 'revision') cls = 'bg-gray-200 text-gray-700';
+                else if (code === 'done') cls = 'bg-blue-50 text-blue-700';
+                else if (code === 'closed') cls = 'bg-blue-100 text-blue-800';
                 return `<span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${cls}">${this.esc(name)}</span>`;
             };
 
