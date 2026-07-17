@@ -311,7 +311,7 @@ $isClosed = ($task['status_code'] === 'closed');
     }
     @media (max-width: 1023px) {
         body { height: 100vh; overflow: hidden; }
-        main { overflow: hidden !important; padding-top: 2.5rem !important; padding-bottom: 3.5rem !important; padding-left: 0 !important; padding-right: 0 !important; display: flex !important; flex-direction: column !important; height: 100vh !important; box-sizing: border-box !important; }
+        main { overflow: hidden !important; padding-top: 3.25rem !important; padding-bottom: 3.5rem !important; padding-left: 0 !important; padding-right: 0 !important; display: flex !important; flex-direction: column !important; height: 100vh !important; box-sizing: border-box !important; }
     }
 </style>
 
