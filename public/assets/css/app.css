@@ -9,6 +9,11 @@
 .scrollbar-hidden::-webkit-scrollbar { display: none; }
 .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Не даём странице сдвигаться при появлении вертикальной прокрутки после фильтрации. */
+html {
+    scrollbar-gutter: stable;
+}
+
 /* Тонкий элегантный скроллбар (как на мобильных) */
 .overflow-y-auto::-webkit-scrollbar {
     width: 4px;
