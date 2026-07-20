@@ -61,23 +61,24 @@ if (!function_exists('renderSubtaskTree')) {
                 <?php endif; ?>
                 <span x-show="!editing" class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 <?= $statusColors[$child['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-600' ?>"><?= e($child['status_name'] ?? '') ?></span>
                 <?php if ($allowDelete): ?>
-                    <button x-show="!editing" type="button" @click="editing = true; $nextTick(() => $root.querySelector('input[name=title]')?.select())"
-                            class="a11y-icon-button flex-shrink-0 text-gray-400 hover:text-blue-600"
-                            aria-label="Редактировать доработку <?= e($child['title']) ?>" title="Редактировать">
-                        <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    </button>
-                    <form x-show="!editing" method="POST" action="<?= url('/tasks/' . $rootTaskId . '/subtasks/' . (int) $child['id'] . '/delete') ?>"
-                          data-confirm-delete="<?= e('Удалить доработку «' . $child['title'] . '» и все вложенные элементы? Это действие нельзя отменить.') ?>"
-                          class="flex-shrink-0">
-                        <?= csrf_field() ?>
-                        <button type="submit"
-                                class="a11y-icon-button text-gray-400 hover:text-red-600"
-                                aria-label="Удалить доработку <?= e($child['title']) ?>" title="Удалить">
-                            <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
+                    <div x-show="!editing" class="flex flex-shrink-0 items-center">
+                        <button type="button" @click="editing = true; $nextTick(() => $root.querySelector('input[name=title]')?.select())"
+                                class="a11y-icon-button text-gray-400 hover:text-blue-600"
+                                aria-label="Редактировать доработку <?= e($child['title']) ?>" title="Редактировать">
+                            <svg class="h-4 w-4 translate-x-1.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         </button>
-                    </form>
+                        <form method="POST" action="<?= url('/tasks/' . $rootTaskId . '/subtasks/' . (int) $child['id'] . '/delete') ?>"
+                              data-confirm-delete="<?= e('Удалить доработку «' . $child['title'] . '» и все вложенные элементы? Это действие нельзя отменить.') ?>">
+                            <?= csrf_field() ?>
+                            <button type="submit"
+                                    class="a11y-icon-button text-gray-400 hover:text-red-600"
+                                    aria-label="Удалить доработку <?= e($child['title']) ?>" title="Удалить">
+                                <svg class="h-4 w-4 -translate-x-1.5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 <?php endif; ?>
             </div>
             <?php if ($hasChildren): ?>
