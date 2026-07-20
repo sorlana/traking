@@ -18,6 +18,8 @@ use Middleware\TaskAccessMiddleware;
 use Middleware\ProjectAccessMiddleware;
 use Models\Task;
 use Models\Project;
+use Models\TaskComment;
+use Models\TaskLink;
 use Services\TaskTreeService;
 use Services\TimeTrackingService;
 use Services\NotificationService;
@@ -323,11 +325,23 @@ class TaskController extends Controller
         }
 
         // Если parent_id указан — получаем родительскую задачу
+        $parentChatImages = [];
         if ($parentId > 0) {
             $parentTask = $this->taskModel->find($parentId);
             if ($parentTask) {
                 $projectId = (int) $parentTask['project_id'];
                 $project = $this->projectModel->find($projectId);
+                $parentChatImages = $db->fetchAll(
+                    "SELECT tf.id, tf.file_name, tf.file_type, tc.created_at,
+                            COALESCE(u.name, u.login) AS user_name
+                     FROM task_files tf
+                     JOIN task_comments tc ON tc.id = tf.comment_id
+                     JOIN users u ON u.id = tc.user_id
+                     WHERE tf.task_id = ?
+                       AND LOWER(tf.file_type) IN ('jpg', 'jpeg', 'png', 'gif', 'webp')
+                     ORDER BY tc.created_at DESC, tf.id DESC",
+                    [$parentId]
+                );
             }
         }
 
@@ -360,6 +374,7 @@ class TaskController extends Controller
             'task' => null,
             'project' => $project,
             'parentTask' => $parentTask,
+            'parentChatImages' => $parentChatImages,
             'projectUsers' => $projectUsers,
             'statuses' => $statuses,
             'projects' => $projects,
@@ -374,6 +389,7 @@ class TaskController extends Controller
      */
     public function store(): void
     {
+        $db = Database::getInstance();
         $data = [
             'project_id' => (int) ($_POST['project_id'] ?? 0),
             'parent_id' => !empty($_POST['parent_id']) ? (int) $_POST['parent_id'] : null,
@@ -384,6 +400,8 @@ class TaskController extends Controller
             'deadline' => $_POST['deadline'] ?? null,
             'assigned_to' => !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null,
         ];
+        $sourceImageId = !empty($_POST['source_image_id']) ? (int) $_POST['source_image_id'] : null;
+        $sourceImage = null;
 
         // Проверяем доступ к проекту
         if ($data['project_id'] <= 0 || !ProjectAccessMiddleware::check($data['project_id'])) {
@@ -396,9 +414,30 @@ class TaskController extends Controller
         // Валидация
         $errors = $this->validateTaskData($data);
 
+        // Родитель и выбранное изображение должны относиться к этой же задаче/проекту.
+        if ($data['parent_id']) {
+            $parentTask = $this->taskModel->find((int) $data['parent_id']);
+            if (!$parentTask || (int) $parentTask['project_id'] !== $data['project_id']) {
+                $errors['parent_id'][] = 'Некорректная родительская задача';
+            } elseif ($sourceImageId) {
+                $sourceImage = $db->fetch(
+                    "SELECT id, file_name, file_type
+                     FROM task_files
+                     WHERE id = ? AND task_id = ? AND comment_id IS NOT NULL
+                       AND LOWER(file_type) IN ('jpg', 'jpeg', 'png', 'gif', 'webp')",
+                    [$sourceImageId, (int) $data['parent_id']]
+                );
+                if (!$sourceImage) {
+                    $errors['source_image_id'][] = 'Выбранное изображение не найдено в чате родительской задачи';
+                }
+            }
+        } elseif ($sourceImageId) {
+            $errors['source_image_id'][] = 'Ссылка на изображение доступна только для доработки';
+        }
+
         if (!empty($errors)) {
             Session::flash('errors', $errors);
-            Session::flash('old', $data);
+            Session::flash('old', array_merge($data, ['source_image_id' => $sourceImageId]));
             $redirectUrl = '/tasks/create?project_id=' . $data['project_id'];
             if ($data['parent_id']) {
                 $redirectUrl .= '&parent_id=' . $data['parent_id'];
@@ -412,7 +451,6 @@ class TaskController extends Controller
 
         // Если status_id не указан — ставим «В работе» автоматически
         if (empty($data['status_id'])) {
-            $db = Database::getInstance();
             $inProgressStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'in_progress' LIMIT 1");
             $data['status_id'] = $inProgressStatus ? (int) $inProgressStatus['id'] : 1;
         }
@@ -425,8 +463,40 @@ class TaskController extends Controller
             $data['description'] = null;
         }
 
-        // Создаём задачу
-        $taskId = $this->taskModel->create($data);
+        // Создание доработки и ссылки выполняем атомарно.
+        $pdo = $db->getConnection();
+        $pdo->beginTransaction();
+        try {
+            $taskId = $this->taskModel->create($data);
+
+            // В первой записи чата доработки сохраняем ссылку на выбранное изображение
+            // из чата родительской задачи. Сам файл не копируется.
+            if ($sourceImage) {
+                $commentModel = new TaskComment();
+                $commentId = $commentModel->create([
+                    'task_id' => (int) $taskId,
+                    'user_id' => Auth::id(),
+                    'comment_text' => 'Изображение из чата родительской задачи:',
+                    'parent_comment_id' => null,
+                ]);
+
+                $linkModel = new TaskLink();
+                $linkModel->create([
+                    'task_id' => (int) $taskId,
+                    'comment_id' => (int) $commentId,
+                    'user_id' => Auth::id(),
+                    'url' => url('/tasks/' . (int) $taskId . '/referenced-files/' . (int) $sourceImage['id'] . '/download'),
+                    'title' => mb_substr('Изображение: ' . $sourceImage['file_name'], 0, 255),
+                ]);
+            }
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
 
         // Логируем создание задачи в историю
         $this->activityLogService->log(

@@ -205,6 +205,48 @@ class FileController extends Controller
             return;
         }
 
+        $this->streamFile($file);
+    }
+
+    /**
+     * Открыть изображение родительской задачи по ссылке из чата доработки.
+     * Доступ определяется по дочерней задаче, поэтому назначенный на доработку
+     * исполнитель сможет увидеть контекст, даже если не назначен на родителя.
+     */
+    public function downloadReferenced(string $taskId, string $fileId): void
+    {
+        $taskId = (int) $taskId;
+        $fileId = (int) $fileId;
+
+        if (!TaskAccessMiddleware::check($taskId)) {
+            Response::forbidden('Нет доступа к файлу');
+            return;
+        }
+
+        $db = Database::getInstance();
+        $referenceUrl = url('/tasks/' . $taskId . '/referenced-files/' . $fileId . '/download');
+        $reference = $db->fetch(
+            "SELECT tf.*
+             FROM task_links tl
+             JOIN tasks child ON child.id = tl.task_id
+             JOIN task_files tf ON tf.id = ? AND tf.task_id = child.parent_id
+             WHERE tl.task_id = ? AND tl.url = ? AND tl.comment_id IS NOT NULL
+             LIMIT 1",
+            [$fileId, $taskId, $referenceUrl]
+        );
+
+        if (!$reference) {
+            Response::notFound('Ссылка на файл не найдена');
+            return;
+        }
+
+        $this->streamFile($reference);
+    }
+
+    /** @param array<string, mixed> $file */
+    private function streamFile(array $file): void
+    {
+
         // Полный путь к файлу
         $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
 
