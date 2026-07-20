@@ -709,6 +709,26 @@ nav[class*="fixed"] {
     border-color: var(--ui-accent) !important;
 }
 
+.app-shell :is(input[type="checkbox"], input[type="radio"]) {
+    border-color: #8f99a6 !important;
+    border-width: 1.5px !important;
+}
+
+.app-shell :is(input[type="checkbox"], input[type="radio"]):hover:not(:disabled) {
+    border-color: #707b89 !important;
+}
+
+.app-shell :is(input[type="checkbox"], input[type="radio"]):is(:checked, :indeterminate) {
+    border-color: var(--ui-accent) !important;
+}
+
+.subtask-batch-input {
+    min-height: 2.625rem;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    line-height: 1.25rem !important;
+}
+
 .app-shell .shadow-sm {
     box-shadow: none;
 }
