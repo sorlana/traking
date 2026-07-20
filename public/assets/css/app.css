@@ -705,17 +705,21 @@ nav[class*="fixed"] {
     border-color: var(--ui-border-strong) !important;
 }
 
+.app-shell :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):hover:not(:disabled):not(:focus):not([class*="border-red-"]) {
+    border-color: #909aa7 !important;
+}
+
 .app-shell :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus {
     border-color: var(--ui-accent) !important;
 }
 
 .app-shell :is(input[type="checkbox"], input[type="radio"]) {
-    border-color: #8f99a6 !important;
-    border-width: 1.5px !important;
+    border-color: var(--ui-border-strong) !important;
+    border-width: 1px !important;
 }
 
 .app-shell :is(input[type="checkbox"], input[type="radio"]):hover:not(:disabled) {
-    border-color: #707b89 !important;
+    border-color: #909aa7 !important;
 }
 
 .app-shell :is(input[type="checkbox"], input[type="radio"]):is(:checked, :indeterminate) {
@@ -788,7 +792,7 @@ nav[class*="fixed"] {
 
 .ui-btn-secondary {
     background-color: #eceef0;
-    border-color: var(--ui-border);
+    border-color: transparent;
     color: #454a52;
 }
 
