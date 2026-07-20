@@ -89,7 +89,12 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="openModal(file, msg.user_id)"
+                                         @click="if (!contextMenu.show) openModal(file, msg.user_id)"
+                                         @contextmenu.stop.prevent="showImageContext($event, msg, file)"
+                                         @touchstart.stop="startImageLongPress($event, msg, file)"
+                                         @touchend="cancelLongPress()"
+                                         @touchmove="cancelLongPress()"
+                                         <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-white/80"
                                          :alt="file.file_name">
                                 </template>
@@ -156,7 +161,12 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <!-- Изображение — превью -->
                                 <template x-if="isImage(file.file_type)">
                                     <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="openModal(file, msg.user_id)"
+                                         @click="if (!contextMenu.show) openModal(file, msg.user_id)"
+                                         @contextmenu.stop.prevent="showImageContext($event, msg, file)"
+                                         @touchstart.stop="startImageLongPress($event, msg, file)"
+                                         @touchend="cancelLongPress()"
+                                         @touchmove="cancelLongPress()"
+                                         <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
                                          class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-gray-200"
                                          :alt="file.file_name">
                                 </template>
@@ -201,6 +211,15 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
          :style="'position: fixed; left: ' + contextMenu.x + 'px; top: ' + contextMenu.y + 'px;'"
          class="z-[200] bg-white rounded-lg shadow-lg border py-1 min-w-[150px]"
          style="display: none;">
+        <!-- Создать доработку по изображению (руководитель/администратор) -->
+        <button x-show="contextMenu.file && canCreateRevision"
+                @click="openRevisionDialog(contextMenu.file)"
+                class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Создать доработку
+        </button>
         <!-- Ответить -->
         <button @click="replyToMessage(contextMenu.msg); contextMenu.show = false"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
@@ -236,6 +255,48 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </svg>
             Удалить
         </button>
+    </div>
+
+    <!-- Создание доработки по выбранному изображению -->
+    <div x-show="revisionFile" x-cloak x-transition.opacity
+         @click.self="closeRevisionDialog()"
+         @keydown.escape.window="closeRevisionDialog()"
+         class="fixed inset-0 z-[250] flex items-center justify-center bg-black/50 p-4"
+         role="dialog" aria-modal="true" aria-label="Создание доработки" style="display:none">
+        <form method="POST" action="<?= url('/tasks/create') ?>"
+              class="w-full max-w-md rounded-xl bg-white p-5" @click.stop>
+            <?= csrf_field() ?>
+            <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
+            <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
+            <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
+            <input type="hidden" name="priority" value="medium">
+            <input type="hidden" name="source_image_id" :value="revisionFile ? revisionFile.id : ''">
+
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Новая доработка</h2>
+                    <p class="mt-1 text-sm text-gray-500">Ссылка на изображение будет добавлена в чат доработки.</p>
+                </div>
+                <button type="button" @click="closeRevisionDialog()" class="a11y-icon-button text-gray-500 hover:text-gray-800" aria-label="Закрыть">✕</button>
+            </div>
+
+            <div class="mb-4 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                <img :src="revisionFile ? BASE_URL + '/files/' + revisionFile.id + '/download?t=' + (revisionFile.updated || revisionFile.id) : ''"
+                     :alt="revisionFile ? revisionFile.file_name : ''" class="h-44 w-full object-contain">
+                <p class="truncate px-3 py-2 text-xs text-gray-600" x-text="revisionFile ? revisionFile.file_name : ''"></p>
+            </div>
+
+            <label class="block text-sm font-medium text-gray-700">
+                <span class="mb-1 block">Название доработки</span>
+                <input type="text" name="title" x-model="revisionTitle" x-ref="revisionTitleInput"
+                       required maxlength="255" placeholder="Что нужно исправить?" class="ui-control">
+            </label>
+
+            <div class="mt-5 flex justify-end gap-2">
+                <button type="button" @click="closeRevisionDialog()" class="ui-btn ui-btn-secondary">Отмена</button>
+                <button type="submit" class="ui-btn ui-btn-primary">Создать доработку</button>
+            </div>
+        </form>
     </div>
 
     <!-- Модальное окно для просмотра изображения -->
@@ -432,17 +493,20 @@ function taskChat() {
         modalFile: null,
         modalFileOwnerId: null,
         modalZoom: 1,
+        revisionFile: null,
+        revisionTitle: '',
         sending: false,
         errorMessage: '',
         lastMessageId: 0,
         currentUserId: <?= (int) $currentUserId ?>,
         taskId: <?= (int) $task['id'] ?>,
         taskStatus: '<?= e($task['status_code'] ?? 'in_progress') ?>',
+        canCreateRevision: <?= can('create_task', (int) $task['project_id']) ? 'true' : 'false' ?>,
 
         // Входящее уведомление — обрабатывается через системный push
 
         // Контекстное меню
-        contextMenu: { show: false, x: 0, y: 0, msg: null },
+        contextMenu: { show: false, x: 0, y: 0, msg: null, file: null },
         longPressTimer: null,
         replyTo: null,
         editingMsg: null,
@@ -551,7 +615,11 @@ function taskChat() {
          * Показать контекстное меню (правая кнопка мыши)
          */
         showContext(event, msg) {
-            this.contextMenu = { show: true, x: event.clientX, y: event.clientY, msg: msg };
+            this.contextMenu = { show: true, x: event.clientX, y: event.clientY, msg: msg, file: null };
+        },
+
+        showImageContext(event, msg, file) {
+            this.contextMenu = { show: true, x: event.clientX, y: event.clientY, msg: msg, file: file };
         },
 
         /**
@@ -560,8 +628,28 @@ function taskChat() {
         startLongPress(event, msg) {
             this.longPressTimer = setTimeout(() => {
                 const touch = event.touches[0];
-                this.contextMenu = { show: true, x: touch.clientX, y: touch.clientY, msg: msg };
+                this.contextMenu = { show: true, x: touch.clientX, y: touch.clientY, msg: msg, file: null };
             }, 500);
+        },
+
+        startImageLongPress(event, msg, file) {
+            this.longPressTimer = setTimeout(() => {
+                const touch = event.touches[0];
+                this.contextMenu = { show: true, x: touch.clientX, y: touch.clientY, msg: msg, file: file };
+            }, 500);
+        },
+
+        openRevisionDialog(file) {
+            if (!file || !this.canCreateRevision) return;
+            this.contextMenu.show = false;
+            this.revisionFile = file;
+            this.revisionTitle = '';
+            this.$nextTick(() => this.$refs.revisionTitleInput?.focus());
+        },
+
+        closeRevisionDialog() {
+            this.revisionFile = null;
+            this.revisionTitle = '';
         },
 
         /**

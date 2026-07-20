@@ -23,19 +23,6 @@ $totalChildrenCount = countAllChildren($childrenTree ?? []);
 $currentUser = \Helpers\Auth::user();
 $roleId = (int) ($currentUser['role_id'] ?? 0);
 
-$parentChatImages = [];
-foreach ($comments ?? [] as $comment) {
-    foreach ($comment['files'] ?? [] as $file) {
-        if (in_array(strtolower($file['file_type'] ?? ''), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-            $parentChatImages[] = array_merge($file, [
-                'user_name' => $comment['user_name'] ?? $comment['user_login'] ?? '',
-                'created_at' => $comment['created_at'] ?? null,
-            ]);
-        }
-    }
-}
-require_once BASE_PATH . '/views/components/source-image-picker.php';
-
 $priorityLabels = [
     'low'    => ['label' => 'Низкий',  'class' => 'bg-gray-100 text-gray-700'],
     'medium' => ['label' => 'Средний', 'class' => 'bg-blue-100 text-blue-700'],
@@ -205,18 +192,15 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php if ($canEdit): ?>
                 <div class="mb-3">
                     <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
-                    <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="space-y-2" style="display: none;">
-                        <div class="flex gap-2">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
-                            <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
-                            <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
-                            <input type="hidden" name="priority" value="medium">
-                            <input type="text" name="title" x-ref="subtaskInput" required placeholder="Название доработки..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                            <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
-                            <button type="button" @click="showAddForm = false" class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm" aria-label="Закрыть форму">✕</button>
-                        </div>
-                        <?php renderSourceImagePicker($parentChatImages, 'desktop'); ?>
+                    <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
+                        <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
+                        <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
+                        <input type="hidden" name="priority" value="medium">
+                        <input type="text" name="title" x-ref="subtaskInput" required placeholder="Название доработки..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
+                        <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
+                        <button type="button" @click="showAddForm = false" class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm" aria-label="Закрыть форму">✕</button>
                     </form>
                 </div>
                 <?php endif; ?>
@@ -431,14 +415,11 @@ $isClosed = ($task['status_code'] === 'closed');
         <?php if ($canEdit): ?>
         <div class="mb-3">
             <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.mobileSubtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
-            <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="space-y-2" style="display: none;">
-                <div class="flex gap-2">
-                    <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>"><input type="hidden" name="priority" value="medium">
-                    <input type="text" name="title" x-ref="mobileSubtaskInput" required placeholder="Название..." class="flex-1 min-w-0 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                    <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
-                    <button type="button" @click="showAddForm = false" class="px-2 text-gray-400 hover:text-gray-600" aria-label="Закрыть форму">✕</button>
-                </div>
-                <?php renderSourceImagePicker($parentChatImages, 'mobile'); ?>
+            <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
+                <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>"><input type="hidden" name="priority" value="medium">
+                <input type="text" name="title" x-ref="mobileSubtaskInput" required placeholder="Название..." class="flex-1 min-w-0 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
+                <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
+                <button type="button" @click="showAddForm = false" class="px-2 text-gray-400 hover:text-gray-600" aria-label="Закрыть форму">✕</button>
             </form>
         </div>
         <?php endif; ?>

@@ -19,7 +19,6 @@ $fieldStatusId = $oldData['status_id'] ?? ($task['status_id'] ?? '');
 $fieldAssignedTo = $oldData['assigned_to'] ?? ($task['assigned_to'] ?? '');
 $fieldProjectId = $oldData['project_id'] ?? ($project['id'] ?? ($_GET['project_id'] ?? ''));
 $fieldParentId = $oldData['parent_id'] ?? ($parentTask['id'] ?? ($task['parent_id'] ?? ($_GET['parent_id'] ?? '')));
-require_once BASE_PATH . '/views/components/source-image-picker.php';
 
 // Автовыбор исполнителя: если создание задачи и в проекте один исполнитель
 if (!$isEdit && empty($fieldAssignedTo) && !empty($projectUsers)) {
@@ -103,12 +102,6 @@ if (!$isEdit && empty($fieldAssignedTo) && !empty($projectUsers)) {
                        maxlength="255" placeholder="Название задачи"
                        class="ui-control">
             </div>
-
-            <?php if (!$isEdit && !empty($fieldParentId)): ?>
-                <div class="mb-4">
-                    <?php renderSourceImagePicker($parentChatImages ?? [], 'full-form', !empty($oldData['source_image_id']) ? (int) $oldData['source_image_id'] : null); ?>
-                </div>
-            <?php endif; ?>
 
             <!-- Описание (показываем если заполнено) -->
             <?php if (!empty($fieldDescription)): ?>

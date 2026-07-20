@@ -325,23 +325,11 @@ class TaskController extends Controller
         }
 
         // Если parent_id указан — получаем родительскую задачу
-        $parentChatImages = [];
         if ($parentId > 0) {
             $parentTask = $this->taskModel->find($parentId);
             if ($parentTask) {
                 $projectId = (int) $parentTask['project_id'];
                 $project = $this->projectModel->find($projectId);
-                $parentChatImages = $db->fetchAll(
-                    "SELECT tf.id, tf.file_name, tf.file_type, tc.created_at,
-                            COALESCE(u.name, u.login) AS user_name
-                     FROM task_files tf
-                     JOIN task_comments tc ON tc.id = tf.comment_id
-                     JOIN users u ON u.id = tc.user_id
-                     WHERE tf.task_id = ?
-                       AND LOWER(tf.file_type) IN ('jpg', 'jpeg', 'png', 'gif', 'webp')
-                     ORDER BY tc.created_at DESC, tf.id DESC",
-                    [$parentId]
-                );
             }
         }
 
@@ -374,7 +362,6 @@ class TaskController extends Controller
             'task' => null,
             'project' => $project,
             'parentTask' => $parentTask,
-            'parentChatImages' => $parentChatImages,
             'projectUsers' => $projectUsers,
             'statuses' => $statuses,
             'projects' => $projects,
