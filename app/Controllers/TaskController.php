@@ -406,16 +406,24 @@ class TaskController extends Controller
             $parentTask = $this->taskModel->find((int) $data['parent_id']);
             if (!$parentTask || (int) $parentTask['project_id'] !== $data['project_id']) {
                 $errors['parent_id'][] = 'Некорректная родительская задача';
-            } elseif ($sourceImageId) {
-                $sourceImage = $db->fetch(
-                    "SELECT id, file_name, file_type
-                     FROM task_files
-                     WHERE id = ? AND task_id = ? AND comment_id IS NOT NULL
-                       AND LOWER(file_type) IN ('jpg', 'jpeg', 'png', 'gif', 'webp')",
-                    [$sourceImageId, (int) $data['parent_id']]
-                );
-                if (!$sourceImage) {
-                    $errors['source_image_id'][] = 'Выбранное изображение не найдено в чате родительской задачи';
+            } else {
+                // Исполнитель доработки всегда наследуется от родительской задачи.
+                // Не доверяем значению assigned_to из формы.
+                $data['assigned_to'] = !empty($parentTask['assigned_to'])
+                    ? (int) $parentTask['assigned_to']
+                    : null;
+
+                if ($sourceImageId) {
+                    $sourceImage = $db->fetch(
+                        "SELECT id, file_name, file_type
+                         FROM task_files
+                         WHERE id = ? AND task_id = ? AND comment_id IS NOT NULL
+                           AND LOWER(file_type) IN ('jpg', 'jpeg', 'png', 'gif', 'webp')",
+                        [$sourceImageId, (int) $data['parent_id']]
+                    );
+                    if (!$sourceImage) {
+                        $errors['source_image_id'][] = 'Выбранное изображение не найдено в чате родительской задачи';
+                    }
                 }
             }
         } elseif ($sourceImageId) {
@@ -858,6 +866,52 @@ class TaskController extends Controller
 
         $tree = $this->treeService->getTree($taskId);
         $this->json($tree);
+    }
+
+    /**
+     * Редактирование названия доработки из дерева родительской задачи.
+     */
+    public function editSubtask(string $parentId, string $id): void
+    {
+        $parentId = (int) $parentId;
+        $taskId = (int) $id;
+        $db = Database::getInstance();
+
+        if (!$this->canManageSubtasks($parentId)) {
+            Response::forbidden('Недостаточно прав для редактирования доработок');
+            return;
+        }
+
+        if (!$this->isDescendantOf($taskId, $parentId, $db)) {
+            Response::notFound('Доработка не найдена в этом дереве');
+            return;
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        if ($title === '') {
+            Session::flash('error', 'Введите название доработки');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+        if (mb_strlen($title) > 255) {
+            Session::flash('error', 'Название не должно превышать 255 символов');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+
+        $task = $this->taskModel->find($taskId);
+        $this->taskModel->update($taskId, ['title' => $title]);
+        $this->activityLogService->log(
+            Auth::id(),
+            (int) $task['project_id'],
+            $taskId,
+            'task_updated',
+            $task['title'],
+            $title
+        );
+
+        Session::flash('success', 'Название доработки обновлено');
+        $this->redirect('/tasks/' . $parentId);
     }
 
     /**

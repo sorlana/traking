@@ -126,6 +126,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/tasks/{id}/status', [\Controllers\TaskController::class, 'changeStatus']);
     $router->post('/tasks/{id}/close', [\Controllers\TaskController::class, 'close']);
     $router->post('/tasks/{id}/reassign', [\Controllers\TaskController::class, 'reassign']);
+    $router->post('/tasks/{parentId}/subtasks/{id}/edit', [\Controllers\TaskController::class, 'editSubtask'], ['csrf']);
     $router->post('/tasks/{parentId}/subtasks/{id}/delete', [\Controllers\TaskController::class, 'deleteSubtask'], ['csrf']);
     $router->post('/tasks/{parentId}/subtasks/delete', [\Controllers\TaskController::class, 'deleteSubtasks'], ['csrf']);
     $router->post('/tasks/{id}/delete', [\Controllers\TaskController::class, 'delete']);

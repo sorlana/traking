@@ -188,19 +188,16 @@ $isClosed = ($task['status_code'] === 'closed');
                 </nav>
             </div>
             <!-- Доработки -->
-            <div x-show="tab === 'subtasks'" x-transition class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ showAddForm: false }">
+            <div x-show="tab === 'subtasks'" x-transition data-subtask-panel class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ selected: 0 }">
                 <?php if ($canEdit): ?>
-                <div class="mb-3">
-                    <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.subtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
-                    <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
+                <div class="mb-3 border-b pb-3">
+                    <form method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2">
                         <?= csrf_field() ?>
                         <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
                         <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
-                        <input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>">
                         <input type="hidden" name="priority" value="medium">
-                        <input type="text" name="title" x-ref="subtaskInput" required placeholder="Название доработки..." class="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                        <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
-                        <button type="button" @click="showAddForm = false" class="px-2 py-1.5 text-gray-400 hover:text-gray-600 text-sm" aria-label="Закрыть форму">✕</button>
+                        <input type="text" name="title" required maxlength="255" autocomplete="off" placeholder="Название доработки..." class="min-w-0 flex-1 rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
                     </form>
                 </div>
                 <?php endif; ?>
@@ -209,13 +206,13 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php else: ?>
                     <?php include BASE_PATH . '/views/components/subtask-tree.php'; ?>
                     <?php if ($canEdit): ?>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
-                              x-data="{ selected: 0 }" class="space-y-2">
+                        <form id="desktop-subtask-bulk-form" method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                              class="mb-2">
                             <?= csrf_field() ?>
                             <div class="flex items-center justify-between gap-3 border-b pb-2">
                                 <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
                                     <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
-                                           @change="$root.querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $root.querySelectorAll('.subtask-select').length : 0">
+                                           @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
                                     Выбрать все
                                 </label>
                                 <button type="submit" x-show="selected > 0" x-cloak
@@ -224,10 +221,10 @@ $isClosed = ($task['status_code'] === 'closed');
                                     Удалить выбранные (<span x-text="selected"></span>)
                                 </button>
                             </div>
-                            <div class="space-y-1">
-                                <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id']); ?>
-                            </div>
                         </form>
+                        <div class="space-y-1">
+                            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id'], 'desktop-subtask-bulk-form'); ?>
+                        </div>
                     <?php else: ?>
                         <div class="space-y-1">
                             <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
@@ -433,15 +430,13 @@ $isClosed = ($task['status_code'] === 'closed');
     <!-- Содержимое вкладок -->
 
     <!-- Доработки -->
-    <div x-show="tab === 'subtasks'" x-cloak class="flex-1 min-h-0 overflow-y-auto px-4" x-data="{ showAddForm: false }">
+    <div x-show="tab === 'subtasks'" x-cloak data-subtask-panel class="flex-1 min-h-0 overflow-y-auto px-4" x-data="{ selected: 0 }">
         <?php if ($canEdit): ?>
-        <div class="mb-3">
-            <button x-show="!showAddForm" @click="showAddForm = true; $nextTick(() => $refs.mobileSubtaskInput.focus())" class="ui-btn ui-btn-secondary">+ Добавить</button>
-            <form x-show="showAddForm" x-transition method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2" style="display: none;">
-                <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="assigned_to" value="<?= (int) ($task['assigned_to'] ?? 0) ?>"><input type="hidden" name="priority" value="medium">
-                <input type="text" name="title" x-ref="mobileSubtaskInput" required placeholder="Название..." class="flex-1 min-w-0 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-2">
-                <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
-                <button type="button" @click="showAddForm = false" class="px-2 text-gray-400 hover:text-gray-600" aria-label="Закрыть форму">✕</button>
+        <div class="mb-3 border-b pb-3">
+            <form method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2">
+                <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="priority" value="medium">
+                <input type="text" name="title" required maxlength="255" autocomplete="off" placeholder="Название доработки..." class="min-w-0 flex-1 rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
             </form>
         </div>
         <?php endif; ?>
@@ -449,13 +444,13 @@ $isClosed = ($task['status_code'] === 'closed');
         <?php else: ?>
             <?php if (!function_exists('renderSubtaskTree')) { include BASE_PATH . '/views/components/subtask-tree.php'; } ?>
             <?php if ($canEdit): ?>
-                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
-                      x-data="{ selected: 0 }" class="space-y-2">
+                <form id="mobile-subtask-bulk-form" method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                      class="mb-2">
                     <?= csrf_field() ?>
                     <div class="flex items-center justify-between gap-2 border-b pb-2">
                         <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
                             <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
-                                   @change="$root.querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $root.querySelectorAll('.subtask-select').length : 0">
+                                   @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
                             Все
                         </label>
                         <button type="submit" x-show="selected > 0" x-cloak
@@ -464,10 +459,10 @@ $isClosed = ($task['status_code'] === 'closed');
                             Удалить (<span x-text="selected"></span>)
                         </button>
                     </div>
-                    <div class="space-y-1">
-                        <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id']); ?>
-                    </div>
                 </form>
+                <div class="space-y-1">
+                    <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id'], 'mobile-subtask-bulk-form'); ?>
+                </div>
             <?php else: ?>
                 <div class="space-y-1">
                     <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
