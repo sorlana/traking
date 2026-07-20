@@ -689,6 +689,17 @@ nav[class*="fixed"] {
     border-color: var(--ui-border);
 }
 
+/* У чата внешний бордер появляется только на десктопе через lg:border. */
+@media (min-width: 1024px) {
+    .app-shell .task-chat-panel {
+        border-color: var(--ui-border);
+    }
+}
+
+.app-shell .task-chat-panel :is(.border-t, .border-b):not([class*="border-blue-"]):not([class*="border-red-"]) {
+    border-color: var(--ui-border);
+}
+
 /* Одинаково заметная граница для нативных и системных полей ввода. */
 .app-shell :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):not([class*="border-red-"]) {
     border-color: var(--ui-border-strong) !important;
