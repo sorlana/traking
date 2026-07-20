@@ -7,7 +7,14 @@
  */
 
 if (!function_exists('renderSubtaskTree')) {
-    function renderSubtaskTree(array $nodes, array $statusColors, array $statusDots, int $depth = 0): void
+    function renderSubtaskTree(
+        array $nodes,
+        array $statusColors,
+        array $statusDots,
+        int $depth = 0,
+        bool $allowDelete = false,
+        int $rootTaskId = 0
+    ): void
     {
         foreach ($nodes as $child):
             $childOverdue = !empty($child['deadline'])
@@ -19,6 +26,12 @@ if (!function_exists('renderSubtaskTree')) {
             $hasChildren = !empty($child['children']);
         ?>
             <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>" style="margin-left: <?= $indent ?>px;">
+                <?php if ($allowDelete): ?>
+                    <input type="checkbox" name="task_ids[]" value="<?= (int) $child['id'] ?>"
+                           class="subtask-select h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600"
+                           @change="selected = $root.querySelectorAll('.subtask-select:checked').length"
+                           aria-label="Выбрать доработку <?= e($child['title']) ?>">
+                <?php endif; ?>
                 <?php if ($hasChildren): ?>
                     <span class="w-2 h-2 flex-shrink-0 text-gray-400">↳</span>
                 <?php endif; ?>
@@ -28,9 +41,20 @@ if (!function_exists('renderSubtaskTree')) {
                     <span class="text-xs <?= $childOverdue ? 'text-red-600 font-medium' : 'text-gray-400' ?> flex-shrink-0"><?= date('d.m', strtotime($child['deadline'])) ?></span>
                 <?php endif; ?>
                 <span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 <?= $statusColors[$child['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-600' ?>"><?= e($child['status_name'] ?? '') ?></span>
+                <?php if ($allowDelete): ?>
+                    <button type="submit"
+                            formaction="<?= url('/tasks/' . $rootTaskId . '/subtasks/' . (int) $child['id'] . '/delete') ?>"
+                            onclick="return confirm(<?= e(json_encode('Удалить доработку «' . $child['title'] . '» и все вложенные элементы?', JSON_UNESCAPED_UNICODE)) ?>)"
+                            class="a11y-icon-button flex-shrink-0 text-gray-400 hover:text-red-600"
+                            aria-label="Удалить доработку <?= e($child['title']) ?>" title="Удалить">
+                        <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                <?php endif; ?>
             </div>
             <?php if ($hasChildren): ?>
-                <?php renderSubtaskTree($child['children'], $statusColors, $statusDots, $depth + 1); ?>
+                <?php renderSubtaskTree($child['children'], $statusColors, $statusDots, $depth + 1, $allowDelete, $rootTaskId); ?>
             <?php endif; ?>
         <?php endforeach;
     }

@@ -207,10 +207,32 @@ $isClosed = ($task['status_code'] === 'closed');
                 <?php if (empty($childrenTree)): ?>
                     <p class="text-sm text-gray-400">Доработок нет</p>
                 <?php else: ?>
-                    <div class="space-y-1">
-                        <?php include BASE_PATH . '/views/components/subtask-tree.php'; ?>
-                        <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
-                    </div>
+                    <?php include BASE_PATH . '/views/components/subtask-tree.php'; ?>
+                    <?php if ($canEdit): ?>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                              x-data="{ selected: 0 }" class="space-y-2">
+                            <?= csrf_field() ?>
+                            <div class="flex items-center justify-between gap-3 border-b pb-2">
+                                <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+                                    <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                                           @change="$root.querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $root.querySelectorAll('.subtask-select').length : 0">
+                                    Выбрать все
+                                </label>
+                                <button type="submit" x-show="selected > 0" x-cloak
+                                        onclick="return confirm('Удалить выбранные доработки и все вложенные элементы?')"
+                                        class="ui-btn ui-btn-light text-red-600">
+                                    Удалить выбранные (<span x-text="selected"></span>)
+                                </button>
+                            </div>
+                            <div class="space-y-1">
+                                <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id']); ?>
+                            </div>
+                        </form>
+                    <?php else: ?>
+                        <div class="space-y-1">
+                            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
             <!-- Информация -->
@@ -424,10 +446,34 @@ $isClosed = ($task['status_code'] === 'closed');
         </div>
         <?php endif; ?>
         <?php if (empty($childrenTree)): ?><p class="text-sm text-gray-400">Доработок нет</p>
-        <?php else: ?><div class="space-y-1">
+        <?php else: ?>
             <?php if (!function_exists('renderSubtaskTree')) { include BASE_PATH . '/views/components/subtask-tree.php'; } ?>
-            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
-        </div><?php endif; ?>
+            <?php if ($canEdit): ?>
+                <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                      x-data="{ selected: 0 }" class="space-y-2">
+                    <?= csrf_field() ?>
+                    <div class="flex items-center justify-between gap-2 border-b pb-2">
+                        <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                                   @change="$root.querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $root.querySelectorAll('.subtask-select').length : 0">
+                            Все
+                        </label>
+                        <button type="submit" x-show="selected > 0" x-cloak
+                                onclick="return confirm('Удалить выбранные доработки и все вложенные элементы?')"
+                                class="ui-btn ui-btn-light text-red-600">
+                            Удалить (<span x-text="selected"></span>)
+                        </button>
+                    </div>
+                    <div class="space-y-1">
+                        <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id']); ?>
+                    </div>
+                </form>
+            <?php else: ?>
+                <div class="space-y-1">
+                    <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 
     <!-- Чат -->

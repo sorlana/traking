@@ -860,6 +860,90 @@ class TaskController extends Controller
         $this->json($tree);
     }
 
+    /**
+     * Удаление одной доработки из дерева родительской задачи.
+     */
+    public function deleteSubtask(string $parentId, string $id): void
+    {
+        $parentId = (int) $parentId;
+        $taskId = (int) $id;
+        $db = Database::getInstance();
+
+        if (!$this->canManageSubtasks($parentId)) {
+            Response::forbidden('Недостаточно прав для удаления доработок');
+            return;
+        }
+
+        if (!$this->isDescendantOf($taskId, $parentId, $db)) {
+            Response::notFound('Доработка не найдена в этом дереве');
+            return;
+        }
+
+        $deletedCount = $this->deleteTaskRoots([$taskId], $db);
+        Session::flash('success', $deletedCount === 1 ? 'Доработка удалена' : "Удалено элементов: {$deletedCount}");
+        $this->redirect('/tasks/' . $parentId);
+    }
+
+    /**
+     * Массовое удаление выбранных доработок из одного дерева.
+     */
+    public function deleteSubtasks(string $parentId): void
+    {
+        $parentId = (int) $parentId;
+        $db = Database::getInstance();
+
+        if (!$this->canManageSubtasks($parentId)) {
+            Response::forbidden('Недостаточно прав для удаления доработок');
+            return;
+        }
+
+        $taskIds = array_values(array_unique(array_filter(
+            array_map('intval', (array) ($_POST['task_ids'] ?? [])),
+            static fn(int $id): bool => $id > 0
+        )));
+
+        if (empty($taskIds)) {
+            Session::flash('error', 'Выберите хотя бы одну доработку');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+
+        if (count($taskIds) > 200) {
+            Session::flash('error', 'За один раз можно удалить не более 200 доработок');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+
+        foreach ($taskIds as $taskId) {
+            if (!$this->isDescendantOf($taskId, $parentId, $db)) {
+                Response::forbidden('Одна из выбранных задач не относится к этому дереву');
+                return;
+            }
+        }
+
+        // Если выбраны родитель и его ребёнок, достаточно удалить только родителя.
+        $selectedLookup = array_fill_keys($taskIds, true);
+        $rootIds = array_values(array_filter($taskIds, function (int $taskId) use ($selectedLookup, $parentId, $db): bool {
+            $current = $db->fetch('SELECT parent_id FROM tasks WHERE id = ?', [$taskId]);
+            $depth = 0;
+            while ($current && !empty($current['parent_id']) && $depth++ < 50) {
+                $ancestorId = (int) $current['parent_id'];
+                if ($ancestorId === $parentId) {
+                    break;
+                }
+                if (isset($selectedLookup[$ancestorId])) {
+                    return false;
+                }
+                $current = $db->fetch('SELECT parent_id FROM tasks WHERE id = ?', [$ancestorId]);
+            }
+            return true;
+        }));
+
+        $deletedCount = $this->deleteTaskRoots($rootIds, $db);
+        Session::flash('success', "Удалено элементов: {$deletedCount}");
+        $this->redirect('/tasks/' . $parentId);
+    }
+
     // ========================================================================
     // Приватные методы
     // ========================================================================
@@ -873,6 +957,85 @@ class TaskController extends Controller
     {
         return !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    }
+
+    private function canManageSubtasks(int $parentId): bool
+    {
+        $parent = $this->taskModel->find($parentId);
+        if (!$parent || !TaskAccessMiddleware::check($parentId)) {
+            return false;
+        }
+
+        return can('create_task', (int) $parent['project_id']);
+    }
+
+    private function isDescendantOf(int $taskId, int $parentId, Database $db): bool
+    {
+        if ($taskId <= 0 || $taskId === $parentId) {
+            return false;
+        }
+
+        $currentId = $taskId;
+        $depth = 0;
+        while ($depth++ < 50) {
+            $task = $db->fetch('SELECT parent_id FROM tasks WHERE id = ?', [$currentId]);
+            if (!$task || empty($task['parent_id'])) {
+                return false;
+            }
+            $currentId = (int) $task['parent_id'];
+            if ($currentId === $parentId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Удаляет корневые элементы выбранных веток и возвращает общее число
+     * удалённых задач с учётом вложенных доработок.
+     */
+    private function deleteTaskRoots(array $rootIds, Database $db): int
+    {
+        $allTaskIds = [];
+        foreach ($rootIds as $rootId) {
+            $allTaskIds[] = (int) $rootId;
+            $allTaskIds = array_merge($allTaskIds, $this->collectChildIds((int) $rootId, $db));
+        }
+        $allTaskIds = array_values(array_unique($allTaskIds));
+
+        if (empty($allTaskIds)) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($allTaskIds), '?'));
+        $taskFiles = $db->fetchAll(
+            "SELECT DISTINCT file_path FROM task_files WHERE task_id IN ({$placeholders})",
+            $allTaskIds
+        );
+
+        $pdo = $db->getConnection();
+        $pdo->beginTransaction();
+        try {
+            foreach ($rootIds as $rootId) {
+                $this->taskModel->delete((int) $rootId);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+
+        foreach ($taskFiles as $file) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $file['file_path'];
+            if (is_file($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        return count($allTaskIds);
     }
 
     /**
