@@ -81,7 +81,7 @@ $upLabel = !empty($parent['id'])
             <div class="flex items-center gap-1 min-w-0">
                 <a href="<?= $upUrl ?>" class="task-up-link a11y-icon-button flex-shrink-0 text-blue-600 hover:text-blue-700"
                    aria-label="<?= e($upLabel) ?>">
-                    <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-3" aria-hidden="true" fill="none" stroke="currentColor" viewBox="7 4 9 16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </a>
@@ -350,7 +350,7 @@ $upLabel = !empty($parent['id'])
     <div class="mb-2 flex min-w-0 items-center gap-1 px-4">
         <a href="<?= $upUrl ?>" class="task-up-link a11y-icon-button flex-shrink-0 text-blue-600 hover:text-blue-700"
            aria-label="<?= e($upLabel) ?>">
-            <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-3" aria-hidden="true" fill="none" stroke="currentColor" viewBox="7 4 9 16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
         </a>
