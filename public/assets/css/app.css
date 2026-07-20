@@ -934,8 +934,20 @@ nav[class*="fixed"] {
     min-height: 2.75rem;
 }
 
-.task-up-link {
-    justify-content: flex-end;
+.a11y-icon-button.task-up-link {
+    position: relative;
+    width: 1.25rem;
+    min-width: 1.25rem;
+    justify-content: flex-start;
+}
+
+.task-up-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -0.75rem;
+    width: 2.75rem;
 }
 
 .app-shell :is(a, button)[title] {
