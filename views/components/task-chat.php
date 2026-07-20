@@ -118,11 +118,22 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </template>
                         <!-- Ссылки -->
                         <template x-for="link in msg.links" :key="link.id">
-                            <a :href="link.url" target="_blank" rel="noopener"
-                               class="flex items-center gap-2 mt-1 p-2 bg-blue-100 rounded-lg text-xs text-gray-700 hover:bg-blue-200 transition">
-                                <span>🔗</span>
-                                <span x-text="link.title || link.url"></span>
-                            </a>
+                            <div class="mt-1">
+                                <template x-if="isReferencedImageLink(link)">
+                                    <button type="button" @click="openReferencedImage(link)" class="block max-w-full text-left">
+                                        <img :src="link.url" :alt="referencedImageName(link)"
+                                             class="max-h-48 max-w-full cursor-zoom-in rounded-lg border border-white/80 hover:opacity-90 transition">
+                                        <span class="mt-1 block max-w-full truncate text-xs text-blue-700" x-text="referencedImageName(link)"></span>
+                                    </button>
+                                </template>
+                                <template x-if="!isReferencedImageLink(link)">
+                                    <a :href="link.url" target="_blank" rel="noopener"
+                                       class="flex items-center gap-2 p-2 bg-blue-100 rounded-lg text-xs text-gray-700 hover:bg-blue-200 transition">
+                                        <span>🔗</span>
+                                        <span x-text="link.title || link.url"></span>
+                                    </a>
+                                </template>
+                            </div>
                         </template>
                         <!-- Время (если есть файлы/ссылки — показываем отдельно) + галочки -->
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
@@ -190,11 +201,22 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </template>
                         <!-- Ссылки -->
                         <template x-for="link in msg.links" :key="link.id">
-                            <a :href="link.url" target="_blank" rel="noopener"
-                               class="flex items-center gap-2 mt-1 p-2 bg-gray-100 rounded-lg border text-xs text-blue-600 hover:bg-blue-50 transition">
-                                <span>🔗</span>
-                                <span x-text="link.title || link.url"></span>
-                            </a>
+                            <div class="mt-1">
+                                <template x-if="isReferencedImageLink(link)">
+                                    <button type="button" @click="openReferencedImage(link)" class="block max-w-full text-left">
+                                        <img :src="link.url" :alt="referencedImageName(link)"
+                                             class="max-h-48 max-w-full cursor-zoom-in rounded-lg border border-gray-200 hover:opacity-90 transition">
+                                        <span class="mt-1 block max-w-full truncate text-xs text-blue-600" x-text="referencedImageName(link)"></span>
+                                    </button>
+                                </template>
+                                <template x-if="!isReferencedImageLink(link)">
+                                    <a :href="link.url" target="_blank" rel="noopener"
+                                       class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg border text-xs text-blue-600 hover:bg-blue-50 transition">
+                                        <span>🔗</span>
+                                        <span x-text="link.title || link.url"></span>
+                                    </a>
+                                </template>
+                            </div>
                         </template>
                         <!-- Время -->
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
@@ -310,7 +332,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             <span class="text-white text-sm truncate" x-text="modalFile ? modalFile.file_name : ''"></span>
             <div class="flex items-center gap-2">
                 <!-- Редактировать (только изображения, только свои) -->
-                <button x-show="modalFile && isImage(modalFile.file_type) && modalFileOwnerId == currentUserId"
+                <button x-show="modalFile && !modalFile.is_reference && isImage(modalFile.file_type) && modalFileOwnerId == currentUserId"
                         @click="$dispatch('open-editor', {file: modalFile}); modalFile = null; modalZoom = 1;"
                         class="text-white hover:text-green-300 p-2 rounded transition" title="Редактировать">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +341,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                     </svg>
                 </button>
                 <!-- Скачать -->
-                <a :href="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download' + '?force=1' : '#'"
+                <a :href="modalFile ? fileUrl(modalFile, false, true) : '#'"
                    class="text-white hover:text-blue-300 p-2 rounded transition" title="Скачать" download>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -339,13 +361,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         <div class="flex-1 overflow-auto flex items-center justify-center" @click.self="modalFile = null; modalZoom = 1; $nextTick(() => scrollToBottom());">
             <!-- Изображение -->
             <img x-show="modalFile && isImage(modalFile.file_type)"
-                 :src="modalFile ? BASE_URL + '/files/' + modalFile.id + '/download?t=' + (modalFile.updated || modalFile.id) : ''"
+                 :src="modalFile ? fileUrl(modalFile, true) : ''"
                  :style="'transform: scale(' + modalZoom + '); transition: transform 0.2s;'"
                  class="max-w-full max-h-full object-contain"
                  :alt="modalFile ? modalFile.file_name : ''">
             <!-- Видео -->
             <video x-show="modalFile && isVideo(modalFile.file_type)"
-                   :src="modalFile && isVideo(modalFile.file_type) ? BASE_URL + '/files/' + modalFile.id + '/download' : ''"
+                   :src="modalFile && isVideo(modalFile.file_type) ? fileUrl(modalFile) : ''"
                    controls autoplay
                    class="max-w-full max-h-full object-contain">
             </video>
@@ -1072,6 +1094,43 @@ function taskChat() {
          */
         isVideo(fileType) {
             return ['mp4', 'mov', 'webm'].includes((fileType || '').toLowerCase());
+        },
+
+        /**
+         * Ссылка, созданная вместе с доработкой и указывающая на изображение
+         * из чата родительской задачи.
+         */
+        isReferencedImageLink(link) {
+            return !!(link && link.url && /\/tasks\/\d+\/referenced-files\/\d+\/download(?:[?#]|$)/.test(link.url));
+        },
+
+        referencedImageName(link) {
+            const title = (link && link.title ? link.title : '').trim();
+            const separator = title.indexOf(':');
+            return (separator >= 0 ? title.slice(separator + 1).trim() : title) || 'Изображение из родительской задачи';
+        },
+
+        fileUrl(file, withCache = false, forceDownload = false) {
+            if (!file) return '';
+            const base = file.download_url || (BASE_URL + '/files/' + file.id + '/download');
+            const params = [];
+            if (withCache) params.push('t=' + encodeURIComponent(file.updated || file.id));
+            if (forceDownload) params.push('force=1');
+            if (params.length === 0) return base;
+            return base + (base.includes('?') ? '&' : '?') + params.join('&');
+        },
+
+        openReferencedImage(link) {
+            if (!this.isReferencedImageLink(link)) return;
+            const fileName = this.referencedImageName(link);
+            this.openModal({
+                id: 'reference-' + link.id,
+                file_name: fileName,
+                file_type: 'png',
+                download_url: link.url,
+                updated: link.id,
+                is_reference: true,
+            }, null);
         },
 
         /**
