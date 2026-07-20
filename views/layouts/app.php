@@ -277,7 +277,7 @@ if ($currentUser) {
     </main>
 
     <!-- Единое подтверждение удаления сущностей -->
-    <div id="delete-confirm-modal" hidden class="fixed inset-0 z-[100] flex items-center justify-center p-4" aria-hidden="true">
+    <div id="delete-confirm-modal" hidden class="hidden fixed inset-0 z-[100] items-center justify-center p-4" aria-hidden="true">
         <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" data-delete-modal-cancel aria-hidden="true"></div>
         <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
                  role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-message" tabindex="-1">
@@ -309,7 +309,7 @@ if ($currentUser) {
     </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=13"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=14"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>

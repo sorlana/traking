@@ -19,6 +19,11 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
     const modal = document.getElementById('delete-confirm-modal');
     if (!modal) return;
 
+    // Модалка всегда стартует закрытой независимо от порядка CSS-правил.
+    modal.hidden = true;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+
     const dialog = modal.querySelector('[role="alertdialog"]');
     const title = document.getElementById('delete-confirm-title');
     const message = document.getElementById('delete-confirm-message');
@@ -28,8 +33,10 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
     let previouslyFocused = null;
 
     function closeDeleteModal(confirmed) {
-        if (modal.hidden) return;
+        if (modal.classList.contains('hidden')) return;
         modal.hidden = true;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('overflow-hidden');
 
@@ -49,6 +56,8 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
         message.textContent = confirmationMessage || 'Удалить выбранную сущность?';
         confirmButton.textContent = options.confirmLabel || 'Удалить';
         modal.hidden = false;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('overflow-hidden');
         requestAnimationFrame(() => confirmButton.focus());
