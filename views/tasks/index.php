@@ -11,16 +11,16 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
 $priorityLabels = [
     'low' => ['label' => 'Низкий', 'class' => 'bg-gray-100 text-gray-700'],
-    'medium' => ['label' => 'Средний', 'class' => 'bg-gray-100 text-gray-700'],
-    'high' => ['label' => 'Высокий', 'class' => 'bg-gray-200 text-gray-800'],
+    'medium' => ['label' => 'Средний', 'class' => 'bg-blue-100 text-blue-700'],
+    'high' => ['label' => 'Высокий', 'class' => 'bg-orange-100 text-orange-700'],
     'urgent' => ['label' => 'Срочный', 'class' => 'bg-red-100 text-red-700'],
 ];
 
 $statusColors = [
-    'in_progress' => 'bg-gray-100 text-gray-700',
-    'revision' => 'bg-gray-200 text-gray-800',
-    'done' => 'bg-blue-50 text-blue-700',
-    'closed' => 'bg-blue-100 text-blue-800',
+    'in_progress' => 'bg-yellow-100 text-yellow-800',
+    'revision' => 'bg-orange-100 text-orange-800',
+    'done' => 'bg-green-100 text-green-800',
+    'closed' => 'bg-indigo-100 text-indigo-800',
 ];
 
 // Проверка: есть ли активные фильтры

@@ -10,8 +10,7 @@
         theme: {
             extend: {
                 colors: {
-                    blue: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
-                    indigo: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
+                    blue: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
                 }
             }
         }

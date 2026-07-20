@@ -763,23 +763,6 @@ nav[class*="fixed"] {
     background: var(--ui-surface-muted);
 }
 
-/* Status fills stay readable but no longer compete with the content. */
-.app-shell :is(.bg-amber-50, .bg-orange-50, .bg-yellow-50, .bg-green-50, .bg-indigo-50, .bg-purple-50) {
-    background-color: var(--ui-surface-muted) !important;
-}
-
-.app-shell :is(.bg-amber-100, .bg-orange-100, .bg-yellow-100, .bg-green-100, .bg-indigo-100, .bg-purple-100) {
-    background-color: #eceef0 !important;
-}
-
-.app-shell :is(.text-amber-700, .text-amber-800, .text-orange-700, .text-orange-800, .text-yellow-700, .text-yellow-800, .text-green-700, .text-green-800, .text-indigo-700, .text-indigo-800, .text-purple-700, .text-purple-800) {
-    color: #4d535b !important;
-}
-
-.app-shell :is(.border-t-amber-400, .border-t-orange-500, .border-t-green-500, .border-t-indigo-500) {
-    border-top-color: var(--ui-border-strong) !important;
-}
-
 .mobile-bottom-nav {
     border-color: var(--ui-border);
     box-shadow: 0 -8px 24px rgba(20, 24, 30, 0.05);

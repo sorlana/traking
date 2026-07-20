@@ -128,9 +128,9 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                         <h3 class="text-base font-semibold text-gray-800 line-clamp-2"><?= e($project['title']) ?></h3>
                         <?php
                         $projectStatusColors = [
-                            'new' => 'bg-gray-100 text-gray-700',
-                            'active' => 'bg-blue-50 text-blue-700',
-                            'on_hold' => 'bg-gray-200 text-gray-700',
+                            'new' => 'bg-blue-100 text-blue-700',
+                            'active' => 'bg-green-100 text-green-700',
+                            'on_hold' => 'bg-yellow-100 text-yellow-700',
                             'closed' => 'bg-gray-100 text-gray-600',
                         ];
                         $colorClass = $projectStatusColors[$project['status_code']] ?? 'bg-gray-100 text-gray-600';
@@ -162,7 +162,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                             </svg>
                             <span>Задач: <?= (int) $project['task_total'] ?></span>
                             <?php if ((int) $project['task_open'] > 0): ?>
-                                <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                <span class="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
                                     открытых: <?= (int) $project['task_open'] ?>
                                 </span>
                             <?php endif; ?>

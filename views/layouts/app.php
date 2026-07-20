@@ -47,8 +47,7 @@ if ($currentUser) {
             extend: {
                 colors: {
                     primary: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
-                    blue: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' },
-                    indigo: { 50: '#f7f7f8', 100: '#f1f2f3', 200: '#e2e4e7', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
+                    blue: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#4f6bed', 400: '#4f6bed', 500: '#4f6bed', 600: '#4f6bed', 700: '#4f6bed', 800: '#4f6bed', 900: '#4f6bed' }
                 }
             }
         }
@@ -67,7 +66,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=33">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=34">
 </head>
 <body class="app-shell min-h-screen flex flex-col bg-white">
 
