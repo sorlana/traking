@@ -869,6 +869,91 @@ class TaskController extends Controller
     }
 
     /**
+     * Создание одной или нескольких доработок из многострочного поля.
+     * Каждая непустая строка становится отдельной задачей.
+     */
+    public function createSubtasks(string $parentId): void
+    {
+        $parentId = (int) $parentId;
+        if (!$this->canManageSubtasks($parentId)) {
+            Response::forbidden('Недостаточно прав для создания доработок');
+            return;
+        }
+
+        $parent = $this->taskModel->find($parentId);
+        $titles = array_values(array_filter(
+            array_map('trim', preg_split('/\R/u', (string) ($_POST['titles'] ?? '')) ?: []),
+            static fn(string $title): bool => $title !== ''
+        ));
+
+        if (empty($titles)) {
+            Session::flash('error', 'Введите хотя бы одну доработку');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+        if (count($titles) > 50) {
+            Session::flash('error', 'За один раз можно добавить не более 50 доработок');
+            $this->redirect('/tasks/' . $parentId);
+            return;
+        }
+        foreach ($titles as $title) {
+            if (mb_strlen($title) > 255) {
+                Session::flash('error', 'Каждая строка должна быть не длиннее 255 символов');
+                $this->redirect('/tasks/' . $parentId);
+                return;
+            }
+        }
+
+        $db = Database::getInstance();
+        $inProgressStatus = $db->fetch("SELECT id FROM task_statuses WHERE code = 'in_progress' LIMIT 1");
+        $statusId = $inProgressStatus ? (int) $inProgressStatus['id'] : 1;
+        $assignedTo = !empty($parent['assigned_to']) ? (int) $parent['assigned_to'] : null;
+        $createdTaskIds = [];
+
+        $pdo = $db->getConnection();
+        $pdo->beginTransaction();
+        try {
+            foreach ($titles as $title) {
+                $createdTaskIds[] = (int) $this->taskModel->create([
+                    'project_id' => (int) $parent['project_id'],
+                    'parent_id' => $parentId,
+                    'title' => $title,
+                    'description' => null,
+                    'status_id' => $statusId,
+                    'priority' => 'medium',
+                    'deadline' => null,
+                    'created_by' => Auth::id(),
+                    'assigned_to' => $assignedTo,
+                ]);
+            }
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+
+        foreach ($createdTaskIds as $index => $taskId) {
+            $this->activityLogService->log(
+                Auth::id(),
+                (int) $parent['project_id'],
+                $taskId,
+                'task_created',
+                null,
+                $titles[$index]
+            );
+            if ($assignedTo) {
+                $this->notificationService->notifyTaskAssigned($taskId, $assignedTo);
+            }
+        }
+
+        $count = count($createdTaskIds);
+        Session::flash('success', $count === 1 ? 'Доработка добавлена' : "Добавлено доработок: {$count}");
+        $this->redirect('/tasks/' . $parentId);
+    }
+
+    /**
      * Редактирование названия доработки из дерева родительской задачи.
      */
     public function editSubtask(string $parentId, string $id): void

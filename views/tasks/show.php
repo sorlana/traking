@@ -191,12 +191,13 @@ $isClosed = ($task['status_code'] === 'closed');
             <div x-show="tab === 'subtasks'" x-transition data-subtask-panel class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ selected: 0 }">
                 <?php if ($canEdit): ?>
                 <div class="mb-3 border-b pb-3">
-                    <form method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2">
+                    <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/create') ?>" class="flex items-end gap-2">
                         <?= csrf_field() ?>
-                        <input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>">
-                        <input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>">
-                        <input type="hidden" name="priority" value="medium">
-                        <input type="text" name="title" required maxlength="255" autocomplete="off" placeholder="Название доработки..." class="min-w-0 flex-1 rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <textarea name="titles" rows="1" required maxlength="13000" autocomplete="off"
+                                  oninput="prepareSubtaskTextarea(this)"
+                                  aria-label="Названия доработок, по одной в строке"
+                                  placeholder="Каждая строка — отдельная доработка"
+                                  class="min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                         <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
                     </form>
                 </div>
@@ -433,9 +434,13 @@ $isClosed = ($task['status_code'] === 'closed');
     <div x-show="tab === 'subtasks'" x-cloak data-subtask-panel class="flex-1 min-h-0 overflow-y-auto px-4" x-data="{ selected: 0 }">
         <?php if ($canEdit): ?>
         <div class="mb-3 border-b pb-3">
-            <form method="POST" action="<?= url('/tasks/create') ?>" class="flex gap-2">
-                <?= csrf_field() ?><input type="hidden" name="project_id" value="<?= (int) $task['project_id'] ?>"><input type="hidden" name="parent_id" value="<?= (int) $task['id'] ?>"><input type="hidden" name="priority" value="medium">
-                <input type="text" name="title" required maxlength="255" autocomplete="off" placeholder="Название доработки..." class="min-w-0 flex-1 rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/create') ?>" class="flex items-end gap-2">
+                <?= csrf_field() ?>
+                <textarea name="titles" rows="1" required maxlength="13000" autocomplete="off"
+                          oninput="prepareSubtaskTextarea(this)"
+                          aria-label="Названия доработок, по одной в строке"
+                          placeholder="Каждая строка — отдельная доработка"
+                          class="min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                 <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
             </form>
         </div>
@@ -547,3 +552,22 @@ $isClosed = ($task['status_code'] === 'closed');
         <?php include BASE_PATH . '/views/components/activity-log.php'; ?>
     </div>
 </div>
+
+<script>
+function prepareSubtaskTextarea(textarea) {
+    const caretStart = textarea.selectionStart;
+    const caretEnd = textarea.selectionEnd;
+    const capitalized = textarea.value.replace(
+        /(^|\n)([ \t]*)([a-zа-яё])/giu,
+        (match, lineBreak, spaces, letter) => lineBreak + spaces + letter.toLocaleUpperCase('ru-RU')
+    );
+
+    if (capitalized !== textarea.value) {
+        textarea.value = capitalized;
+        textarea.setSelectionRange(caretStart, caretEnd);
+    }
+
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 240) + 'px';
+}
+</script>
