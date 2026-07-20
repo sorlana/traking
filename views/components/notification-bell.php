@@ -8,7 +8,7 @@
 ?>
 <div x-data="notificationBell()" x-init="init()" @keydown.escape.window="open = false" class="relative">
     <!-- Кнопка колокольчика -->
-    <button type="button" @click="toggleDropdown()" class="desktop-header-icon relative p-2 rounded-full hover:bg-gray-100 transition"
+    <button type="button" @click="toggleDropdown()" class="desktop-header-icon p-1 relative"
             :aria-label="unreadCount > 0 ? `Уведомления: непрочитанных ${unreadCount}` : 'Уведомления'"
             :aria-expanded="open.toString()" aria-controls="notification-menu">
         <!-- Обычный колокольчик -->

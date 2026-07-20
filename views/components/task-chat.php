@@ -460,7 +460,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       placeholder="Написать..."
                       rows="1"
                       maxlength="5000"
-                      class="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none overflow-hidden"
+                      class="flex-1 resize-none border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none overflow-hidden"
                       style="max-height: 150px;"></textarea>
 
             <!-- Кнопка отправить -->
