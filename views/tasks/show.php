@@ -210,9 +210,9 @@ $isClosed = ($task['status_code'] === 'closed');
                                            @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
                                     Выбрать все
                                 </label>
-                                <button type="submit" x-show="selected > 0" x-cloak
+                                <button type="submit" x-show.important="selected > 0" x-cloak
                                         class="ui-btn ui-btn-subtle">
-                                    Удалить выбранные (<span x-text="selected"></span>)
+                                    Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
                                 </button>
                             </div>
                         </form>
@@ -452,9 +452,9 @@ $isClosed = ($task['status_code'] === 'closed');
                                    @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
                             Все
                         </label>
-                        <button type="submit" x-show="selected > 0" x-cloak
+                        <button type="submit" x-show.important="selected > 0" x-cloak
                                 class="ui-btn ui-btn-subtle">
-                            Удалить (<span x-text="selected"></span>)
+                            Удалить <span class="ui-btn-count" x-text="selected"></span>
                         </button>
                     </div>
                 </form>

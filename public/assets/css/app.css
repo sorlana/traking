@@ -113,7 +113,7 @@ textarea {
     text-align: center;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 .ui-btn:focus {
@@ -784,6 +784,13 @@ nav[class*="fixed"] {
 
 .ui-btn-primary:hover {
     background-color: var(--ui-accent-hover);
+    filter: brightness(0.9);
+}
+
+:is(button, a).bg-blue-500:hover,
+:is(button, a).bg-blue-600:hover,
+:is(button, a).bg-blue-700:hover {
+    filter: brightness(0.9);
 }
 
 .ui-btn-dark {
@@ -801,13 +808,28 @@ nav[class*="fixed"] {
 }
 
 .ui-btn-subtle {
-    border-color: var(--ui-border);
+    border-color: transparent;
     background-color: var(--ui-surface-soft);
     color: #454a52;
 }
 
 .ui-btn-subtle:hover {
     background-color: var(--ui-surface-muted);
+}
+
+.ui-btn-count {
+    display: inline-flex;
+    min-width: 1.375rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: #eceef0;
+    color: #454a52;
+    padding: 0.0625rem 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-align: center;
 }
 
 .desktop-header-icon {
