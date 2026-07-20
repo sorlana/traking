@@ -783,14 +783,13 @@ nav[class*="fixed"] {
 }
 
 .ui-btn-primary:hover {
-    background-color: var(--ui-accent-hover);
-    filter: brightness(0.9);
+    background-color: color-mix(in srgb, var(--ui-accent) 88%, #000);
 }
 
 :is(button, a).bg-blue-500:hover,
 :is(button, a).bg-blue-600:hover,
 :is(button, a).bg-blue-700:hover {
-    filter: brightness(0.9);
+    background-color: color-mix(in srgb, var(--ui-accent) 88%, #000) !important;
 }
 
 .ui-btn-dark {

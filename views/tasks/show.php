@@ -144,7 +144,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php if ($canEdit && $task['status_code'] === 'done' && !$isExecutor): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть и принять задачу?')" class="inline">
                             <?= csrf_field() ?>
-                            <button type="submit" class="ui-btn ui-btn-secondary" <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>Принять и закрыть</button>
+                            <button type="submit" class="ui-btn ui-btn-secondary" <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>Закрыть</button>
                         </form>
                     <?php endif; ?>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
@@ -394,7 +394,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php endif; ?>
                     <?php if ($task['status_code'] === 'done'): ?>
                         <div class="border-t my-1"></div>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть и принять задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" <?= !$canClose['can'] ? 'disabled' : '' ?>>Принять и закрыть</button></form>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть и принять задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" <?= !$canClose['can'] ? 'disabled' : '' ?>>Закрыть</button></form>
                     <?php endif; ?>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                         <div class="border-t my-1"></div>
