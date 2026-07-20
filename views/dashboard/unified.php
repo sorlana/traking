@@ -451,13 +451,6 @@ main { overflow: hidden; height: 100%; }
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <!-- Легенда -->
-            <div class="flex gap-3 mb-3 text-xs text-gray-500">
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span>В работе</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Доработки</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>Готово</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Закрыто</span>
-            </div>
             <!-- Загрузка -->
             <div x-show="treeLoading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
             <!-- Пусто -->
@@ -535,13 +528,6 @@ document.addEventListener('alpine:init', () => {
         renderTree(nodes, depth) {
             if (!nodes || nodes.length === 0) return '';
             let html = '';
-            const statusDot = (code) => {
-                if (code === 'in_progress') return 'bg-yellow-500';
-                if (code === 'revision') return 'bg-orange-500';
-                if (code === 'done') return 'bg-green-500';
-                if (code === 'closed') return 'bg-indigo-500';
-                return 'bg-gray-400';
-            };
             const statusBadge = (code, name) => {
                 let cls = 'bg-gray-100 text-gray-600';
                 if (code === 'in_progress') cls = 'bg-yellow-100 text-yellow-800';
@@ -565,8 +551,8 @@ document.addEventListener('alpine:init', () => {
                     html += `<span class="absolute border-t border-gray-300" style="left: ${(depth - 1) * 20 + 9}px; top: 16px; width: 11px;"></span>`;
                 }
                 html += `<div class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 relative">`;
-                html += `<span class="w-2 h-2 rounded-full flex-shrink-0 ${statusDot(node.status_code)}"></span>`;
                 html += `<a href="${BASE_URL}/tasks/${node.id}" class="text-sm text-gray-800 hover:text-blue-600 font-medium flex-1 truncate">${this.esc(node.title)}</a>`;
+                html += statusBadge(node.status_code, node.status_name);
                 html += `</div>`;
                 if (hasChildren) {
                     html += this.renderTree(node.children, depth + 1);

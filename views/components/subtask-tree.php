@@ -2,7 +2,7 @@
 /**
  * Рекурсивный компонент дерева доработок
  *
- * Принимает: $nodes (массив задач с вложенными children), $statusColors, $statusDots, $depth
+ * Принимает: $nodes (массив задач с вложенными children), $statusColors, $depth
  * Рекурсивно отрисовывает все уровни вложенности.
  */
 
@@ -10,7 +10,6 @@ if (!function_exists('renderSubtaskTree')) {
     function renderSubtaskTree(
         array $nodes,
         array $statusColors,
-        array $statusDots,
         int $depth = 0,
         bool $allowDelete = false,
         int $rootTaskId = 0,
@@ -22,7 +21,6 @@ if (!function_exists('renderSubtaskTree')) {
                 && strtotime($child['deadline']) < strtotime(date('Y-m-d'))
                 && ($child['status_code'] ?? '') !== 'done'
                 && ($child['status_code'] ?? '') !== 'closed';
-            $dotColor = $statusDots[$child['status_code'] ?? ''] ?? 'bg-gray-400';
             $indent = $depth * 16; // px отступ для вложенности
             $hasChildren = !empty($child['children']);
         ?>
@@ -37,7 +35,6 @@ if (!function_exists('renderSubtaskTree')) {
                 <?php if ($hasChildren): ?>
                     <span class="w-2 h-2 flex-shrink-0 text-gray-400">↳</span>
                 <?php endif; ?>
-                <span class="w-2 h-2 rounded-full flex-shrink-0 <?= $dotColor ?>"></span>
                 <a x-show="!editing" href="<?= url('/tasks/' . (int) $child['id']) ?>" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex-1 truncate"><?= e($child['title']) ?></a>
                 <?php if ($allowDelete): ?>
                     <form x-show="editing" x-cloak method="POST"
@@ -82,7 +79,7 @@ if (!function_exists('renderSubtaskTree')) {
                 <?php endif; ?>
             </div>
             <?php if ($hasChildren): ?>
-                <?php renderSubtaskTree($child['children'], $statusColors, $statusDots, $depth + 1, $allowDelete, $rootTaskId, $bulkFormId); ?>
+                <?php renderSubtaskTree($child['children'], $statusColors, $depth + 1, $allowDelete, $rootTaskId, $bulkFormId); ?>
             <?php endif; ?>
         <?php endforeach;
     }

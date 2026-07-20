@@ -800,6 +800,16 @@ nav[class*="fixed"] {
     border-color: var(--ui-border-strong);
 }
 
+.ui-btn-subtle {
+    border-color: var(--ui-border);
+    background-color: var(--ui-surface-soft);
+    color: #454a52;
+}
+
+.ui-btn-subtle:hover {
+    background-color: var(--ui-surface-muted);
+}
+
 .desktop-header-icon {
     display: inline-flex;
     align-items: center;

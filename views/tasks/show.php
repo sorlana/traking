@@ -37,13 +37,6 @@ $statusColors = [
     'closed'      => 'bg-indigo-100 text-indigo-800',
 ];
 
-$statusDots = [
-    'in_progress' => 'bg-yellow-500',
-    'revision'    => 'bg-orange-500',
-    'done'        => 'bg-green-500',
-    'closed'      => 'bg-indigo-500',
-];
-
 $isOverdue = !empty($task['deadline'])
     && strtotime($task['deadline']) < strtotime(date('Y-m-d'))
     && !in_array($task['status_code'] ?? '', ['done', 'closed']);
@@ -218,17 +211,17 @@ $isClosed = ($task['status_code'] === 'closed');
                                     Выбрать все
                                 </label>
                                 <button type="submit" x-show="selected > 0" x-cloak
-                                        class="ui-btn ui-btn-light">
+                                        class="ui-btn ui-btn-subtle">
                                     Удалить выбранные (<span x-text="selected"></span>)
                                 </button>
                             </div>
                         </form>
                         <div class="space-y-1">
-                            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id'], 'desktop-subtask-bulk-form'); ?>
+                            <?php renderSubtaskTree($childrenTree, $statusColors, 0, true, (int) $task['id'], 'desktop-subtask-bulk-form'); ?>
                         </div>
                     <?php else: ?>
                         <div class="space-y-1">
-                            <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
+                            <?php renderSubtaskTree($childrenTree, $statusColors); ?>
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
@@ -460,17 +453,17 @@ $isClosed = ($task['status_code'] === 'closed');
                             Все
                         </label>
                         <button type="submit" x-show="selected > 0" x-cloak
-                                class="ui-btn ui-btn-light">
+                                class="ui-btn ui-btn-subtle">
                             Удалить (<span x-text="selected"></span>)
                         </button>
                     </div>
                 </form>
                 <div class="space-y-1">
-                    <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots, 0, true, (int) $task['id'], 'mobile-subtask-bulk-form'); ?>
+                    <?php renderSubtaskTree($childrenTree, $statusColors, 0, true, (int) $task['id'], 'mobile-subtask-bulk-form'); ?>
                 </div>
             <?php else: ?>
                 <div class="space-y-1">
-                    <?php renderSubtaskTree($childrenTree, $statusColors, $statusDots); ?>
+                    <?php renderSubtaskTree($childrenTree, $statusColors); ?>
                 </div>
             <?php endif; ?>
         <?php endif; ?>
