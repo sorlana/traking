@@ -732,9 +732,10 @@ nav[class*="fixed"] {
 }
 
 .subtask-batch-input {
-    min-height: 2.625rem;
-    padding-top: 0.625rem !important;
-    padding-bottom: 0.625rem !important;
+    height: 2.375rem;
+    min-height: 2.375rem;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
     line-height: 1.25rem !important;
 }
 

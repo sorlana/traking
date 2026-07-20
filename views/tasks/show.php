@@ -57,6 +57,12 @@ foreach ($statuses as $s) {
 $isDone = ($task['status_code'] === 'done');
 $isRevision = ($task['status_code'] === 'revision');
 $isClosed = ($task['status_code'] === 'closed');
+$upUrl = !empty($parent['id'])
+    ? url('/tasks/' . (int) $parent['id'])
+    : url('/projects/' . (int) $task['project_id']);
+$upLabel = !empty($parent['id'])
+    ? 'К родительской задаче «' . ($parent['title'] ?? '') . '»'
+    : 'К проекту «' . ($task['project_title'] ?? '') . '»';
 ?>
 
 <!-- ============================================================ -->
@@ -66,18 +72,19 @@ $isClosed = ($task['status_code'] === 'closed');
 
     <!-- Шапка -->
     <div class="bg-white rounded-lg shadow-sm border p-4">
-        <div class="flex items-center justify-between mb-2">
-            <nav class="flex items-center gap-1.5 text-xs text-gray-400">
-                <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500"><?= e($task['project_title'] ?? 'Проект') ?></a>
-                <?php foreach ($breadcrumbs as $crumb): ?>
-                    <span>›</span>
-                    <a href="<?= url('/tasks/' . (int) $crumb['id']) ?>" class="hover:text-blue-500 truncate max-w-[120px]" title="<?= e($crumb['title']) ?>"><?= e($crumb['title']) ?></a>
-                <?php endforeach; ?>
-            </nav>
-            <a href="<?= url('/tasks') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все задачи</a>
+        <div class="mb-2 flex items-center gap-2 text-xs text-gray-400">
+            <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="hover:text-blue-500"><?= e($task['project_title'] ?? 'Проект') ?></a>
+            <span aria-hidden="true">•</span>
+            <a href="<?= url('/tasks') ?>" class="text-blue-600 hover:text-blue-800">Все задачи</a>
         </div>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
+                <a href="<?= $upUrl ?>" class="a11y-icon-button -ml-2 flex-shrink-0 rounded-md text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                   aria-label="<?= e($upLabel) ?>">
+                    <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
                 <h1 class="text-xl font-bold text-gray-800 truncate"><?= e($task['title']) ?></h1>
                 <?php if ($isOverdue): ?>
                     <span class="flex-shrink-0 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">⚠ Просрочена</span>
@@ -190,7 +197,7 @@ $isClosed = ($task['status_code'] === 'closed');
                                   oninput="prepareSubtaskTextarea(this)"
                                   aria-label="Названия доработок, по одной в строке"
                                   placeholder="Каждая строка — доработка"
-                                  class="subtask-batch-input min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                  class="subtask-batch-input max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                         <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
                     </form>
                 </div>
@@ -335,12 +342,19 @@ $isClosed = ($task['status_code'] === 'closed');
 <div class="lg:hidden flex flex-col flex-1 min-h-0" x-data="{ tab: 'chat', reassignOpen: false }">
 
     <!-- Заголовок задачи -->
-    <div class="flex items-center justify-between mb-2 px-4">
-        <h1 class="text-lg font-bold text-gray-800 truncate"><?= e($task['title']) ?></h1>
-        <a href="<?= url('/tasks') ?>" class="flex-shrink-0 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-            Все задачи
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <div class="mb-1 flex items-center gap-2 px-4 text-xs text-gray-400">
+        <a href="<?= url('/projects/' . (int) $task['project_id']) ?>" class="truncate hover:text-blue-500"><?= e($task['project_title'] ?? 'Проект') ?></a>
+        <span class="flex-shrink-0" aria-hidden="true">•</span>
+        <a href="<?= url('/tasks') ?>" class="flex-shrink-0 text-blue-600 hover:text-blue-800">Все задачи</a>
+    </div>
+    <div class="mb-2 flex min-w-0 items-center px-4">
+        <a href="<?= $upUrl ?>" class="a11y-icon-button -ml-2 flex-shrink-0 rounded-md text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+           aria-label="<?= e($upLabel) ?>">
+            <svg class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
         </a>
+        <h1 class="min-w-0 truncate text-lg font-bold text-gray-800"><?= e($task['title']) ?></h1>
     </div>
 
     <!-- Строка статусов и действий -->
@@ -437,7 +451,7 @@ $isClosed = ($task['status_code'] === 'closed');
                           oninput="prepareSubtaskTextarea(this)"
                           aria-label="Названия доработок, по одной в строке"
                           placeholder="Каждая строка — доработка"
-                          class="subtask-batch-input min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                          class="subtask-batch-input max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                 <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
             </form>
         </div>

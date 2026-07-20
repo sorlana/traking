@@ -235,20 +235,6 @@ class TaskController extends Controller
         unset($comment);
         $parent = $this->taskModel->getParent($taskId);
 
-        // Полная цепочка родителей для breadcrumb
-        $breadcrumbs = [];
-        $currentParentId = $task['parent_id'] ?? null;
-        $maxDepth = 50; // Защита от бесконечного цикла
-        while ($currentParentId && $maxDepth-- > 0) {
-            $parentTask = $db->fetch(
-                "SELECT id, title, parent_id FROM tasks WHERE id = ?",
-                [(int) $currentParentId]
-            );
-            if (!$parentTask) break;
-            array_unshift($breadcrumbs, $parentTask);
-            $currentParentId = $parentTask['parent_id'] ?? null;
-        }
-
         // История действий
         $activityLogModel = new \Models\ActivityLog();
         $activityLog = $activityLogModel->getByTask($taskId);
@@ -281,7 +267,6 @@ class TaskController extends Controller
             'task' => $task,
             'children' => $children,
             'childrenTree' => $childrenTree,
-            'breadcrumbs' => $breadcrumbs,
             'comments' => $comments,
             'files' => $files,
             'links' => $links,
