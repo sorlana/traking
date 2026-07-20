@@ -6,16 +6,18 @@
  * Polling каждые 30 секунд для обновления счётчика.
  */
 ?>
-<div x-data="notificationBell()" x-init="init()" class="relative">
+<div x-data="notificationBell()" x-init="init()" @keydown.escape.window="open = false" class="relative">
     <!-- Кнопка колокольчика -->
-    <button @click="toggleDropdown()" class="desktop-header-icon relative p-2 rounded-full hover:bg-gray-100 transition">
+    <button type="button" @click="toggleDropdown()" class="desktop-header-icon relative p-2 rounded-full hover:bg-gray-100 transition"
+            :aria-label="unreadCount > 0 ? `Уведомления: непрочитанных ${unreadCount}` : 'Уведомления'"
+            :aria-expanded="open.toString()" aria-controls="notification-menu">
         <!-- Обычный колокольчик -->
-        <svg x-show="!dndEnabled" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="!dndEnabled" class="w-5 h-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
         </svg>
         <!-- Перечёркнутый колокольчик (DND) -->
-        <svg x-show="dndEnabled" class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg x-show="dndEnabled" class="w-5 h-5 text-red-400" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
@@ -23,23 +25,26 @@
         <!-- Бейдж с количеством -->
         <span x-show="unreadCount > 0 && !dndEnabled" x-text="unreadCount > 99 ? '99+' : unreadCount"
               x-transition
-              class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full min-w-[18px]">
+              class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full min-w-[18px]" aria-hidden="true">
         </span>
     </button>
 
     <!-- Выпадающий список уведомлений -->
-    <div x-show="open" @click.outside="open = false" x-transition:enter="transition ease-out duration-200"
+    <div id="notification-menu" x-show="open" @click.outside="open = false" x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1"
-         class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 overflow-hidden">
+         class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 overflow-hidden" aria-label="Последние уведомления">
 
         <!-- Заголовок dropdown -->
         <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
             <h3 class="text-sm font-medium text-gray-800">Уведомления</h3>
             <div class="flex items-center gap-2">
                 <!-- DND toggle (перечёркнутый колокольчик) -->
-                <button @click.stop="toggleDnd()" class="p-1 rounded hover:bg-gray-100 transition" :title="dndEnabled ? 'Включить уведомления' : 'Выключить уведомления'">
+                <button type="button" @click.stop="toggleDnd()" class="a11y-icon-button p-1 rounded hover:bg-gray-100 transition"
+                        :title="dndEnabled ? 'Включить уведомления' : 'Выключить уведомления'"
+                        :aria-label="dndEnabled ? 'Включить уведомления' : 'Выключить уведомления'"
+                        :aria-pressed="dndEnabled.toString()">
                     <!-- Колокольчик (если уведомления включены) -->
                     <svg x-show="!dndEnabled" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -57,7 +62,7 @@
         <!-- Список уведомлений -->
         <div class="max-h-80 overflow-y-auto divide-y">
             <template x-if="items.length === 0">
-                <div class="px-4 py-6 text-center text-sm text-gray-400">
+                <div class="px-4 py-6 text-center text-sm text-gray-500" role="status">
                     Нет уведомлений
                 </div>
             </template>
@@ -86,10 +91,10 @@
                         <!-- Текст -->
                         <div class="flex-1 min-w-0">
                             <p class="text-sm truncate" :class="item.is_read ? 'text-gray-500' : 'text-gray-800 font-medium'" x-text="item.title"></p>
-                            <p class="text-xs text-gray-400 mt-0.5" x-text="formatTime(item.created_at)"></p>
+                            <p class="text-xs text-gray-500 mt-0.5" x-text="formatTime(item.created_at)"></p>
                         </div>
                         <!-- Точка непрочитанного -->
-                        <span x-show="!item.is_read" class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2"></span>
+                        <span x-show="!item.is_read" class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" aria-hidden="true"></span>
                     </div>
                 </a>
             </template>
@@ -97,7 +102,7 @@
 
         <!-- Footer -->
         <div class="px-4 py-2 bg-gray-50 border-t text-center" x-show="unreadCount > 0">
-            <button @click="markAllRead()" class="text-xs text-blue-600 hover:text-blue-800">
+            <button type="button" @click="markAllRead()" class="text-xs text-blue-600 hover:text-blue-800">
                 Отметить все как прочитанные
             </button>
         </div>

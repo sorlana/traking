@@ -66,12 +66,14 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=34">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=35">
 </head>
 <body class="app-shell min-h-screen flex flex-col bg-white">
 
+    <a href="#main-content" class="skip-link">Перейти к основному содержимому</a>
+
     <!-- Навигация -->
-    <nav class="app-header bg-white border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }">
+    <nav class="app-header bg-white border-b fixed top-0 left-0 right-0 z-50" x-data="{ mobileOpen: false }" aria-label="Основная навигация">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-10 md:h-16">
                 <!-- Логотип -->
@@ -87,26 +89,31 @@ if ($currentUser) {
                     <div class="hidden md:flex items-center gap-7">
                         <?php if (\Helpers\Auth::isAdmin()): ?>
                             <a href="<?= url('/admin/users') ?>"
+                               <?= str_starts_with($currentPath, '/admin/users') ? 'aria-current="page"' : '' ?>
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/admin/users') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Пользователи
                             </a>
                         <?php else: ?>
                             <a href="<?= url('/dashboard') ?>"
+                               <?= str_starts_with($currentPath, '/dashboard') ? 'aria-current="page"' : '' ?>
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Дашборд
                             </a>
 
                             <a href="<?= url('/tasks/last') ?>"
+                               <?= str_starts_with($currentPath, '/tasks') ? 'aria-current="page"' : '' ?>
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Задачи
                             </a>
 
                             <a href="<?= url('/projects') ?>"
+                               <?= str_starts_with($currentPath, '/projects') ? 'aria-current="page"' : '' ?>
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Проекты
                             </a>
 
                             <a href="<?= url('/calendar') ?>"
+                               <?= str_starts_with($currentPath, '/calendar') ? 'aria-current="page"' : '' ?>
                                class="text-sm font-medium <?= str_starts_with($currentPath, '/calendar') ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900' ?>">
                                 Календарь
                             </a>
@@ -117,14 +124,14 @@ if ($currentUser) {
                 <!-- Правая часть: помощь + настройки + уведомления + пользователь + выход -->
                 <div class="hidden md:flex items-center gap-1">
                     <!-- Помощь -->
-                    <a href="<?= url('/help') ?>" class="desktop-header-icon p-1 relative" title="Помощь">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="<?= url('/help') ?>" class="desktop-header-icon p-1 relative" title="Помощь" aria-label="Помощь">
+                        <svg class="w-5 h-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </a>
                     <!-- Настройки -->
-                    <a href="<?= url('/settings') ?>" class="desktop-header-icon p-1 relative" title="Настройки">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="<?= url('/settings') ?>" class="desktop-header-icon p-1 relative" title="Настройки" aria-label="Настройки">
+                        <svg class="w-5 h-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -166,43 +173,45 @@ if ($currentUser) {
     </nav>
 
     <!-- Нижняя навигация (мобильная) -->
-    <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50" x-data="{ moreOpen: false }">
+    <nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50" x-data="{ moreOpen: false }" @keydown.escape.window="moreOpen = false" aria-label="Мобильная навигация">
         <div class="flex items-center h-14">
             <?php if (\Helpers\Auth::isAdmin()): ?>
-                <a href="<?= url('/admin/users') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/admin') ? 'text-blue-600' : 'text-gray-500' ?>">
+                <a href="<?= url('/admin/users') ?>" <?= str_contains($currentPath, '/admin') ? 'aria-current="page"' : '' ?> class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/admin') ? 'text-blue-600' : 'text-gray-500' ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     <span class="text-xs">Пользователи</span>
                 </a>
             <?php else: ?>
-                <a href="<?= url('/dashboard') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-500' ?>">
+                <a href="<?= url('/dashboard') ?>" <?= str_contains($currentPath, '/dashboard') ? 'aria-current="page"' : '' ?> class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/dashboard') ? 'text-blue-600' : 'text-gray-500' ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span class="text-xs">Главная</span>
                 </a>
-                <a href="<?= url('/tasks/last') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-500' ?>">
+                <a href="<?= url('/tasks/last') ?>" <?= str_contains($currentPath, '/tasks') ? 'aria-current="page"' : '' ?> class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/tasks') ? 'text-blue-600' : 'text-gray-500' ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                     <span class="text-xs">Задачи</span>
                 </a>
-                <a href="<?= url('/projects') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-500' ?>">
+                <a href="<?= url('/projects') ?>" <?= str_contains($currentPath, '/projects') ? 'aria-current="page"' : '' ?> class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/projects') ? 'text-blue-600' : 'text-gray-500' ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     <span class="text-xs">Проекты</span>
                 </a>
             <?php endif; ?>
             <!-- Уведомления -->
-            <a href="<?= url('/notifications') ?>" class="flex-1 flex flex-col items-center gap-0.5 py-1 relative <?= str_contains($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-500' ?>"
+            <a href="<?= url('/notifications') ?>" <?= str_contains($currentPath, '/notifications') ? 'aria-current="page"' : '' ?> class="flex-1 flex flex-col items-center gap-0.5 py-1 relative <?= str_contains($currentPath, '/notifications') ? 'text-blue-600' : 'text-gray-500' ?>"
+               :aria-label="unread > 0 ? `Уведомления: непрочитанных ${unread}` : 'Уведомления'"
                x-data="{ unread: 0 }" x-init="fetch(BASE_URL + '/ajax/notifications/count', {headers:{'X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(d=>{unread=d.count||0}); setInterval(()=>{fetch(BASE_URL+'/ajax/notifications/count',{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(d=>{unread=d.count||0})},30000)">
                 <div class="relative">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    <span x-show="unread > 0" x-cloak class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" style="display:none"></span>
+                    <span x-show="unread > 0" x-cloak class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" style="display:none" aria-hidden="true"></span>
                 </div>
-                <span class="text-xs">Уведом...</span>
+                <span class="text-xs">Уведомления</span>
             </a>
             <!-- Ещё -->
-            <button @click="moreOpen = !moreOpen" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/settings') || str_contains($currentPath, '/help') || str_contains($currentPath, '/calendar') ? 'text-blue-600' : 'text-gray-500' ?>">
+            <button type="button" @click="moreOpen = !moreOpen" :aria-expanded="moreOpen.toString()" aria-controls="mobile-more-menu" class="flex-1 flex flex-col items-center gap-0.5 py-1 <?= str_contains($currentPath, '/settings') || str_contains($currentPath, '/help') || str_contains($currentPath, '/calendar') ? 'text-blue-600' : 'text-gray-500' ?>">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
                 <span class="text-xs">Ещё</span>
             </button>
             <!-- Выпадающее меню «Ещё» -->
-            <div x-show="moreOpen" @click.outside="moreOpen = false" x-cloak x-transition
+            <div id="mobile-more-menu" x-show="moreOpen" @click.outside="moreOpen = false" x-cloak x-transition
+                 aria-label="Дополнительная навигация"
                  class="absolute bottom-14 right-2 bg-white rounded-lg shadow-lg border py-2 min-w-[160px]" style="display:none">
                 <?php if (!\Helpers\Auth::isAdmin()): ?>
                     <a href="<?= url('/calendar') ?>" class="flex items-center gap-3 px-4 py-2.5 text-sm <?= str_contains($currentPath, '/calendar') ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50' ?>">
@@ -227,7 +236,7 @@ if ($currentUser) {
     <?php $flashError = \Helpers\Session::getFlash('error'); ?>
 
     <?php if ($flashSuccess): ?>
-        <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4" x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 4000)">
+        <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4" x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 4000)" role="status" aria-live="polite">
             <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg p-3 shadow-lg flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -235,7 +244,7 @@ if ($currentUser) {
                     </svg>
                     <span class="text-sm"><?= e($flashSuccess) ?></span>
                 </div>
-                <button @click="show = false" class="text-green-500 hover:text-green-700 ml-2">
+                <button type="button" @click="show = false" class="text-green-500 hover:text-green-700 ml-2" aria-label="Закрыть уведомление">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
@@ -245,7 +254,7 @@ if ($currentUser) {
     <?php endif; ?>
 
     <?php if ($flashError): ?>
-        <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4" x-data="{ show: true }" x-show="show" x-transition>
+        <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4" x-data="{ show: true }" x-show="show" x-transition role="alert" aria-live="assertive">
             <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 shadow-lg flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -253,7 +262,7 @@ if ($currentUser) {
                     </svg>
                     <span class="text-sm"><?= e($flashError) ?></span>
                 </div>
-                <button @click="show = false" class="text-red-500 hover:text-red-700 ml-2">
+                <button type="button" @click="show = false" class="text-red-500 hover:text-red-700 ml-2" aria-label="Закрыть уведомление">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                     </svg>
@@ -263,12 +272,12 @@ if ($currentUser) {
     <?php endif; ?>
 
     <!-- Основное содержимое -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-28 md:pb-4 pt-14 md:pt-20">
+    <main id="main-content" tabindex="-1" class="flex-1 max-w-7xl w-full mx-auto px-4 py-4 pb-28 md:pb-4 pt-14 md:pt-20">
         <?= $content ?>
     </main>
 
     <!-- Toast-уведомления (контейнер) -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Base URL для JS-компонентов -->
     <script>

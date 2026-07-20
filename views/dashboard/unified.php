@@ -25,7 +25,7 @@ main { overflow: hidden; height: 100%; }
 }
 </style>
 
-<div x-data="dashboard" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden">
+<div x-data="dashboard" @keydown.escape.window="showInfoModal = false; showTreeModal = false" class="flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-5.5rem)] overflow-hidden">
 
     <!-- Сообщение при отсутствии проектов -->
     <template x-if="projects.length === 0">
@@ -350,7 +350,7 @@ main { overflow: hidden; height: 100%; }
     </template>
 
     <!-- Модалка со статистикой (вне template) -->
-    <div x-show="showInfoModal"
+    <div x-show="showInfoModal" role="dialog" aria-modal="true" aria-labelledby="project-stats-title"
          @click.self="showInfoModal = false"
          class="project-stats-modal md:hidden fixed inset-0 z-[200] bg-black/50 flex items-end"
          style="display: none;"
@@ -363,8 +363,8 @@ main { overflow: hidden; height: 100%; }
         <div class="bg-white w-full rounded-t-2xl p-4 pb-8 space-y-3 max-h-[70vh] overflow-y-auto"
              @click.stop>
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium text-gray-700">Статистика проекта</h3>
-                <button @click="showInfoModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                <h3 id="project-stats-title" class="text-sm font-medium text-gray-700">Статистика проекта</h3>
+                <button type="button" @click="showInfoModal = false" class="a11y-icon-button p-1 text-gray-400 hover:text-gray-600" aria-label="Закрыть статистику проекта">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -433,7 +433,7 @@ main { overflow: hidden; height: 100%; }
     </div>
 
     <!-- Модалка с деревом задач (вне template для корректного fixed позиционирования) -->
-    <div x-show="showTreeModal"
+    <div x-show="showTreeModal" role="dialog" aria-modal="true" aria-labelledby="task-tree-title"
          @click.self="showTreeModal = false"
          class="fixed inset-0 z-[200] bg-black/50 flex items-end md:items-center md:justify-center"
          style="display: none;"
@@ -446,8 +446,8 @@ main { overflow: hidden; height: 100%; }
         <div class="bg-white w-full md:w-[600px] md:max-w-[90vw] rounded-t-2xl md:rounded-2xl p-4 pb-8 max-h-[80vh] overflow-y-auto"
              @click.stop>
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-700">Дерево задач</h3>
-                <button @click="showTreeModal = false" class="p-1 text-gray-400 hover:text-gray-600">
+                <h3 id="task-tree-title" class="text-sm font-medium text-gray-700">Дерево задач</h3>
+                <button type="button" @click="showTreeModal = false" class="a11y-icon-button p-1 text-gray-400 hover:text-gray-600" aria-label="Закрыть дерево задач">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>

@@ -48,7 +48,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
 }
 ?>
 
-<div x-data="{ showFilters: false, showCreate: false }">
+<div x-data="{ showFilters: false, showCreate: false }" @keydown.escape.window="showFilters = false; showCreate = false">
 
     <!-- Заголовок + Создать + Фильтры -->
     <div class="flex items-center justify-between gap-4 mb-6">
@@ -194,13 +194,13 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
     <?php endif; ?>
 
     <!-- Модалка: Создание проекта -->
-    <div x-show="showCreate" x-transition.opacity
+    <div x-show="showCreate" x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="create-project-title"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showCreate = false" style="display: none;">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[86vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-bold text-gray-800">Новый проект</h2>
-                <button type="button" @click="showCreate = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <h2 id="create-project-title" class="text-lg font-bold text-gray-800">Новый проект</h2>
+                <button type="button" @click="showCreate = false" class="a11y-icon-button text-gray-400 hover:text-gray-600 text-xl" aria-label="Закрыть окно создания проекта">&times;</button>
             </div>
             <form method="POST" action="<?= url('/projects/create') ?>" class="p-4 space-y-4" data-mobile-form-validation>
                 <?= csrf_field() ?>
@@ -258,13 +258,13 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
     </div>
 
     <!-- Модалка: Фильтры -->
-    <div x-show="showFilters" x-transition.opacity
+    <div x-show="showFilters" x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="project-filters-title"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showFilters = false" style="display: none;">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[82vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
-                <button type="button" @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <h2 id="project-filters-title" class="text-lg font-bold text-gray-800">Фильтры</h2>
+                <button type="button" @click="showFilters = false" class="a11y-icon-button text-gray-400 hover:text-gray-600 text-xl" aria-label="Закрыть фильтры">&times;</button>
             </div>
             <form method="GET" action="<?= url('/projects') ?>" class="p-4 space-y-4">
                 <div class="mobile-filter-field">

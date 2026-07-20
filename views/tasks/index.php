@@ -80,7 +80,7 @@ if ($project ?? null) {
 }
 ?>
 
-<div class="space-y-4" x-data="{ showFilters: false, showCreate: false }">
+<div class="space-y-4" x-data="{ showFilters: false, showCreate: false }" @keydown.escape.window="showFilters = false; showCreate = false">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
     <div class="flex items-center justify-between gap-4">
         <h1 class="text-xl font-bold text-gray-800">
@@ -239,13 +239,13 @@ if ($project ?? null) {
     <?php endif; ?>
 
     <!-- Модалка: Создание задачи -->
-    <div x-show="showCreate" x-transition.opacity
+    <div x-show="showCreate" x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="create-task-title"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showCreate = false" style="display: none;">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[86vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-bold text-gray-800">Новая задача</h2>
-                <button type="button" @click="showCreate = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <h2 id="create-task-title" class="text-lg font-bold text-gray-800">Новая задача</h2>
+                <button type="button" @click="showCreate = false" class="a11y-icon-button text-gray-400 hover:text-gray-600 text-xl" aria-label="Закрыть окно создания задачи">&times;</button>
             </div>
             <form method="POST" action="<?= url('/tasks/create') ?>" class="p-4 space-y-4" data-mobile-form-validation>
                 <?= csrf_field() ?>
@@ -340,13 +340,13 @@ if ($project ?? null) {
     </div>
 
     <!-- Модалка: Фильтры -->
-    <div x-show="showFilters" x-transition.opacity
+    <div x-show="showFilters" x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="task-filters-title"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50"
          @click.self="showFilters = false" style="display: none;">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[82vh] overflow-y-auto" @click.stop>
             <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-bold text-gray-800">Фильтры</h2>
-                <button @click="showFilters = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                <h2 id="task-filters-title" class="text-lg font-bold text-gray-800">Фильтры</h2>
+                <button type="button" @click="showFilters = false" class="a11y-icon-button text-gray-400 hover:text-gray-600 text-xl" aria-label="Закрыть фильтры">&times;</button>
             </div>
             <?php
             $mobileStatusOptions = ['' => 'Все'];

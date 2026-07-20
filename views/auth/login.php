@@ -20,7 +20,7 @@
 </head>
 <body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
 
-    <div class="w-full max-w-md">
+    <main class="w-full max-w-md">
         <!-- Логотип / название -->
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Traking</h1>
@@ -39,13 +39,13 @@
             ?>
 
             <?php if ($error): ?>
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert" aria-live="assertive">
                     <?= e($error) ?>
                 </div>
             <?php endif; ?>
 
             <?php if ($success): ?>
-                <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm" role="status" aria-live="polite">
                     <?= e($success) ?>
                 </div>
             <?php endif; ?>
@@ -104,10 +104,10 @@
         </div>
 
         <!-- Подвал -->
-        <p class="text-center text-gray-400 text-sm mt-6">
+        <p class="text-center text-gray-500 text-sm mt-6">
             &copy; <?= date('Y') ?> Traking. Система управления проектами.
         </p>
-    </div>
+    </main>
 
 </body>
 </html>

@@ -780,3 +780,111 @@ nav[class*="fixed"] {
         display: none !important;
     }
 }
+
+/* Accessibility: visible keyboard focus, readable secondary text and motion preferences. */
+.skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    padding: 0.65rem 1rem;
+    border-radius: 0.625rem;
+    background: #202328;
+    color: #fff;
+    font-weight: 600;
+    transform: translateY(-160%);
+    transition: transform 150ms ease;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+.app-shell :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--ui-accent) !important;
+    outline-offset: 3px !important;
+    box-shadow: none;
+}
+
+.app-shell #main-content:focus {
+    outline: none !important;
+}
+
+.app-shell :is(.text-gray-300, .text-gray-400) {
+    color: #6b7280 !important;
+}
+
+/* Keep semantic hues while making colored labels readable on light surfaces. */
+.app-shell :is(.text-red-300, .text-red-400, .text-red-500) {
+    color: #b91c1c !important;
+}
+
+.app-shell :is(.text-green-300, .text-green-500, .text-green-600) {
+    color: #15803d !important;
+}
+
+.app-shell :is(.text-yellow-500, .text-yellow-600) {
+    color: #854d0e !important;
+}
+
+.app-shell :is(.text-orange-500, .text-orange-600) {
+    color: #c2410c !important;
+}
+
+.app-shell :is(.text-purple-500, .text-purple-600) {
+    color: #7e22ce !important;
+}
+
+.app-shell .text-indigo-500 {
+    color: #4338ca !important;
+}
+
+.a11y-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}
+
+.app-shell :is(a, button)[title] {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+}
+
+.mobile-bottom-nav > div > :is(a, button) {
+    min-height: 2.75rem;
+}
+
+.mobile-bottom-nav > div > :is(a, button) > .text-xs {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[aria-current="page"] {
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.35em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (forced-colors: active) {
+    [aria-current="page"] {
+        text-decoration: underline;
+    }
+}
