@@ -218,7 +218,7 @@ $isClosed = ($task['status_code'] === 'closed');
                                     Выбрать все
                                 </label>
                                 <button type="submit" x-show="selected > 0" x-cloak
-                                        class="ui-btn ui-btn-light text-red-600">
+                                        class="ui-btn ui-btn-light">
                                     Удалить выбранные (<span x-text="selected"></span>)
                                 </button>
                             </div>
@@ -460,7 +460,7 @@ $isClosed = ($task['status_code'] === 'closed');
                             Все
                         </label>
                         <button type="submit" x-show="selected > 0" x-cloak
-                                class="ui-btn ui-btn-light text-red-600">
+                                class="ui-btn ui-btn-light">
                             Удалить (<span x-text="selected"></span>)
                         </button>
                     </div>
