@@ -66,7 +66,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=47">
+    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=48">
 </head>
 <body class="app-shell min-h-screen flex flex-col bg-white">
 

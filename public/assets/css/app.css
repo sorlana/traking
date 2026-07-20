@@ -95,7 +95,7 @@ textarea {
 
 .ui-control:focus {
     border-color: #4f6bed !important;
-    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14) !important;
+    box-shadow: none !important;
     outline: none !important;
 }
 
@@ -583,12 +583,12 @@ nav[class*="fixed"] {
 
 .mobile-filter-details[open] .mobile-filter-trigger {
     border-color: #4f6bed;
-    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14);
+    box-shadow: none;
 }
 
 .mobile-filter-field-error .mobile-filter-trigger {
     border-color: #ef4444;
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.14);
+    box-shadow: none;
 }
 
 .mobile-filter-details[open] .mobile-filter-arrow {
@@ -597,7 +597,7 @@ nav[class*="fixed"] {
 
 .mobile-filter-trigger:focus {
     border-color: #4f6bed;
-    box-shadow: 0 0 0 2px rgba(79, 107, 237, 0.14);
+    box-shadow: none;
     outline: none;
 }
 
@@ -776,7 +776,7 @@ nav[class*="fixed"] {
 .mobile-filter-trigger:focus,
 .mobile-filter-details[open] .mobile-filter-trigger {
     border-color: var(--ui-accent) !important;
-    box-shadow: 0 0 0 3px rgba(79, 107, 237, 0.12) !important;
+    box-shadow: none !important;
 }
 
 .ui-btn {
@@ -887,10 +887,21 @@ nav[class*="fixed"] {
     transform: translateY(0);
 }
 
-.app-shell :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+.app-shell :is(a, button, summary, [tabindex]:not(input):not(select):not(textarea)):focus-visible {
     outline: 3px solid var(--ui-accent) !important;
     outline-offset: 3px !important;
     box-shadow: none;
+}
+
+/* У контролов фокус обозначается одной синей границей без второй рамки. */
+.app-shell :is(input:not([type="hidden"]):not([type="file"]):not([type="range"]), select, textarea):is(:focus, :focus-visible),
+.app-shell .mobile-filter-trigger:is(:focus, :focus-visible) {
+    border-color: var(--ui-accent) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
 }
 
 .app-shell #main-content:focus {
