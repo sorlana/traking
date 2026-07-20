@@ -196,7 +196,7 @@ $isClosed = ($task['status_code'] === 'closed');
                         <textarea name="titles" rows="1" required maxlength="13000" autocomplete="off"
                                   oninput="prepareSubtaskTextarea(this)"
                                   aria-label="Названия доработок, по одной в строке"
-                                  placeholder="Каждая строка — отдельная доработка"
+                                  placeholder="Каждая строка — доработка"
                                   class="min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                         <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
                     </form>
@@ -439,7 +439,7 @@ $isClosed = ($task['status_code'] === 'closed');
                 <textarea name="titles" rows="1" required maxlength="13000" autocomplete="off"
                           oninput="prepareSubtaskTextarea(this)"
                           aria-label="Названия доработок, по одной в строке"
-                          placeholder="Каждая строка — отдельная доработка"
+                          placeholder="Каждая строка — доработка"
                           class="min-h-[42px] max-h-60 min-w-0 flex-1 resize-none overflow-y-auto rounded-md border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                 <button type="submit" class="ui-btn ui-btn-primary">Добавить</button>
             </form>
