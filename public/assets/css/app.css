@@ -934,6 +934,10 @@ nav[class*="fixed"] {
     min-height: 2.75rem;
 }
 
+.task-up-link {
+    justify-content: flex-end;
+}
+
 .app-shell :is(a, button)[title] {
     min-width: 2.75rem;
     min-height: 2.75rem;
