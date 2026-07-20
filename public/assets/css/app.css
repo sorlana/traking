@@ -658,8 +658,8 @@ nav[class*="fixed"] {
     --ui-surface: #ffffff;
     --ui-surface-muted: #f1f2f3;
     --ui-surface-soft: #f7f7f8;
-    --ui-border: #e2e4e7;
-    --ui-border-strong: #d4d7dc;
+    --ui-border: #cbd1d8;
+    --ui-border-strong: #aeb7c2;
     --ui-text: #202328;
     --ui-text-muted: #6f747c;
     --ui-accent: #4f6bed;
@@ -682,6 +682,20 @@ nav[class*="fixed"] {
 .app-shell .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
 .app-shell .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
     border-color: var(--ui-border);
+}
+
+/* Белые карточки без семантического цветного состояния не теряются на белом фоне. */
+.app-shell .bg-white.border:not([class*="border-red-"]):not([class*="border-blue-"]):not([class*="border-green-"]):not([class*="border-yellow-"]):not([class*="border-orange-"]):not([class*="border-purple-"]) {
+    border-color: var(--ui-border);
+}
+
+/* Одинаково заметная граница для нативных и системных полей ввода. */
+.app-shell :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):not([class*="border-red-"]) {
+    border-color: var(--ui-border-strong) !important;
+}
+
+.app-shell :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus {
+    border-color: var(--ui-accent) !important;
 }
 
 .app-shell .shadow-sm {
@@ -714,7 +728,7 @@ nav[class*="fixed"] {
 
 .ui-control:hover,
 .mobile-filter-trigger:hover {
-    border-color: #b9bec6 !important;
+    border-color: #909aa7 !important;
 }
 
 .ui-control:focus,
@@ -743,11 +757,12 @@ nav[class*="fixed"] {
 
 .ui-btn-secondary {
     background-color: #eceef0;
+    border-color: var(--ui-border);
     color: #454a52;
 }
 
 .ui-btn-light {
-    border-color: var(--ui-border);
+    border-color: var(--ui-border-strong);
 }
 
 .desktop-header-icon {
