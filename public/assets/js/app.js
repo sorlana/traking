@@ -12,6 +12,91 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 /**
+ * Единое доступное модальное подтверждение удаления.
+ * Возвращает Promise<boolean> и поддерживает обычные формы и AJAX-сценарии.
+ */
+(() => {
+    const modal = document.getElementById('delete-confirm-modal');
+    if (!modal) return;
+
+    const dialog = modal.querySelector('[role="alertdialog"]');
+    const title = document.getElementById('delete-confirm-title');
+    const message = document.getElementById('delete-confirm-message');
+    const confirmButton = modal.querySelector('[data-delete-modal-confirm]');
+    const cancelButtons = modal.querySelectorAll('[data-delete-modal-cancel]');
+    let resolveConfirmation = null;
+    let previouslyFocused = null;
+
+    function closeDeleteModal(confirmed) {
+        if (modal.hidden) return;
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+
+        const resolver = resolveConfirmation;
+        resolveConfirmation = null;
+        if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+        previouslyFocused = null;
+        if (resolver) resolver(confirmed);
+    }
+
+    window.confirmDeletion = (confirmationMessage, options = {}) => new Promise((resolve) => {
+        if (resolveConfirmation) closeDeleteModal(false);
+
+        resolveConfirmation = resolve;
+        previouslyFocused = document.activeElement;
+        title.textContent = options.title || 'Подтвердите удаление';
+        message.textContent = confirmationMessage || 'Удалить выбранную сущность?';
+        confirmButton.textContent = options.confirmLabel || 'Удалить';
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(() => confirmButton.focus());
+    });
+
+    confirmButton.addEventListener('click', () => closeDeleteModal(true));
+    cancelButtons.forEach((button) => button.addEventListener('click', () => closeDeleteModal(false)));
+
+    modal.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeDeleteModal(false);
+            return;
+        }
+        if (event.key !== 'Tab') return;
+
+        const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('form[data-confirm-delete]');
+        if (!form || form.dataset.deleteConfirmed === 'true') return;
+
+        event.preventDefault();
+        const submitter = event.submitter;
+        const confirmed = await window.confirmDeletion(
+            form.dataset.confirmDelete,
+            { title: form.dataset.confirmTitle || 'Подтвердите удаление' }
+        );
+        if (!confirmed) return;
+
+        form.dataset.deleteConfirmed = 'true';
+        form.requestSubmit(submitter || undefined);
+        queueMicrotask(() => delete form.dataset.deleteConfirmed);
+    }, true);
+})();
+
+/**
  * Компактные выпадающие поля для мобильных модалок.
  * Используются в фильтрах и быстрых формах создания.
  */

@@ -66,10 +66,11 @@ if (!function_exists('renderSubtaskTree')) {
                             aria-label="Редактировать доработку <?= e($child['title']) ?>" title="Редактировать">
                         <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     </button>
-                    <form x-show="!editing" method="POST" action="<?= url('/tasks/' . $rootTaskId . '/subtasks/' . (int) $child['id'] . '/delete') ?>" class="flex-shrink-0">
+                    <form x-show="!editing" method="POST" action="<?= url('/tasks/' . $rootTaskId . '/subtasks/' . (int) $child['id'] . '/delete') ?>"
+                          data-confirm-delete="<?= e('Удалить доработку «' . $child['title'] . '» и все вложенные элементы? Это действие нельзя отменить.') ?>"
+                          class="flex-shrink-0">
                         <?= csrf_field() ?>
                         <button type="submit"
-                                onclick="return confirm(<?= e(json_encode('Удалить доработку «' . $child['title'] . '» и все вложенные элементы?', JSON_UNESCAPED_UNICODE)) ?>)"
                                 class="a11y-icon-button text-gray-400 hover:text-red-600"
                                 aria-label="Удалить доработку <?= e($child['title']) ?>" title="Удалить">
                             <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">

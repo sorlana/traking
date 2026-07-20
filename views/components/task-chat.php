@@ -720,7 +720,7 @@ function taskChat() {
          * Удалить сообщение
          */
         async deleteMessage(msg) {
-            if (!confirm('Удалить сообщение?')) return;
+            if (!(await window.confirmDeletion('Удалить сообщение? Это действие нельзя отменить.'))) return;
             try {
                 const response = await fetch(BASE_URL + `/comments/${msg.id}/delete`, {
                     method: 'POST',

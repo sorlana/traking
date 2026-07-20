@@ -218,7 +218,7 @@ function commentsComponent() {
          * Удалить комментарий
          */
         async deleteComment(commentId) {
-            if (!confirm('Удалить комментарий?')) return;
+            if (!(await window.confirmDeletion('Удалить комментарий? Это действие нельзя отменить.'))) return;
 
             try {
                 const formData = new FormData();

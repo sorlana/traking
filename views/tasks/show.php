@@ -155,7 +155,7 @@ $isClosed = ($task['status_code'] === 'closed');
                         </form>
                     <?php endif; ?>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" onsubmit="return confirm('Удалить задачу и все доработки?')" class="inline">
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" data-confirm-delete="Удалить задачу и все вложенные доработки? Это действие нельзя отменить." class="inline">
                             <?= csrf_field() ?>
                             <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
                         </form>
@@ -208,6 +208,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php include BASE_PATH . '/views/components/subtask-tree.php'; ?>
                     <?php if ($canEdit): ?>
                         <form id="desktop-subtask-bulk-form" method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                              data-confirm-delete="Удалить выбранные доработки и все вложенные элементы? Это действие нельзя отменить."
                               class="mb-2">
                             <?= csrf_field() ?>
                             <div class="flex items-center justify-between gap-3 border-b pb-2">
@@ -217,7 +218,6 @@ $isClosed = ($task['status_code'] === 'closed');
                                     Выбрать все
                                 </label>
                                 <button type="submit" x-show="selected > 0" x-cloak
-                                        onclick="return confirm('Удалить выбранные доработки и все вложенные элементы?')"
                                         class="ui-btn ui-btn-light text-red-600">
                                     Удалить выбранные (<span x-text="selected"></span>)
                                 </button>
@@ -401,7 +401,7 @@ $isClosed = ($task['status_code'] === 'closed');
                     <?php endif; ?>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
                         <div class="border-t my-1"></div>
-                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" onsubmit="return confirm('Удалить задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button></form>
+                        <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" data-confirm-delete="Удалить задачу и все вложенные доработки? Это действие нельзя отменить."><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button></form>
                     <?php endif; ?>
                 </div>
             </div>
@@ -450,6 +450,7 @@ $isClosed = ($task['status_code'] === 'closed');
             <?php if (!function_exists('renderSubtaskTree')) { include BASE_PATH . '/views/components/subtask-tree.php'; } ?>
             <?php if ($canEdit): ?>
                 <form id="mobile-subtask-bulk-form" method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/delete') ?>"
+                      data-confirm-delete="Удалить выбранные доработки и все вложенные элементы? Это действие нельзя отменить."
                       class="mb-2">
                     <?= csrf_field() ?>
                     <div class="flex items-center justify-between gap-2 border-b pb-2">
@@ -459,7 +460,6 @@ $isClosed = ($task['status_code'] === 'closed');
                             Все
                         </label>
                         <button type="submit" x-show="selected > 0" x-cloak
-                                onclick="return confirm('Удалить выбранные доработки и все вложенные элементы?')"
                                 class="ui-btn ui-btn-light text-red-600">
                             Удалить (<span x-text="selected"></span>)
                         </button>

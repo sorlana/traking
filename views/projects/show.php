@@ -33,7 +33,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
             <div class="flex items-center gap-2">
                 <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="ui-btn ui-btn-secondary">Редактировать</a>
                 <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
-                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все задачи?')" class="inline">
+                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>" class="inline">
                         <?= csrf_field() ?>
                         <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
                     </form>
@@ -72,7 +72,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                     <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                         <div class="border-t my-1"></div>
-                        <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" onsubmit="return confirm('Удалить проект?')">
+                        <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>">
                             <?= csrf_field() ?>
                             <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button>
                         </form>
@@ -259,7 +259,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                             </div>
                             <?php if (can('edit_project', (int) $project['id']) && (int) $u['id'] !== (int) $project['created_by']): ?>
                                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/remove-user') ?>"
-                                      onsubmit="return confirm('Удалить участника?')" class="inline flex-shrink-0">
+                                      data-confirm-delete="<?= e('Удалить участника «' . $u['name'] . '» из проекта?') ?>" class="inline flex-shrink-0">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="user_id" value="<?= e($u['id']) ?>">
                                     <button type="submit" class="text-red-600 hover:text-red-700 text-xs">Удалить</button>
@@ -447,7 +447,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                            class="ui-btn ui-btn-secondary">Редактировать</a>
                         <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                             <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>"
-                                  onsubmit="return confirm('Удалить проект «<?= e($project['title']) ?>» и все его задачи?')" class="inline">
+                                  data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>" class="inline">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="ui-btn bg-red-50 text-red-700 border-red-100 hover:bg-red-100">Удалить</button>
                             </form>
@@ -530,7 +530,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async deleteTask(task) {
-            if (!confirm('Удалить задачу «' + task.title + '»?')) return;
+            if (!(await window.confirmDeletion('Удалить задачу «' + task.title + '»? Это действие нельзя отменить.'))) return;
 
             try {
                 const res = await fetch(BASE_URL + '/ajax/projects/' + projectId + '/delete-task/' + task.id, {

@@ -276,6 +276,29 @@ if ($currentUser) {
         <?= $content ?>
     </main>
 
+    <!-- Единое подтверждение удаления сущностей -->
+    <div id="delete-confirm-modal" hidden class="fixed inset-0 z-[100] flex items-center justify-center p-4" aria-hidden="true">
+        <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" data-delete-modal-cancel aria-hidden="true"></div>
+        <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
+                 role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-message" tabindex="-1">
+            <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600" aria-hidden="true">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h2 id="delete-confirm-title" class="text-lg font-semibold text-gray-900">Подтвердите удаление</h2>
+                    <p id="delete-confirm-message" class="mt-2 text-sm leading-6 text-gray-600"></p>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" data-delete-modal-cancel class="ui-btn ui-btn-secondary justify-center">Отмена</button>
+                <button type="button" data-delete-modal-confirm class="ui-btn justify-center border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 focus-visible:ring-red-500">Удалить</button>
+            </div>
+        </section>
+    </div>
+
     <!-- Toast-уведомления (контейнер) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2" role="status" aria-live="polite" aria-atomic="true"></div>
 
@@ -286,7 +309,7 @@ if ($currentUser) {
     </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=12"></script>
+    <script src="<?= url('/assets/js/app.js') ?>?v=13"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>
