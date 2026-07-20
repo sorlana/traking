@@ -45,12 +45,14 @@ if (!function_exists('renderSubtaskTree')) {
                                @keydown.escape.prevent="editing = false"
                                class="min-w-0 flex-1 rounded-md border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-blue-500"
                                aria-label="Новое название доработки">
-                        <button type="submit" class="a11y-icon-button text-blue-600 hover:text-blue-800" aria-label="Сохранить название" title="Сохранить">
-                            <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-                        <button type="button" @click="editing = false" class="a11y-icon-button text-gray-400 hover:text-gray-700" aria-label="Отменить редактирование" title="Отмена">
-                            <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
+                        <div class="-mr-2 flex flex-shrink-0 items-center -space-x-3">
+                            <button type="submit" class="a11y-icon-button text-blue-600 hover:text-blue-800" aria-label="Сохранить название" title="Сохранить">
+                                <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <button type="button" @click="editing = false" class="a11y-icon-button text-gray-400 hover:text-gray-700" aria-label="Отменить редактирование" title="Отмена">
+                                <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
                     </form>
                 <?php endif; ?>
                 <?php if (!empty($child['deadline'])): ?>

@@ -156,14 +156,16 @@ if ($currentUser) {
                         echo $roleLabels[(int)($currentUser['role_id'] ?? 0)] ?? '';
                         ?>
                     </span>
-                    <span class="mx-2 h-6 w-px bg-gray-300" aria-hidden="true"></span>
-                    <a href="<?= url('/logout') ?>"
-                       class="desktop-header-icon p-1 relative"
-                       title="Выйти" aria-label="Выйти">
-                        <svg class="h-5 w-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </a>
+                    <div class="relative ml-2 flex items-center pl-3">
+                        <span class="absolute left-0 h-6 w-px bg-gray-300" aria-hidden="true"></span>
+                        <a href="<?= url('/logout') ?>"
+                           class="desktop-header-icon p-1 relative"
+                           title="Выйти" aria-label="Выйти">
+                            <svg class="h-5 w-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Мобильный хедер: имя + роль + выход -->
