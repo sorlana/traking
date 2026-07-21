@@ -112,7 +112,7 @@ class CommentController extends Controller
             $commentText = '📎 Файл';
         }
 
-        // Ответ может ссылаться на любое сообщение этой задачи, включая своё.
+        // Ответ может ссылаться только на чужое сообщение этой задачи.
         $parentCommentId = !empty($_POST['parent_comment_id']) ? (int) $_POST['parent_comment_id'] : null;
         if ($parentCommentId !== null) {
             $parentComment = $this->commentModel->find($parentCommentId);
@@ -121,6 +121,15 @@ class CommentController extends Controller
                     $this->json(['error' => 'Сообщение для ответа не найдено в этой задаче'], 422);
                 } else {
                     Session::flash('error', 'Сообщение для ответа не найдено в этой задаче');
+                    Response::back();
+                }
+                return;
+            }
+            if ((int) $parentComment['user_id'] === Auth::id()) {
+                if ($this->isAjax()) {
+                    $this->json(['error' => 'Нельзя ответить на собственное сообщение'], 422);
+                } else {
+                    Session::flash('error', 'Нельзя ответить на собственное сообщение');
                     Response::back();
                 }
                 return;

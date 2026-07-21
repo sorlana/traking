@@ -243,7 +243,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             Создать доработку
         </button>
         <!-- Ответить -->
-        <button type="button" x-show="contextMenu.msg"
+        <button type="button" x-show="contextMenu.msg && contextMenu.msg.user_id != currentUserId"
                 @click="replyToMessage(contextMenu.msg); contextMenu.show = false"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -690,7 +690,7 @@ function taskChat() {
          * Ответить на сообщение
          */
         replyToMessage(msg) {
-            if (!msg) return;
+            if (!msg || msg.user_id == this.currentUserId) return;
             const wasEditing = Boolean(this.editingMsg);
             this.editingMsg = null;
             if (wasEditing) this.newMessage = '';
