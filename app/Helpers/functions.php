@@ -33,7 +33,7 @@ if (!function_exists('asset')) {
      * Генерирует URL для статического файла (из public/assets/)
      *
      * Пример:
-     *   asset('/assets/css/app.css') → '/traking/assets/css/app.css'
+     *   asset('/assets/css/app.css') → '/traking/public/assets/css/app.css'
      *
      * @param string $path Путь к файлу (начинается с /)
      * @return string Полный путь
@@ -41,7 +41,7 @@ if (!function_exists('asset')) {
     function asset(string $path): string
     {
         $basePath = $GLOBALS['config']['base_path'] ?? '';
-        return rtrim($basePath, '/') . '/' . ltrim($path, '/');
+        return rtrim($basePath, '/') . '/public/' . ltrim($path, '/');
     }
 }
 

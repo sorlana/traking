@@ -16,7 +16,7 @@
         }
     }
     </script>
-    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>?v=2">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('/favicon.svg') ?>?v=2">
     <style>
         .login-control:focus {
             border-color: #4f6bed;

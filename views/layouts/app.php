@@ -55,10 +55,10 @@ if ($currentUser) {
     </script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=6">
+    <link rel="manifest" href="<?= asset('/manifest.json') ?>?v=6">
     <meta name="theme-color" content="#ffffff">
-    <link rel="icon" type="image/svg+xml" href="<?= url('/favicon.svg') ?>?v=2">
-    <link rel="apple-touch-icon" href="<?= url('/icons/push-icon.php') ?>?v=2">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('/favicon.svg') ?>?v=2">
+    <link rel="apple-touch-icon" href="<?= asset('/icons/push-icon.php') ?>?v=2">
     <!-- iOS: белая заставка вместо авто-генерируемой с иконкой -->
     <link rel="apple-touch-startup-image" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect fill='%23fff' width='1' height='1'/></svg>">
     <meta name="mobile-web-app-capable" content="yes">
@@ -66,7 +66,7 @@ if ($currentUser) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="csrf-token" content="<?= csrf_token() ?>">
 
-    <link rel="stylesheet" href="<?= url('/assets/css/app.css') ?>?v=54">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>?v=54">
 </head>
 <body class="app-shell min-h-screen flex flex-col bg-white">
 
@@ -79,10 +79,10 @@ if ($currentUser) {
                 <!-- Логотип -->
                 <div class="flex items-center gap-10">
                     <a href="<?= url('/dashboard') ?>" class="hidden md:flex items-center" aria-label="Flowtask">
-                        <img src="<?= url('/icons/flowtask_logo.svg') ?>?v=2" alt="Flowtask" class="h-8 w-auto">
+                        <img src="<?= asset('/icons/flowtask_logo.svg') ?>?v=2" alt="Flowtask" class="h-8 w-auto">
                     </a>
                     <a href="<?= url('/dashboard') ?>" class="md:hidden flex items-center" aria-label="Flowtask">
-                        <img src="<?= url('/favicon.svg') ?>?v=2" alt="Flowtask" class="h-8 w-8">
+                        <img src="<?= asset('/favicon.svg') ?>?v=2" alt="Flowtask" class="h-8 w-8">
                     </a>
 
                     <!-- Навигационные ссылки (десктоп) -->
@@ -315,7 +315,7 @@ if ($currentUser) {
     </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= url('/assets/js/app.js') ?>?v=14"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>?v=14"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>
