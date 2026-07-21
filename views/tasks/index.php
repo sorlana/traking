@@ -98,7 +98,7 @@ $taskFilterQuery = http_build_query(array_filter(
 $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery : '');
 ?>
 
-<div class="space-y-4"
+<div class="space-y-4 lg:flex lg:h-[calc(100vh-6rem)] lg:min-h-0 lg:flex-col lg:gap-4 lg:space-y-0 lg:overflow-hidden"
      x-data="{
          showFilters: false,
          showCreate: false,
@@ -123,7 +123,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
      }"
      @keydown.escape.window="showFilters = false; showCreate = false; showEdit = false">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4 lg:flex-shrink-0">
         <h1 class="text-xl font-bold text-gray-800">
             <?php if ($project ?? null): ?>
                 Задачи «<?= e($project['title']) ?>»
@@ -148,7 +148,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
     </div>
 
     <!-- Десктопные фильтры и массовые действия (lg+) -->
-    <div class="hidden items-end gap-4 rounded-lg border bg-white p-4 shadow-sm lg:flex">
+    <div class="hidden items-end gap-4 rounded-lg border bg-white p-4 shadow-sm lg:flex lg:flex-shrink-0">
         <form method="GET" action="<?= url('/tasks') ?>" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
             <div class="w-28">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
@@ -246,7 +246,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
             <p class="text-gray-500">Задачи не найдены</p>
         </div>
     <?php else: ?>
-        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div class="bg-white rounded-lg shadow-sm border overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <?php if (!empty($deletableTaskIds)): ?>
                 <form method="POST" action="<?= url('/tasks/delete') ?>"
                       data-confirm-delete="Удалить выбранные задачи и все вложенные элементы? Это действие нельзя отменить."
@@ -269,9 +269,9 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                     </button>
                 </form>
             <?php endif; ?>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-50 border-b">
+                    <thead class="border-b bg-gray-50 lg:sticky lg:top-0 lg:z-10">
                         <tr>
                             <th class="text-left px-4 py-3 font-medium text-gray-600">Название</th>
                             <th class="text-left px-4 py-3 font-medium text-gray-600">Статус</th>
@@ -406,7 +406,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 </table>
             </div>
         </div>
-        <p class="text-sm text-gray-400">Найдено задач: <?= count($tasks) ?></p>
+        <p class="text-sm text-gray-400 lg:flex-shrink-0">Найдено задач: <?= count($tasks) ?></p>
     <?php endif; ?>
 
     <!-- Модалка: Создание задачи -->
