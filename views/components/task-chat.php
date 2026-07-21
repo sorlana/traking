@@ -393,7 +393,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </div>
 
     <!-- Превью прикреплённого файла -->
-    <div x-show="attachedFile" x-cloak class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2" style="display:none">>
+    <div x-show="attachedFile" x-cloak class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2" style="display:none">
         <span class="text-xs text-gray-600">📎</span>
         <span class="text-xs text-gray-700 truncate flex-1" x-text="attachedFile ? attachedFile.name : ''"></span>
         <!-- Toggle Редактировать (только для изображений) -->
@@ -412,12 +412,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </div>
 
     <!-- Блок «Ответ на...» или «Редактирование» -->
-    <div x-show="replyTo || editingMsg" class="px-4 py-2 border-t bg-blue-50 flex items-center justify-between" style="display:none !important" :style="(replyTo || editingMsg) ? 'display:flex!important' : 'display:none!important'">>
-        <div class="text-xs text-blue-700">
+    <div x-show="replyTo || editingMsg" class="border-t bg-white px-4 py-1 flex items-center justify-between" style="display:none !important" :style="(replyTo || editingMsg) ? 'display:flex!important' : 'display:none!important'">
+        <div class="text-xs">
             <span x-show="replyTo">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
-            <span x-show="editingMsg">✏️ Редактирование</span>
+            <span x-show="editingMsg" class="font-semibold text-gray-700">Редактирование</span>
         </div>
-        <button @click="cancelReply(); cancelEdit();" class="text-xs text-gray-500 hover:text-red-500">✕</button>
+        <button type="button" @click="cancelReply(); cancelEdit();"
+                class="inline-flex h-6 w-6 items-center justify-center text-base font-bold leading-none text-gray-700 hover:text-black"
+                aria-label="Отменить редактирование или ответ">✕</button>
     </div>
 
     <!-- Поле ввода -->
@@ -460,8 +462,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       placeholder="Написать..."
                       rows="1"
                       maxlength="5000"
-                      class="flex-1 resize-none border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none overflow-hidden"
-                      style="max-height: 150px;"></textarea>
+                      class="min-w-0 flex-1 resize-none overflow-hidden border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"></textarea>
 
             <!-- Кнопка отправить -->
             <button @click="sendMessage()"
@@ -703,9 +704,15 @@ function taskChat() {
          * Редактировать сообщение
          */
         editMessage(msg) {
+            this.replyTo = null;
             this.editingMsg = msg;
             this.newMessage = msg.comment_text;
-            this.$refs.messageInput.focus();
+            this.$nextTick(() => {
+                const input = this.$refs.messageInput;
+                this.resizeMessageInput(input);
+                input?.focus();
+                if (input) input.setSelectionRange(input.value.length, input.value.length);
+            });
         },
 
         /**
@@ -714,6 +721,7 @@ function taskChat() {
         cancelEdit() {
             this.editingMsg = null;
             this.newMessage = '';
+            this.$nextTick(() => this.resetMessageInput());
         },
 
         /**
@@ -979,6 +987,7 @@ function taskChat() {
             this.$nextTick(() => {
                 input.focus();
                 input.selectionStart = input.selectionEnd = start + emoji.length;
+                this.resizeMessageInput(input);
             });
         },
 
@@ -1034,9 +1043,18 @@ function taskChat() {
          * Авто-увеличение textarea
          */
         autoResize(event) {
-            const el = event.target;
+            this.resizeMessageInput(event.target);
+        },
+
+        resizeMessageInput(el) {
+            if (!el) return;
             el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+            el.style.height = el.scrollHeight + 'px';
+        },
+
+        resetMessageInput() {
+            const el = this.$refs.messageInput;
+            if (el) el.style.height = 'auto';
         },
 
         /**
