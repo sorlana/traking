@@ -243,7 +243,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             Создать доработку
         </button>
         <!-- Ответить -->
-        <button @click="replyToMessage(contextMenu.msg); contextMenu.show = false"
+        <button type="button" x-show="contextMenu.msg"
+                @click="replyToMessage(contextMenu.msg); contextMenu.show = false"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
@@ -689,8 +690,16 @@ function taskChat() {
          * Ответить на сообщение
          */
         replyToMessage(msg) {
+            if (!msg) return;
+            const wasEditing = Boolean(this.editingMsg);
+            this.editingMsg = null;
+            if (wasEditing) this.newMessage = '';
             this.replyTo = msg;
-            this.$refs.messageInput.focus();
+            this.$nextTick(() => {
+                const input = this.$refs.messageInput;
+                this.resizeMessageInput(input);
+                input?.focus();
+            });
         },
 
         /**

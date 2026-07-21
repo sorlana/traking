@@ -112,12 +112,27 @@ class CommentController extends Controller
             $commentText = '📎 Файл';
         }
 
+        // Ответ может ссылаться на любое сообщение этой задачи, включая своё.
+        $parentCommentId = !empty($_POST['parent_comment_id']) ? (int) $_POST['parent_comment_id'] : null;
+        if ($parentCommentId !== null) {
+            $parentComment = $this->commentModel->find($parentCommentId);
+            if (!$parentComment || (int) $parentComment['task_id'] !== $taskId) {
+                if ($this->isAjax()) {
+                    $this->json(['error' => 'Сообщение для ответа не найдено в этой задаче'], 422);
+                } else {
+                    Session::flash('error', 'Сообщение для ответа не найдено в этой задаче');
+                    Response::back();
+                }
+                return;
+            }
+        }
+
         // Создаём комментарий
         $data = [
             'task_id' => $taskId,
             'user_id' => Auth::id(),
             'comment_text' => $commentText,
-            'parent_comment_id' => !empty($_POST['parent_comment_id']) ? (int) $_POST['parent_comment_id'] : null,
+            'parent_comment_id' => $parentCommentId,
         ];
 
         $commentId = $this->commentModel->create($data);
