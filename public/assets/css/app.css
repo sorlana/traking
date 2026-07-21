@@ -947,9 +947,14 @@ nav[class*="fixed"] {
 
 .a11y-icon-button.task-up-link {
     position: relative;
-    width: 0.625rem;
-    min-width: 0.625rem;
+    width: 0.5rem;
+    min-width: 0.5rem;
     justify-content: flex-start;
+}
+
+.task-up-icon {
+    width: 0.5rem;
+    height: 0.75rem;
 }
 
 .task-up-link::before {
