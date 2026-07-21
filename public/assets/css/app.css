@@ -178,7 +178,8 @@ textarea {
 }
 
 .desktop-header-icon:hover {
-    color: #374151;
+    color: #000000;
+    background-color: transparent;
 }
 
 /* Загрузочный экран мобильного приложения */
@@ -847,7 +848,16 @@ nav[class*="fixed"] {
 }
 
 .desktop-header-icon:hover {
-    background: var(--ui-surface-muted);
+    color: #000000;
+    background: transparent;
+}
+
+/* Серые интерактивные иконки во всём приложении становятся чёрными. */
+.app-shell :is(a, button, label, summary):has(svg):is([class*="text-gray-"], [class*="text-slate-"]):hover,
+.app-shell :is(a, button, label, summary):is([aria-label], [title], .a11y-icon-button):is([class*="text-gray-"], [class*="text-slate-"]):hover,
+.app-shell :is(a, button, label, summary):hover svg:is([class*="text-gray-"], [class*="text-slate-"]),
+.app-shell .drag-handle:hover {
+    color: #000000 !important;
 }
 
 .mobile-bottom-nav {
