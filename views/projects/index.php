@@ -79,13 +79,22 @@ $projectStatusColors = [
      x-data="{
          showFilters: false,
          showCreate: false,
+         showEdit: false,
+         editProject: {},
          selectedProjects: [],
          deletableProjectIds: <?= json_encode(array_map('intval', array_keys($deletableProjectIds))) ?>,
          toggleAllProjects(checked) {
              this.selectedProjects = checked ? [...this.deletableProjectIds] : [];
+         },
+         openEdit(project) {
+             this.editProject = { ...project };
+             this.showCreate = false;
+             this.showFilters = false;
+             this.showEdit = true;
+             this.$nextTick(() => this.$refs.editProjectTitle?.focus());
          }
      }"
-     @keydown.escape.window="showFilters = false; showCreate = false">
+     @keydown.escape.window="showFilters = false; showCreate = false; showEdit = false">
 
     <!-- Заголовок + Создать + Фильтры -->
     <div class="flex items-center justify-between gap-4 lg:flex-shrink-0">
@@ -94,7 +103,7 @@ $projectStatusColors = [
         <div class="flex items-center gap-2">
             <?php if (can('create_project')): ?>
                 <button type="button"
-                        @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createProjectTitle?.focus())"
+                        @click="showCreate = true; showEdit = false; showFilters = false; $nextTick(() => $refs.createProjectTitle?.focus())"
                         class="ui-btn ui-btn-primary">
                     Создать
                 </button>
@@ -292,11 +301,19 @@ $projectStatusColors = [
                                         <?php if ($canEditProject || $canDeleteProject): ?>
                                             <div class="flex items-center justify-end -space-x-3">
                                                 <?php if ($canEditProject): ?>
-                                                    <a href="<?= url('/projects/' . $projectId . '/edit') ?>"
+                                                    <button type="button"
+                                                       @click='openEdit(<?= json_encode([
+                                                           'id' => $projectId,
+                                                           'title' => $project['title'],
+                                                           'description' => $project['description'] ?? '',
+                                                           'deadline' => $project['deadline'] ?? '',
+                                                           'estimated_hours' => $project['estimated_hours'] ?? '',
+                                                           'status_id' => (int) $project['status_id'],
+                                                       ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>)'
                                                        class="a11y-icon-button text-gray-400 hover:text-black"
                                                        aria-label="Редактировать проект <?= e($project['title']) ?>" title="Редактировать">
                                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                                    </a>
+                                                    </button>
                                                 <?php endif; ?>
                                                 <?php if ($canDeleteProject): ?>
                                                     <form method="POST" action="<?= url('/projects/' . $projectId . '/delete') ?>"
@@ -380,6 +397,68 @@ $projectStatusColors = [
                 <div class="flex gap-2 pt-2 border-t">
                     <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
                     <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка: Редактирование проекта -->
+    <div x-show="showEdit" x-cloak x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="edit-project-title"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+         @click.self="showEdit = false" style="display: none;">
+        <div class="max-h-[86vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white shadow-xl" @click.stop>
+            <div class="flex items-center justify-between border-b p-4">
+                <h2 id="edit-project-title" class="text-lg font-bold text-gray-800">Редактирование проекта</h2>
+                <button type="button" @click="showEdit = false"
+                        class="a11y-icon-button text-xl text-gray-400 hover:text-black"
+                        aria-label="Закрыть окно редактирования проекта">&times;</button>
+            </div>
+            <form method="POST" :action="'<?= url('/projects') ?>/' + editProject.id + '/edit'"
+                  class="space-y-4 p-4">
+                <?= csrf_field() ?>
+                <input type="hidden" name="redirect_to" value="<?= e($projectsReturnUrl) ?>">
+
+                <div>
+                    <label for="edit_project_title_input" class="mb-1 block text-xs font-medium text-gray-500">
+                        Название проекта <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="edit_project_title_input" name="title" x-ref="editProjectTitle"
+                           x-model="editProject.title" required maxlength="255" class="ui-control">
+                </div>
+
+                <div>
+                    <label for="edit_project_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
+                    <textarea id="edit_project_description" name="description" x-model="editProject.description"
+                              rows="3" placeholder="Описание проекта" class="ui-control"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label for="edit_project_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок сдачи</label>
+                        <input type="date" id="edit_project_deadline" name="deadline"
+                               x-model="editProject.deadline" class="ui-control">
+                    </div>
+                    <div>
+                        <label for="edit_project_estimated_hours" class="mb-1 block text-xs font-medium text-gray-500">Расчётное время</label>
+                        <input type="number" id="edit_project_estimated_hours" name="estimated_hours"
+                               x-model="editProject.estimated_hours" step="0.5" min="0.5" placeholder="Часы" class="ui-control">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit_project_status" class="mb-1 block text-xs font-medium text-gray-500">
+                        Статус <span class="text-red-500">*</span>
+                    </label>
+                    <select id="edit_project_status" name="status_id" x-model="editProject.status_id" required class="ui-control">
+                        <?php foreach ($statuses as $status): ?>
+                            <option value="<?= (int) $status['id'] ?>"><?= e($status['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="flex gap-2 border-t pt-4">
+                    <button type="submit" class="ui-btn ui-btn-primary">Сохранить</button>
+                    <button type="button" @click="showEdit = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
         </div>

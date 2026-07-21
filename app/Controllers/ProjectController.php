@@ -347,7 +347,7 @@ class ProjectController extends Controller
         if (!empty($errors)) {
             Session::flash('errors', $errors);
             Session::flash('old', $data);
-            $this->redirect("/projects/{$id}/edit");
+            $this->redirect(isset($_POST['redirect_to']) ? $this->projectsReturnUrl() : "/projects/{$id}/edit");
             return;
         }
 
@@ -371,7 +371,7 @@ class ProjectController extends Controller
         $this->projectModel->update((int) $id, $data);
 
         Session::flash('success', 'Проект обновлён');
-        $this->redirect('/projects/' . $id);
+        $this->redirect(isset($_POST['redirect_to']) ? $this->projectsReturnUrl() : '/projects/' . $id);
     }
 
     /**
