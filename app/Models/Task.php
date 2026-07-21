@@ -230,7 +230,7 @@ class Task extends Model
             $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
         }
 
-        $sql .= " ORDER BY t.created_at DESC";
+        $sql .= " ORDER BY t.sort_order ASC, t.created_at DESC";
 
         return $this->db()->fetchAll($sql, $params);
     }
@@ -289,7 +289,7 @@ class Task extends Model
             $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
         }
 
-        $sql .= " ORDER BY t.created_at DESC";
+        $sql .= " ORDER BY p.title ASC, t.sort_order ASC, t.created_at DESC";
 
         return $this->db()->fetchAll($sql, $params);
     }

@@ -126,11 +126,15 @@ class TaskController extends Controller
                     $sql .= " AND t.deadline < CURDATE() AND ts.code NOT IN ('done', 'closed')";
                 }
 
-                $sql .= " ORDER BY t.created_at DESC";
+                $sql .= " ORDER BY p.title ASC, t.sort_order ASC, t.created_at DESC";
                 $tasks = $db->fetchAll($sql, $params);
             }
             $project = null;
         }
+
+        // Общая страница отображает задачи деревом. Порядок корневых задач
+        // совпадает с сохранённым порядком на странице проекта.
+        $tasks = $this->buildTaskRows($tasks);
 
         // Данные для фильтров
         $statuses = $db->fetchAll("SELECT * FROM task_statuses ORDER BY sort_order");
@@ -158,6 +162,65 @@ class TaskController extends Controller
             'executors' => $executors,
             'filters' => $filters,
         ]);
+    }
+
+    /**
+     * Подготовить плоский список строк для древовидной таблицы.
+     * Дочерние строки располагаются сразу после родителя, сохраняя порядок выборки.
+     */
+    private function buildTaskRows(array $tasks): array
+    {
+        $tasksById = [];
+        $childrenByParent = [];
+        $rootIds = [];
+
+        foreach ($tasks as $task) {
+            $tasksById[(int) $task['id']] = $task;
+        }
+
+        foreach ($tasks as $task) {
+            $taskId = (int) $task['id'];
+            $parentId = !empty($task['parent_id']) ? (int) $task['parent_id'] : null;
+
+            if ($parentId !== null && $parentId !== $taskId && isset($tasksById[$parentId])) {
+                $childrenByParent[$parentId][] = $taskId;
+            } elseif ($parentId === null || $parentId === $taskId) {
+                $rootIds[] = $taskId;
+            }
+        }
+
+        $rows = [];
+        $visited = [];
+        $appendBranch = function (int $taskId, int $depth, array $ancestorIds) use (
+            &$appendBranch,
+            &$rows,
+            &$visited,
+            $tasksById,
+            $childrenByParent
+        ): void {
+            if (isset($visited[$taskId]) || !isset($tasksById[$taskId])) {
+                return;
+            }
+
+            $visited[$taskId] = true;
+            $childIds = $childrenByParent[$taskId] ?? [];
+            $row = $tasksById[$taskId];
+            $row['tree_depth'] = $depth;
+            $row['tree_ancestor_ids'] = $ancestorIds;
+            $row['tree_has_children'] = !empty($childIds);
+            $rows[] = $row;
+
+            $childAncestors = [...$ancestorIds, $taskId];
+            foreach ($childIds as $childId) {
+                $appendBranch($childId, $depth + 1, $childAncestors);
+            }
+        };
+
+        foreach ($rootIds as $rootId) {
+            $appendBranch($rootId, 0, []);
+        }
+
+        return $rows;
     }
 
     /**

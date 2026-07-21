@@ -80,7 +80,15 @@ if ($project ?? null) {
 }
 ?>
 
-<div class="space-y-4" x-data="{ showFilters: false, showCreate: false }" @keydown.escape.window="showFilters = false; showCreate = false">
+<div class="space-y-4"
+     x-data="{
+         showFilters: false,
+         showCreate: false,
+         expandedTasks: {},
+         toggleTask(id) { this.expandedTasks[id] = !this.expandedTasks[id] },
+         taskVisible(ancestorIds) { return ancestorIds.every(id => this.expandedTasks[id]) }
+     }"
+     @keydown.escape.window="showFilters = false; showCreate = false">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
     <div class="flex items-center justify-between gap-4">
         <h1 class="text-xl font-bold text-gray-800">
@@ -191,20 +199,44 @@ if ($project ?? null) {
                     <tbody class="divide-y divide-gray-100">
                         <?php foreach ($tasks as $task): ?>
                             <?php
+                            $treeDepth = (int) ($task['tree_depth'] ?? 0);
+                            $treeAncestors = $task['tree_ancestor_ids'] ?? [];
+                            $treeHasChildren = !empty($task['tree_has_children']);
                             $isOverdue = !empty($task['deadline'])
                                 && strtotime($task['deadline']) < strtotime(date('Y-m-d'))
                                 && ($task['status_code'] ?? '') !== 'done';
                             $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['medium'];
                             $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
                             ?>
-                            <tr class="hover:bg-gray-50 transition <?= $isOverdue ? 'bg-red-50' : '' ?>">
+                            <tr x-show='taskVisible(<?= json_encode($treeAncestors) ?>)'
+                                <?= $treeDepth > 0 ? 'x-cloak style="display:none"' : '' ?>
+                                class="hover:bg-gray-50 transition <?= $isOverdue ? 'bg-red-50' : '' ?>">
                                 <td class="px-4 py-3">
-                                    <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="text-blue-600 hover:text-blue-800 font-medium">
-                                        <?= e($task['title']) ?>
-                                    </a>
-                                    <?php if ($isOverdue): ?>
-                                        <span class="ml-1 text-xs text-red-600 font-medium">Просрочено</span>
-                                    <?php endif; ?>
+                                    <div class="flex min-w-0 items-center gap-1" style="padding-left: <?= $treeDepth * 20 ?>px">
+                                        <?php if ($treeHasChildren): ?>
+                                            <button type="button"
+                                                    @click.stop="toggleTask(<?= (int) $task['id'] ?>)"
+                                                    :aria-expanded="Boolean(expandedTasks[<?= (int) $task['id'] ?>])"
+                                                    class="-ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                                    aria-label="Показать или скрыть вложенные задачи">
+                                                <svg class="h-4 w-4 transition-transform"
+                                                     :class="{ 'rotate-180': expandedTasks[<?= (int) $task['id'] ?>] }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                                </svg>
+                                            </button>
+                                        <?php else: ?>
+                                            <span class="h-6 w-6 flex-shrink-0" aria-hidden="true"></span>
+                                        <?php endif; ?>
+                                        <div class="min-w-0">
+                                            <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="font-medium text-blue-600 hover:text-blue-800">
+                                                <?= e($task['title']) ?>
+                                            </a>
+                                            <?php if ($isOverdue): ?>
+                                                <span class="ml-1 text-xs font-medium text-red-600">Просрочено</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium <?= $statusClass ?>">
