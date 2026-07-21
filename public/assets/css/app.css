@@ -42,6 +42,27 @@ html {
     display: none;
 }
 
+/* Прокрутка таблицы задач — такая же тонкая и спокойная, как в чате. */
+.task-table-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+.task-table-scroll::-webkit-scrollbar {
+    display: block;
+    width: 4px;
+    height: 4px;
+}
+.task-table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.task-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+.task-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
 /* Дерево задач — базовые стили для узлов */
 .tree-node {
     position: relative;

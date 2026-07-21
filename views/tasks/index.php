@@ -269,7 +269,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                     </button>
                 </form>
             <?php endif; ?>
-            <div class="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-auto">
+            <div class="task-table-scroll overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="border-b bg-gray-50 lg:sticky lg:top-0 lg:z-10">
                         <tr>
