@@ -761,8 +761,67 @@ class ProjectController extends Controller
         }
 
         $projectId = (int) $id;
-        $db = \Helpers\Database::getInstance();
+        $this->deleteProjectData($projectId, Database::getInstance());
 
+        Session::flash('success', 'Проект «' . $project['title'] . '» удалён');
+        $this->redirect($this->projectsReturnUrl());
+    }
+
+    /**
+     * Массовое удаление доступных пользователю проектов.
+     */
+    public function deleteSelected(): void
+    {
+        $projectIds = array_values(array_unique(array_filter(
+            array_map('intval', (array) ($_POST['project_ids'] ?? [])),
+            static fn(int $id): bool => $id > 0
+        )));
+
+        if (empty($projectIds)) {
+            Session::flash('error', 'Выберите хотя бы один проект');
+            $this->redirect($this->projectsReturnUrl());
+            return;
+        }
+
+        if (count($projectIds) > 100) {
+            Session::flash('error', 'За один раз можно удалить не более 100 проектов');
+            $this->redirect($this->projectsReturnUrl());
+            return;
+        }
+
+        $projects = [];
+        foreach ($projectIds as $projectId) {
+            $project = $this->projectModel->find($projectId);
+            $canDelete = $project
+                && ProjectAccessMiddleware::check($projectId)
+                && (Auth::isAdmin() || (int) $project['created_by'] === Auth::id());
+
+            if (!$canDelete) {
+                Response::forbidden('Недостаточно прав для удаления одного из выбранных проектов');
+                return;
+            }
+            $projects[] = $project;
+        }
+
+        $db = Database::getInstance();
+        foreach ($projects as $project) {
+            $this->deleteProjectData((int) $project['id'], $db);
+        }
+
+        Session::flash('success', 'Удалено проектов: ' . count($projects));
+        $this->redirect($this->projectsReturnUrl());
+    }
+
+    private function projectsReturnUrl(): string
+    {
+        $returnUrl = (string) ($_POST['redirect_to'] ?? '/projects');
+        return $returnUrl === '/projects' || str_starts_with($returnUrl, '/projects?')
+            ? $returnUrl
+            : '/projects';
+    }
+
+    private function deleteProjectData(int $projectId, Database $db): void
+    {
         // Удаляем физические файлы задач с диска
         $taskFiles = $db->fetchAll(
             "SELECT tf.file_path FROM task_files tf
@@ -793,9 +852,6 @@ class ProjectController extends Controller
 
         // Удаляем проект (CASCADE удалит связанные записи в БД)
         $this->projectModel->delete($projectId);
-
-        Session::flash('success', 'Проект «' . $project['title'] . '» удалён');
-        $this->redirect('/projects');
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * Шаблон списка проектов
- * Карточки проектов + фильтры в модальном окне
+ * Таблица проектов, фильтры и массовые действия
  */
 $layout = 'layouts/app';
 
@@ -46,12 +46,49 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
         break;
     }
 }
+
+$currentUser = \Helpers\Auth::user();
+$currentUserId = (int) ($currentUser['id'] ?? 0);
+$deletableProjectIds = [];
+$editableProjectIds = [];
+foreach ($projects as $listedProject) {
+    $listedProjectId = (int) $listedProject['id'];
+    if (can('edit_project', $listedProjectId)) {
+        $editableProjectIds[$listedProjectId] = true;
+    }
+    if (\Helpers\Auth::isAdmin() || (int) $listedProject['created_by'] === $currentUserId) {
+        $deletableProjectIds[$listedProjectId] = true;
+    }
+}
+$hasProjectActions = !empty($editableProjectIds) || !empty($deletableProjectIds);
+$projectFilterQuery = http_build_query(array_filter(
+    $filters,
+    static fn(mixed $value): bool => $value !== '' && $value !== null
+));
+$projectsReturnUrl = '/projects' . ($projectFilterQuery !== '' ? '?' . $projectFilterQuery : '');
+
+$projectStatusColors = [
+    'new' => 'bg-blue-100 text-blue-700',
+    'active' => 'bg-green-100 text-green-700',
+    'on_hold' => 'bg-yellow-100 text-yellow-700',
+    'closed' => 'bg-gray-100 text-gray-600',
+];
 ?>
 
-<div x-data="{ showFilters: false, showCreate: false }" @keydown.escape.window="showFilters = false; showCreate = false">
+<div class="space-y-4 lg:flex lg:h-[calc(100vh-6rem)] lg:min-h-0 lg:flex-col lg:gap-4 lg:space-y-0 lg:overflow-hidden"
+     x-data="{
+         showFilters: false,
+         showCreate: false,
+         selectedProjects: [],
+         deletableProjectIds: <?= json_encode(array_map('intval', array_keys($deletableProjectIds))) ?>,
+         toggleAllProjects(checked) {
+             this.selectedProjects = checked ? [...this.deletableProjectIds] : [];
+         }
+     }"
+     @keydown.escape.window="showFilters = false; showCreate = false">
 
     <!-- Заголовок + Создать + Фильтры -->
-    <div class="flex items-center justify-between gap-4 mb-6">
+    <div class="flex items-center justify-between gap-4 lg:flex-shrink-0">
         <h1 class="text-xl font-bold text-gray-800">Проекты</h1>
 
         <div class="flex items-center gap-2">
@@ -69,19 +106,19 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
         </div>
     </div>
 
-    <!-- Десктопные фильтры (lg+) -->
-    <form method="GET" action="<?= url('/projects') ?>" class="hidden lg:block mb-6">
-        <div class="grid grid-cols-5 gap-4">
-            <div>
+    <!-- Десктопные фильтры и массовые действия -->
+    <div class="hidden items-end gap-4 rounded-lg border bg-white p-4 shadow-sm lg:flex lg:flex-shrink-0">
+        <form method="GET" action="<?= url('/projects') ?>" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+            <div class="w-32">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
                 <select name="status" class="ui-control">
-                    <option value="">Все статусы</option>
+                    <option value="">Все</option>
                     <?php foreach ($statuses as $s): ?>
                         <option value="<?= e($s['code']) ?>" <?= $filters['status'] === $s['code'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div>
+            <div class="w-40">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Руководитель</label>
                 <select name="manager" class="ui-control">
                     <option value="">Все</option>
@@ -90,7 +127,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div>
+            <div class="w-40">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
                 <select name="executor" class="ui-control">
                     <option value="">Все</option>
@@ -99,7 +136,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div>
+            <div class="w-36">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
                 <select name="deadline" class="ui-control">
                     <option value="">Все</option>
@@ -107,89 +144,175 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                     <option value="week" <?= $filters['deadline'] === 'week' ? 'selected' : '' ?>>На этой неделе</option>
                 </select>
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="ui-btn ui-btn-dark">Применить</button>
-                <a href="<?= url('/projects') ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
+            <div class="flex items-end gap-1">
+                <button type="submit" class="ui-btn ui-btn-primary flex h-11 w-11 items-center justify-center px-0"
+                        aria-label="Применить фильтры" title="Применить фильтры">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L14 13.667V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.333L3.2 4.6A1 1 0 013 4z"/>
+                    </svg>
+                </button>
+                <a href="<?= url('/projects') ?>"
+                   class="ui-btn ui-btn-secondary flex h-11 w-11 items-center justify-center px-0"
+                   aria-label="Сбросить фильтры" title="Сбросить фильтры">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </a>
             </div>
-        </div>
-    </form>
+        </form>
 
-    <!-- Сетка проектов -->
+        <?php if (!empty($deletableProjectIds) && !empty($projects)): ?>
+            <form method="POST" action="<?= url('/projects/delete-selected') ?>"
+                  data-confirm-delete="Удалить выбранные проекты и все задачи внутри? Это действие нельзя отменить."
+                  class="flex flex-shrink-0 items-center gap-2 border-l pl-4">
+                <?= csrf_field() ?>
+                <input type="hidden" name="redirect_to" value="<?= e($projectsReturnUrl) ?>">
+                <template x-for="projectId in selectedProjects" :key="'desktop-project-' + projectId">
+                    <input type="hidden" name="project_ids[]" :value="projectId">
+                </template>
+                <label class="flex cursor-pointer items-center gap-2 whitespace-nowrap text-xs text-gray-600">
+                    <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                           :checked="deletableProjectIds.length > 0 && selectedProjects.length === deletableProjectIds.length"
+                           @change="toggleAllProjects($event.target.checked)">
+                    Выбрать все
+                </label>
+                <button type="submit" :disabled="selectedProjects.length === 0" class="ui-btn ui-btn-subtle whitespace-nowrap">
+                    Удалить выбранные <span class="ui-btn-count" x-text="selectedProjects.length">0</span>
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <!-- Таблица проектов -->
     <?php if (empty($projects)): ?>
-        <div class="text-center py-12">
-            <p class="text-gray-500">Проектов пока нет</p>
+        <div class="rounded-lg border bg-white p-8 text-center">
+            <p class="text-gray-500">Проекты не найдены</p>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <?php foreach ($projects as $project): ?>
-                <a href="<?= url('/projects/' . (int) $project['id']) ?>"
-                   class="bg-white rounded-lg shadow-sm border hover:shadow-md transition p-5 block">
-                    <div class="flex items-start justify-between gap-2 mb-3">
-                        <h3 class="text-base font-semibold text-gray-800 line-clamp-2"><?= e($project['title']) ?></h3>
-                        <?php
-                        $projectStatusColors = [
-                            'new' => 'bg-blue-100 text-blue-700',
-                            'active' => 'bg-green-100 text-green-700',
-                            'on_hold' => 'bg-yellow-100 text-yellow-700',
-                            'closed' => 'bg-gray-100 text-gray-600',
-                        ];
-                        $colorClass = $projectStatusColors[$project['status_code']] ?? 'bg-gray-100 text-gray-600';
-                        ?>
-                        <span class="text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap <?= $colorClass ?>">
-                            <?= e($project['status_name']) ?>
-                        </span>
-                    </div>
+        <div class="overflow-hidden rounded-lg border bg-white lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+            <?php if (!empty($deletableProjectIds)): ?>
+                <form method="POST" action="<?= url('/projects/delete-selected') ?>"
+                      data-confirm-delete="Удалить выбранные проекты и все задачи внутри? Это действие нельзя отменить."
+                      class="flex h-[53px] items-center justify-between gap-3 border-b bg-white px-4 lg:hidden">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect_to" value="<?= e($projectsReturnUrl) ?>">
+                    <template x-for="projectId in selectedProjects" :key="'mobile-project-' + projectId">
+                        <input type="hidden" name="project_ids[]" :value="projectId">
+                    </template>
+                    <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+                        <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                               :checked="deletableProjectIds.length > 0 && selectedProjects.length === deletableProjectIds.length"
+                               @change="toggleAllProjects($event.target.checked)">
+                        Выбрать все
+                    </label>
+                    <button type="submit" :disabled="selectedProjects.length === 0" class="ui-btn ui-btn-subtle">
+                        Удалить выбранные <span class="ui-btn-count" x-text="selectedProjects.length">0</span>
+                    </button>
+                </form>
+            <?php endif; ?>
 
-                    <div class="space-y-2 text-sm text-gray-600">
-                        <?php if ($project['deadline']): ?>
-                            <?php $isOverdue = $project['deadline'] < date('Y-m-d') && $project['status_code'] !== 'closed'; ?>
-                            <div class="flex items-center gap-2 <?= $isOverdue ? 'text-red-600' : '' ?>">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span><?= date('d.m.Y', strtotime($project['deadline'])) ?></span>
-                                <?php if ($isOverdue): ?>
-                                    <span class="text-xs font-medium text-red-600">просрочен</span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                            <span>Задач: <?= (int) $project['task_total'] ?></span>
-                            <?php if ((int) $project['task_open'] > 0): ?>
-                                <span class="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
-                                    открытых: <?= (int) $project['task_open'] ?>
-                                </span>
+            <div class="task-table-scroll overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b bg-gray-50 lg:sticky lg:top-0 lg:z-10">
+                        <tr>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600">Название</th>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600">Статус</th>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Задачи</th>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Руководитель</th>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">Срок</th>
+                            <th class="text-left px-4 py-3 font-medium text-gray-600 hidden xl:table-cell">Расчёт</th>
+                            <?php if ($hasProjectActions): ?>
+                                <th class="w-20 px-2 py-3"><span class="sr-only">Действия</span></th>
                             <?php endif; ?>
-                        </div>
-
-                        <?php if (!empty($project['estimated_hours'])): ?>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>Расчёт: <?= rtrim(rtrim(number_format((float) $project['estimated_hours'], 1, '.', ''), '0'), '.') ?> ч</span>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if (!empty($project['managers'])): ?>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                                <span class="truncate"><?= e(implode(', ', array_column($project['managers'], 'name'))) ?></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </a>
-            <?php endforeach; ?>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php foreach ($projects as $project): ?>
+                            <?php
+                            $projectId = (int) $project['id'];
+                            $canEditProject = isset($editableProjectIds[$projectId]);
+                            $canDeleteProject = isset($deletableProjectIds[$projectId]);
+                            $isOverdue = !empty($project['deadline'])
+                                && $project['deadline'] < date('Y-m-d')
+                                && ($project['status_code'] ?? '') !== 'closed';
+                            $statusClass = $projectStatusColors[$project['status_code'] ?? '']
+                                ?? 'bg-gray-100 text-gray-600';
+                            $managerNames = !empty($project['managers'])
+                                ? implode(', ', array_column($project['managers'], 'name'))
+                                : '—';
+                            ?>
+                            <tr class="transition hover:bg-gray-100 <?= $isOverdue ? 'bg-red-50' : '' ?>">
+                                <td class="px-4 py-3">
+                                    <div class="flex min-w-0 items-center gap-2">
+                                        <?php if ($canDeleteProject): ?>
+                                            <input type="checkbox" value="<?= $projectId ?>" x-model.number="selectedProjects"
+                                                   class="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600"
+                                                   aria-label="Выбрать проект <?= e($project['title']) ?>">
+                                        <?php elseif (!empty($deletableProjectIds)): ?>
+                                            <span class="h-4 w-4 flex-shrink-0" aria-hidden="true"></span>
+                                        <?php endif; ?>
+                                        <div class="min-w-0">
+                                            <a href="<?= url('/projects/' . $projectId) ?>"
+                                               class="font-medium text-blue-600 hover:text-blue-800">
+                                                <?= e($project['title']) ?>
+                                            </a>
+                                            <?php if ($isOverdue): ?>
+                                                <span class="ml-1 text-xs font-medium text-red-600">Просрочено</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium <?= $statusClass ?>">
+                                        <?= e($project['status_name'] ?? '') ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 hidden sm:table-cell">
+                                    <?= (int) $project['task_total'] ?>
+                                    <?php if ((int) $project['task_open'] > 0): ?>
+                                        <span class="ml-1 text-xs text-gray-500">открытых: <?= (int) $project['task_open'] ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 hidden md:table-cell"><?= e($managerNames) ?></td>
+                                <td class="px-4 py-3 hidden lg:table-cell <?= $isOverdue ? 'font-medium text-red-600' : 'text-gray-600' ?>">
+                                    <?= $project['deadline'] ? date('d.m.Y', strtotime($project['deadline'])) : '—' ?>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 hidden xl:table-cell">
+                                    <?= !empty($project['estimated_hours'])
+                                        ? e(rtrim(rtrim(number_format((float) $project['estimated_hours'], 1, '.', ''), '0'), '.') . ' ч')
+                                        : '—' ?>
+                                </td>
+                                <?php if ($hasProjectActions): ?>
+                                    <td class="px-2 py-1 text-right">
+                                        <?php if ($canEditProject || $canDeleteProject): ?>
+                                            <div class="flex items-center justify-end -space-x-3">
+                                                <?php if ($canEditProject): ?>
+                                                    <a href="<?= url('/projects/' . $projectId . '/edit') ?>"
+                                                       class="a11y-icon-button text-gray-400 hover:text-black"
+                                                       aria-label="Редактировать проект <?= e($project['title']) ?>" title="Редактировать">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if ($canDeleteProject): ?>
+                                                    <form method="POST" action="<?= url('/projects/' . $projectId . '/delete') ?>"
+                                                          data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все задачи внутри? Это действие нельзя отменить.') ?>">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="redirect_to" value="<?= e($projectsReturnUrl) ?>">
+                                                        <button type="submit" class="a11y-icon-button text-gray-400 hover:text-black"
+                                                                aria-label="Удалить проект <?= e($project['title']) ?>" title="Удалить">
+                                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endif; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -250,7 +373,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                 </div>
 
                 <div class="flex gap-2 pt-2 border-t">
-                    <button type="submit" class="ui-btn ui-btn-dark">Создать</button>
+                    <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
                     <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
@@ -332,7 +455,7 @@ if ($createStatusValue === '' && !empty($createStatusOptions)) {
                 </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="ui-btn ui-btn-dark">Применить</button>
+                    <button type="submit" class="ui-btn ui-btn-primary">Применить</button>
                     <a href="<?= url('/projects') ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
                 </div>
             </form>

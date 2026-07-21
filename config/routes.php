@@ -97,6 +97,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->get('/projects', [\Controllers\ProjectController::class, 'index']);
     $router->get('/projects/create', [\Controllers\ProjectController::class, 'create']);
     $router->post('/projects/create', [\Controllers\ProjectController::class, 'store']);
+    $router->post('/projects/delete-selected', [\Controllers\ProjectController::class, 'deleteSelected']);
     $router->get('/projects/{id}', [\Controllers\ProjectController::class, 'show']);
     $router->get('/projects/{id}/edit', [\Controllers\ProjectController::class, 'edit']);
     $router->post('/projects/{id}/edit', [\Controllers\ProjectController::class, 'update']);
