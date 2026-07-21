@@ -897,6 +897,7 @@ nav[class*="fixed"] {
 .app-shell :is(input:not([type="hidden"]):not([type="file"]):not([type="range"]), select, textarea):is(:focus, :focus-visible),
 .app-shell .mobile-filter-trigger:is(:focus, :focus-visible) {
     border-color: var(--ui-accent) !important;
+    border-width: 2px !important;
     outline: none !important;
     box-shadow: none !important;
     --tw-ring-color: transparent !important;
