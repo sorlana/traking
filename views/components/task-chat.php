@@ -27,8 +27,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <span class="text-xs font-medium text-blue-700 flex-shrink-0"
                       x-text="messages.filter(m => m.is_pinned).length"></span>
                 <span class="text-xs text-blue-600 truncate flex-1"
-                      x-show="!pinsOpen"
+                      x-show="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.comment_text !== '📎 Файл'"
                       x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></span>
+                <template x-if="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.files?.length">
+                    <button type="button" @click.stop="openModal(messages.filter(m => m.is_pinned)[0].files[0], messages.filter(m => m.is_pinned)[0].user_id)"
+                            class="min-w-0 flex-1 truncate text-left text-xs font-medium text-blue-600 hover:text-blue-800"
+                            x-text="'📎 ' + messages.filter(m => m.is_pinned)[0].files[0].file_name"></button>
+                </template>
                 <svg class="w-4 h-4 text-blue-400 transition-transform flex-shrink-0 ml-auto" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
@@ -38,7 +43,14 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <template x-for="pin in messages.filter(m => m.is_pinned)" :key="'pin-' + pin.id">
                     <div class="flex items-center gap-2 text-xs bg-white rounded px-2 py-1.5 border border-blue-100">
                         <span class="font-medium text-blue-700 flex-shrink-0" x-text="pin.user_name"></span>
-                        <span class="text-gray-700 truncate flex-1" x-text="pin.comment_text"></span>
+                        <span x-show="pin.comment_text !== '📎 Файл'" class="text-gray-700 truncate min-w-0 flex-1" x-text="pin.comment_text"></span>
+                        <div x-show="pin.files?.length" class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                            <template x-for="file in pin.files" :key="'pinned-file-' + file.id">
+                                <button type="button" @click.stop="openModal(file, pin.user_id)"
+                                        class="truncate text-left font-medium text-blue-600 hover:text-blue-800"
+                                        x-text="'📎 ' + file.file_name"></button>
+                            </template>
+                        </div>
                         <button @click.stop="togglePin(pin)" class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Открепить">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -72,7 +84,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <template x-if="getParentMessage(msg)">
                                 <div class="bg-blue-100 bg-opacity-70 rounded px-2 py-1 mb-2 border-l-2 border-blue-400 text-xs">
                                     <div class="font-medium text-gray-700" x-text="getParentMessage(msg).user_name"></div>
-                                    <div class="text-gray-500 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                    <div x-show="getParentMessage(msg).comment_text !== '📎 Файл'"
+                                         class="text-gray-500 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                    <template x-for="file in (getParentMessage(msg).files || [])" :key="'own-quote-file-' + file.id">
+                                        <button type="button" @click.stop="openModal(file, getParentMessage(msg).user_id)"
+                                                class="block max-w-full truncate text-left font-medium text-blue-600 hover:text-blue-800"
+                                                x-text="'📎 ' + file.file_name"></button>
+                                    </template>
                                 </div>
                             </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
@@ -160,7 +178,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <template x-if="getParentMessage(msg)">
                                 <div class="bg-gray-200 rounded px-2 py-1 mb-2 border-l-2 border-blue-400 text-xs">
                                     <div class="font-medium text-blue-600" x-text="getParentMessage(msg).user_name"></div>
-                                    <div class="text-gray-600 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                    <div x-show="getParentMessage(msg).comment_text !== '📎 Файл'"
+                                         class="text-gray-600 truncate" x-text="getParentMessage(msg).comment_text"></div>
+                                    <template x-for="file in (getParentMessage(msg).files || [])" :key="'other-quote-file-' + file.id">
+                                        <button type="button" @click.stop="openModal(file, getParentMessage(msg).user_id)"
+                                                class="block max-w-full truncate text-left font-medium text-blue-600 hover:text-blue-800"
+                                                x-text="'📎 ' + file.file_name"></button>
+                                    </template>
                                 </div>
                             </template>
                             <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
@@ -372,6 +396,16 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                    controls autoplay
                    class="max-w-full max-h-full object-contain">
             </video>
+            <!-- Остальные файлы -->
+            <div x-show="modalFile && !isImage(modalFile.file_type) && !isVideo(modalFile.file_type)"
+                 class="mx-4 max-w-md rounded-lg bg-white p-6 text-center">
+                <svg class="mx-auto h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V6m-4-4v4h4M8 13h8M8 17h6"/>
+                </svg>
+                <p class="mt-3 break-words text-sm font-medium text-gray-800" x-text="modalFile ? modalFile.file_name : ''"></p>
+                <a :href="modalFile ? fileUrl(modalFile, false, true) : '#'" download
+                   class="ui-btn ui-btn-primary mt-4">Скачать файл</a>
+            </div>
         </div>
         <!-- Ползунок зума внизу (только для изображений) -->
         <div x-show="modalFile && isImage(modalFile.file_type)" class="px-4 py-3 bg-black bg-opacity-50 flex items-center gap-3">
@@ -414,8 +448,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
     <!-- Блок «Ответ на...» или «Редактирование» -->
     <div x-show="replyTo || editingMsg" class="border-t bg-white px-4 py-1 flex items-center justify-between" style="display:none !important" :style="(replyTo || editingMsg) ? 'display:flex!important' : 'display:none!important'">
-        <div class="text-xs">
-            <span x-show="replyTo">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
+        <div class="flex min-w-0 items-center gap-2 text-xs">
+            <span x-show="replyTo" class="flex-shrink-0">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
+            <template x-if="replyTo?.files?.length">
+                <button type="button" @click="openModal(replyTo.files[0], replyTo.user_id)"
+                        class="min-w-0 truncate font-medium text-blue-600 hover:text-blue-800"
+                        x-text="'📎 ' + replyTo.files[0].file_name"></button>
+            </template>
             <span x-show="editingMsg" class="font-semibold text-gray-700">Редактирование</span>
         </div>
         <button type="button" @click="cancelReply(); cancelEdit();"
