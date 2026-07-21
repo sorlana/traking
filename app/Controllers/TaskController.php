@@ -296,6 +296,20 @@ class TaskController extends Controller
             return;
         }
 
+        // Поддерживаем правило и для уже существующих деревьев: при первом
+        // открытии задача сразу получает актуальный статус.
+        $this->syncRevisionStatusUpTree($taskId, $db);
+        $syncedStatus = $db->fetch(
+            "SELECT t.status_id, t.closed_at, ts.name AS status_name, ts.code AS status_code
+             FROM tasks t
+             JOIN task_statuses ts ON ts.id = t.status_id
+             WHERE t.id = ?",
+            [$taskId]
+        );
+        if ($syncedStatus) {
+            $task = array_merge($task, $syncedStatus);
+        }
+
         // Получаем связанные данные
         $children = $this->taskModel->getChildren($taskId);
         $childrenTree = $this->treeService->getChildrenTree($taskId);
@@ -607,6 +621,10 @@ class TaskController extends Controller
             $this->notificationService->notifyTaskAssigned((int) $taskId, $data['assigned_to']);
         }
 
+        // Активная доработка автоматически переводит всю цепочку родителей
+        // в статус «Доработки».
+        $this->syncRevisionStatusUpTree((int) $taskId, $db);
+
         Session::flash('success', 'Задача успешно создана');
 
         // Если создали подзадачу — вернуть на родительскую задачу
@@ -720,6 +738,8 @@ class TaskController extends Controller
                 (new PushService())->sendTaskStatusChanged($taskId, Auth::id(), $newStatus['name']);
             }
         }
+
+        $this->syncRevisionStatusUpTree($taskId, Database::getInstance());
 
         Session::flash('success', 'Задача обновлена');
         $this->redirect(isset($_POST['redirect_to']) ? $this->tasksReturnUrl() : '/tasks/' . $taskId);
@@ -841,6 +861,8 @@ class TaskController extends Controller
         if ((int) $task['status_id'] !== $statusId) {
             (new PushService())->sendTaskStatusChanged($taskId, Auth::id(), $status['name']);
         }
+
+        $this->syncRevisionStatusUpTree($taskId, $db);
 
         if ($this->isAjax()) {
             $this->json([
@@ -1052,6 +1074,10 @@ class TaskController extends Controller
             if ($assignedTo) {
                 $this->notificationService->notifyTaskAssigned($taskId, $assignedTo);
             }
+        }
+
+        if (!empty($createdTaskIds)) {
+            $this->syncRevisionStatusUpTree((int) $createdTaskIds[0], $db);
         }
 
         $count = count($createdTaskIds);
@@ -1340,6 +1366,77 @@ class TaskController extends Controller
         $deletedCount = $this->deleteTaskRoots($rootIds, $db);
         Session::flash('success', "Удалено задач: {$deletedCount}");
         $this->redirect($this->tasksReturnUrl());
+    }
+
+    /**
+     * Если у задачи есть непосредственная доработка в статусе «В работе»
+     * или «Доработки», переводит задачу в «Доработки». Проверка поднимается
+     * до корня, поэтому правило работает и для глубоко вложенного дерева.
+     */
+    private function syncRevisionStatusUpTree(int $taskId, Database $db): void
+    {
+        $revisionStatus = $db->fetch(
+            "SELECT id, name FROM task_statuses WHERE code = 'revision' LIMIT 1"
+        );
+        if (!$revisionStatus) {
+            return;
+        }
+
+        $revisionStatusId = (int) $revisionStatus['id'];
+        $currentId = $taskId;
+        $visited = [];
+        $depth = 0;
+
+        while ($currentId > 0 && $depth++ < 50 && !isset($visited[$currentId])) {
+            $visited[$currentId] = true;
+            $current = $db->fetch(
+                "SELECT t.id, t.parent_id, t.project_id, t.status_id, ts.name AS status_name
+                 FROM tasks t
+                 JOIN task_statuses ts ON ts.id = t.status_id
+                 WHERE t.id = ?",
+                [$currentId]
+            );
+            if (!$current) {
+                break;
+            }
+
+            $activeChild = $db->fetch(
+                "SELECT child.id
+                 FROM tasks child
+                 JOIN task_statuses child_status ON child_status.id = child.status_id
+                 WHERE child.parent_id = ?
+                   AND child_status.code IN ('in_progress', 'revision')
+                 LIMIT 1",
+                [$currentId]
+            );
+
+            if ($activeChild && (int) $current['status_id'] !== $revisionStatusId) {
+                $this->taskModel->update($currentId, [
+                    'status_id' => $revisionStatusId,
+                    'closed_at' => null,
+                ]);
+                $this->activityLogService->log(
+                    Auth::id(),
+                    (int) $current['project_id'],
+                    $currentId,
+                    'status_changed',
+                    $current['status_name'] ?? null,
+                    $revisionStatus['name']
+                );
+                $this->notificationService->notifyStatusChanged(
+                    $currentId,
+                    $revisionStatus['name'],
+                    Auth::id()
+                );
+                (new PushService())->sendTaskStatusChanged(
+                    $currentId,
+                    Auth::id(),
+                    $revisionStatus['name']
+                );
+            }
+
+            $currentId = !empty($current['parent_id']) ? (int) $current['parent_id'] : 0;
+        }
     }
 
     /**
