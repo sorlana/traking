@@ -11,6 +11,11 @@
     # Запрет прямого доступа к служебным папкам
     RewriteRule ^(app|config|database|storage|views)(/|$) - [F,L]
 
+    # Публичная статика хранится в public/, но доступна без /public в URL.
+    # Явные правила не зависят от DOCUMENT_ROOT хостинга.
+    RewriteRule ^(assets|icons)/(.*)$ public/$1/$2 [L]
+    RewriteRule ^(manifest\.json|favicon\.svg|service-worker\.js|offline\.html)$ public/$1 [L]
+
     # Если запрос к реальному файлу в public/ — отдаём его оттуда
     RewriteCond %{DOCUMENT_ROOT}/traking/public/$1 -f
     RewriteRule ^(.+)$ public/$1 [L]
