@@ -118,29 +118,26 @@ $upLabel = !empty($parent['id'])
                 <?php
                 $headerTimeIsManager = $canManagerEditTime && !$canEditTime;
                 $headerTimeValue = $headerTimeIsManager ? $manager_time_spent : $time_spent;
-                $headerTimeColor = $headerTimeIsManager ? 'purple' : 'blue';
                 ?>
                 <div class="js-time-container relative flex items-center gap-1.5"
                      data-task-id="<?= (int) $task['id'] ?>"
+                     data-time-always-edit="true"
                      <?= $headerTimeIsManager ? 'data-time-type="manager"' : '' ?>>
-                    <span class="js-time-display text-sm text-gray-700" <?= $headerTimeValue !== null ? '' : 'style="display:none"' ?>><?= $headerTimeValue !== null ? e($headerTimeValue) . ' ч' : '—' ?></span>
+                    <span class="js-time-display hidden text-sm text-gray-700"><?= $headerTimeValue !== null ? e($headerTimeValue) . ' ч' : '—' ?></span>
                     <input type="number" step="0.5" min="0.5" max="999.5" value="<?= $headerTimeValue !== null ? e($headerTimeValue) : '' ?>"
                            placeholder="0.5" aria-label="Затраченное время в часах"
-                           class="js-time-input w-20 rounded-md border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500 <?= $headerTimeValue !== null ? 'hidden' : '' ?>">
-                    <span class="js-time-unit text-xs text-gray-500 <?= $headerTimeValue !== null ? 'hidden' : '' ?>">ч</span>
-                    <button type="button"
-                            class="js-save-time p-1.5 text-<?= $headerTimeColor ?>-600 hover:text-<?= $headerTimeColor ?>-800 transition <?= $headerTimeValue !== null ? 'hidden' : '' ?>"
-                            title="Сохранить время" aria-label="Сохранить время">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-                    <button type="button"
-                            class="js-edit-time p-1.5 text-gray-400 hover:text-<?= $headerTimeColor ?>-600 transition <?= $headerTimeValue === null ? 'hidden' : '' ?>"
-                            title="Редактировать время" aria-label="Редактировать время">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                    </button>
-                    <button type="button"
-                            class="js-toggle-add-time flex h-9 w-9 items-center justify-center rounded-full bg-<?= $headerTimeColor ?>-50 text-lg font-semibold text-<?= $headerTimeColor ?>-600 hover:bg-<?= $headerTimeColor ?>-100"
-                            title="Добавить время" aria-label="Добавить время">+</button>
+                           class="js-time-input w-20 rounded-md border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <span class="js-time-unit text-xs text-gray-500">ч</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button"
+                                class="js-save-time p-1.5 text-blue-600 transition hover:text-blue-800"
+                                title="Сохранить время" aria-label="Сохранить время">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button type="button"
+                                class="js-toggle-add-time flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-lg font-semibold text-blue-600 hover:bg-blue-100"
+                                title="Добавить время" aria-label="Добавить время">+</button>
+                    </div>
                     <div class="js-add-time-form absolute right-0 top-full z-50 mt-2 hidden items-center gap-1 rounded-lg border bg-white p-2 shadow-lg">
                         <input type="number" step="0.5" min="0.5" max="999.5"
                                class="js-add-time-input w-20 rounded-md border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500"
@@ -149,7 +146,7 @@ $upLabel = !empty($parent['id'])
                         <input type="date" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>"
                                class="js-add-time-date max-w-[145px] rounded-md border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500"
                                title="Дата затраченного времени">
-                        <button type="button" class="js-save-added-time p-1.5 text-<?= $headerTimeColor ?>-600 hover:text-<?= $headerTimeColor ?>-800" title="Прибавить" aria-label="Прибавить время">
+                        <button type="button" class="js-save-added-time p-1.5 text-blue-600 hover:text-blue-800" title="Прибавить" aria-label="Прибавить время">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         </button>
                         <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-black" title="Отмена" aria-label="Отменить">×</button>

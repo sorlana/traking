@@ -736,6 +736,16 @@ function switchToViewMode(container, value) {
     const saveBtn = container.querySelector('.js-save-time');
     const editBtn = container.querySelector('.js-edit-time');
 
+    if (container.dataset.timeAlwaysEdit === 'true') {
+        display.style.display = 'none';
+        input.value = value;
+        input.classList.remove('hidden');
+        unit.classList.remove('hidden');
+        saveBtn.classList.remove('hidden');
+        editBtn?.classList.add('hidden');
+        return;
+    }
+
     // Обновляем текст отображения
     display.textContent = value + ' ч';
     display.style.display = '';
