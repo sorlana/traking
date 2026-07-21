@@ -53,7 +53,7 @@ class ProjectController extends Controller
         if ($roleId === 1) {
             // Admin видит все проекты
             $sql = "SELECT p.*, ps.name as status_name, ps.code as status_code,
-                           u.name as creator_name
+                           u.name as creator_name, u.role_id as creator_role_id
                     FROM projects p
                     JOIN project_statuses ps ON p.status_id = ps.id
                     JOIN users u ON p.created_by = u.id
@@ -62,7 +62,8 @@ class ProjectController extends Controller
         } else {
             // Manager/Executor видят только свои проекты
             $sql = "SELECT p.*, ps.name as status_name, ps.code as status_code,
-                           u.name as creator_name, pu.project_role
+                           u.name as creator_name, u.role_id as creator_role_id,
+                           pu.project_role
                     FROM projects p
                     JOIN project_statuses ps ON p.status_id = ps.id
                     JOIN users u ON p.created_by = u.id

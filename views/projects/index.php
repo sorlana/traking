@@ -226,7 +226,7 @@ $projectStatusColors = [
                             <?php endif; ?>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100 border-b border-gray-200">
                         <?php foreach ($projects as $project): ?>
                             <?php
                             $projectId = (int) $project['id'];
@@ -235,13 +235,18 @@ $projectStatusColors = [
                             $isOverdue = !empty($project['deadline'])
                                 && $project['deadline'] < date('Y-m-d')
                                 && ($project['status_code'] ?? '') !== 'closed';
+                            $isPersonalProject = (int) ($project['creator_role_id'] ?? 0) === \Helpers\Auth::ROLE_EXECUTOR
+                                && (int) $project['created_by'] === $currentUserId;
+                            $rowBackground = $isPersonalProject
+                                ? 'bg-blue-50 hover:bg-blue-100'
+                                : 'bg-white hover:bg-gray-100';
                             $statusClass = $projectStatusColors[$project['status_code'] ?? '']
                                 ?? 'bg-gray-100 text-gray-600';
                             $managerNames = !empty($project['managers'])
                                 ? implode(', ', array_column($project['managers'], 'name'))
                                 : '—';
                             ?>
-                            <tr class="transition hover:bg-gray-100 <?= $isOverdue ? 'bg-red-50' : '' ?>">
+                            <tr class="transition-colors <?= $rowBackground ?>">
                                 <td class="px-4 py-3">
                                     <div class="flex min-w-0 items-center gap-2">
                                         <?php if ($canDeleteProject): ?>
