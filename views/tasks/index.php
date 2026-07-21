@@ -35,7 +35,7 @@ $createPriorityOptions = [
 $createPriorityValue = 'medium';
 
 $createProjectOptions = [];
-foreach ($projects ?? [] as $p) {
+foreach ($taskCreationProjects ?? $projects ?? [] as $p) {
     $createProjectOptions[(string) $p['id']] = $p['title'];
 }
 
@@ -58,7 +58,10 @@ foreach ($executors ?? [] as $exec) {
 // Автовыбор исполнителя: если в проекте один исполнитель, выбрать его
 $createExecutorValue = '';
 $createExecutorLabel = 'Не назначен';
-if ($project ?? null) {
+if ($roleId === \Helpers\Auth::ROLE_EXECUTOR && !empty($currentUser['id'])) {
+    $createExecutorValue = (string) $currentUser['id'];
+    $createExecutorLabel = (string) ($currentUser['name'] ?? 'Исполнитель');
+} elseif ($project ?? null) {
     // Проект определён — ищем исполнителей проекта
     $db = \Helpers\Database::getInstance();
     $projectExecutors = $db->fetchAll(
@@ -81,12 +84,22 @@ if ($project ?? null) {
 
 $editableTaskIds = [];
 $deletableTaskIds = [];
+$manageableTaskProjects = [];
 foreach ($tasks ?? [] as $listedTask) {
     $listedTaskId = (int) $listedTask['id'];
-    if (can('create_task', (int) $listedTask['project_id'])) {
+    $listedProjectId = (int) $listedTask['project_id'];
+    if (!array_key_exists($listedProjectId, $manageableTaskProjects)) {
+        $manageableTaskProjects[$listedProjectId] = can('create_task', $listedProjectId);
+    }
+    $canManageTaskProject = $manageableTaskProjects[$listedProjectId];
+    if ($canManageTaskProject) {
         $editableTaskIds[$listedTaskId] = true;
     }
-    if ($roleId === 1 || (int) $listedTask['created_by'] === (int) ($currentUser['id'] ?? 0)) {
+    if (
+        $roleId === 1
+        || (int) $listedTask['created_by'] === (int) ($currentUser['id'] ?? 0)
+        || ($roleId === 3 && $canManageTaskProject)
+    ) {
         $deletableTaskIds[$listedTaskId] = true;
     }
 }
@@ -133,7 +146,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
         </h1>
 
         <div class="flex items-center gap-2">
-            <?php if (can('create_task', $project['id'] ?? null)): ?>
+            <?php if (can('create_task', $project['id'] ?? null) && (($project ?? null) || !empty($createProjectOptions))): ?>
                 <button type="button"
                         @click="showCreate = true; showCreateExtra = false; showEdit = false; showFilters = false; $nextTick(() => $refs.createTaskTitle?.focus())"
                         class="ui-btn ui-btn-primary">

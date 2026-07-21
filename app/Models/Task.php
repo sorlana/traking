@@ -252,8 +252,17 @@ class Task extends Model
                 LEFT JOIN users u ON t.assigned_to = u.id
                 LEFT JOIN users creator ON t.created_by = creator.id
                 JOIN projects p ON t.project_id = p.id
-                WHERE t.assigned_to = ?";
-        $params = [$userId];
+                JOIN users project_creator ON project_creator.id = p.created_by
+                WHERE (
+                    (project_creator.role_id = ? AND p.created_by = ?)
+                    OR (project_creator.role_id <> ? AND t.assigned_to = ?)
+                )";
+        $params = [
+            \Helpers\Auth::ROLE_EXECUTOR,
+            $userId,
+            \Helpers\Auth::ROLE_EXECUTOR,
+            $userId,
+        ];
 
         // Фильтр по статусу
         if (!empty($filters['status'])) {

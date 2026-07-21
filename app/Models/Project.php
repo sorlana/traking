@@ -124,7 +124,7 @@ class Project extends Model
      * Получить проекты пользователя по его роли в проекте
      *
      * @param int $userId ID пользователя
-     * @param int $roleId Роль пользователя в системе (для контекста, не используется в запросе)
+     * @param int $roleId Роль пользователя в системе
      * @return array Массив проектов
      */
     public function getUserProjects(int $userId, int $roleId): array
@@ -133,10 +133,12 @@ class Project extends Model
                 FROM projects p
                 JOIN project_statuses ps ON p.status_id = ps.id
                 JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
+                JOIN users creator ON creator.id = p.created_by
+                WHERE creator.role_id <> ? OR p.created_by = ?
                 GROUP BY p.id
                 ORDER BY p.created_at DESC";
 
-        return $this->db()->fetchAll($sql, [$userId]);
+        return $this->db()->fetchAll($sql, [$userId, \Helpers\Auth::ROLE_EXECUTOR, $userId]);
     }
 
     /**

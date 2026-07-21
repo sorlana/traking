@@ -21,13 +21,13 @@ class Auth
     private const SESSION_KEY = 'auth_user';
 
     /** @var int ID роли «Администратор» */
-    private const ROLE_ADMIN = 1;
+    public const ROLE_ADMIN = 1;
 
     /** @var int ID роли «Руководитель» */
-    private const ROLE_MANAGER = 2;
+    public const ROLE_MANAGER = 2;
 
     /** @var int ID роли «Исполнитель» */
-    private const ROLE_EXECUTOR = 3;
+    public const ROLE_EXECUTOR = 3;
 
     /**
      * Получить данные текущего авторизованного пользователя

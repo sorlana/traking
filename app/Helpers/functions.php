@@ -160,9 +160,20 @@ if (!function_exists('can')) {
 
         return match ($action) {
             'manage_users' => false, // Только admin
-            'create_project' => $roleId <= 2, // Admin или Manager
-            'edit_project' => $roleId <= 2 && ($resource === null || \Middleware\ProjectAccessMiddleware::check((int) $resource)),
-            'create_task' => $roleId <= 2 && ($resource === null || \Middleware\ProjectAccessMiddleware::check((int) $resource)),
+            'create_project' => in_array($roleId, [
+                \Helpers\Auth::ROLE_ADMIN,
+                \Helpers\Auth::ROLE_MANAGER,
+                \Helpers\Auth::ROLE_EXECUTOR,
+            ], true),
+            'edit_project' => $resource !== null
+                && \Middleware\ProjectAccessMiddleware::canManage((int) $resource),
+            'create_task' => $resource === null
+                ? in_array($roleId, [
+                    \Helpers\Auth::ROLE_ADMIN,
+                    \Helpers\Auth::ROLE_MANAGER,
+                    \Helpers\Auth::ROLE_EXECUTOR,
+                ], true)
+                : \Middleware\ProjectAccessMiddleware::canManage((int) $resource),
             'view_project' => $resource !== null && \Middleware\ProjectAccessMiddleware::check((int) $resource),
             'view_task' => $resource !== null && \Middleware\TaskAccessMiddleware::check((int) $resource),
             default => false,

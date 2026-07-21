@@ -84,10 +84,23 @@ class DashboardService
                   AND ts.code IN ('in_progress', 'revision', 'done', 'closed')";
         $params = [$projectId];
 
-        // Для Executor — только назначенные на него задачи
+        // В обычных проектах Executor видит назначенные задачи.
+        // В собственном приватном проекте — все задачи проекта.
         if ($roleId === 3) {
-            $sql .= " AND t.assigned_to = ?";
+            $sql .= " AND (
+                t.assigned_to = ?
+                OR EXISTS (
+                    SELECT 1
+                    FROM projects owner_project
+                    JOIN users project_creator ON project_creator.id = owner_project.created_by
+                    WHERE owner_project.id = t.project_id
+                      AND owner_project.created_by = ?
+                      AND project_creator.role_id = ?
+                )
+            )";
             $params[] = $userId;
+            $params[] = $userId;
+            $params[] = \Helpers\Auth::ROLE_EXECUTOR;
         }
 
         $sql .= " ORDER BY t.sort_order ASC, t.created_at DESC";

@@ -69,6 +69,17 @@ class ProjectController extends Controller
                     JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
                     WHERE 1=1";
             $params = [(int) $user['id']];
+
+            // Проекты исполнителей приватны: руководитель их не видит,
+            // другой исполнитель не получает доступ даже при ошибочной связи.
+            if ($roleId === Auth::ROLE_MANAGER) {
+                $sql .= " AND u.role_id <> ?";
+                $params[] = Auth::ROLE_EXECUTOR;
+            } elseif ($roleId === Auth::ROLE_EXECUTOR) {
+                $sql .= " AND (u.role_id <> ? OR p.created_by = ?)";
+                $params[] = Auth::ROLE_EXECUTOR;
+                $params[] = (int) $user['id'];
+            }
         }
 
         // Фильтр по статусу
@@ -160,13 +171,16 @@ class ProjectController extends Controller
 
         // Данные для формы добавления участника
         $db = Database::getInstance();
-        $allUsers = $db->fetchAll(
-            "SELECT id, name, login, role_id FROM users 
-             WHERE status = 'active' AND role_id != 1 
-               AND id NOT IN (SELECT user_id FROM project_users WHERE project_id = ?)
-             ORDER BY name",
-            [(int) $id]
-        );
+        $isPrivateExecutorProject = ProjectAccessMiddleware::isExecutorOwnedProject((int) $id);
+        $allUsers = $isPrivateExecutorProject
+            ? []
+            : $db->fetchAll(
+                "SELECT id, name, login, role_id FROM users
+                 WHERE status = 'active' AND role_id != 1
+                   AND id NOT IN (SELECT user_id FROM project_users WHERE project_id = ?)
+                 ORDER BY name",
+                [(int) $id]
+            );
         $statuses = $db->fetchAll("SELECT * FROM project_statuses ORDER BY sort_order");
 
         // Получаем создателя проекта
@@ -183,6 +197,7 @@ class ProjectController extends Controller
             'allUsers' => $allUsers,
             'statuses' => $statuses,
             'creator' => $creator,
+            'isPrivateExecutorProject' => $isPrivateExecutorProject,
         ]);
     }
 
@@ -192,7 +207,7 @@ class ProjectController extends Controller
      */
     public function create(): void
     {
-        // Только admin и manager могут создавать проекты
+        // Исполнитель также может создать собственный приватный проект.
         $this->authorize(can('create_project'), 'Недостаточно прав для создания проекта');
 
         $db = Database::getInstance();
@@ -378,6 +393,11 @@ class ProjectController extends Controller
 
         $this->authorize(can('edit_project', (int) $id), 'Недостаточно прав');
 
+        if (ProjectAccessMiddleware::isExecutorOwnedProject((int) $id)) {
+            Response::forbidden('Приватный проект исполнителя нельзя открывать другим участникам');
+            return;
+        }
+
         $userId = (int) ($_POST['user_id'] ?? 0);
         $role = $_POST['project_role'] ?? 'executor';
 
@@ -424,6 +444,11 @@ class ProjectController extends Controller
         }
 
         $this->authorize(can('edit_project', (int) $id), 'Недостаточно прав');
+
+        if (ProjectAccessMiddleware::isExecutorOwnedProject((int) $id)) {
+            Response::forbidden('Приватный проект исполнителя нельзя открывать другим участникам');
+            return;
+        }
 
         $userId = (int) ($_POST['user_id'] ?? 0);
 
@@ -722,7 +747,12 @@ class ProjectController extends Controller
             return;
         }
 
-        // Удалять может только создатель или admin
+        if (!ProjectAccessMiddleware::check((int) $id)) {
+            Response::forbidden('Нет доступа к проекту');
+            return;
+        }
+
+        // Удалять может только создатель или admin.
         $canDelete = Auth::isAdmin() || (int) $project['created_by'] === Auth::id();
 
         if (!$canDelete) {
@@ -813,6 +843,10 @@ class ProjectController extends Controller
 
         $title = trim($_POST['title'] ?? '');
         $assignedTo = !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null;
+        $privateOwnerId = ProjectAccessMiddleware::executorOwnerId($projectId);
+        if ($privateOwnerId !== null) {
+            $assignedTo = $privateOwnerId;
+        }
 
         if ($title === '') {
             $this->json(['error' => 'Укажите название задачи'], 400);
@@ -924,6 +958,10 @@ class ProjectController extends Controller
 
         $title = trim($_POST['title'] ?? '');
         $assignedTo = !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null;
+        $privateOwnerId = ProjectAccessMiddleware::executorOwnerId($projectId);
+        if ($privateOwnerId !== null) {
+            $assignedTo = $privateOwnerId;
+        }
 
         if ($title === '') {
             $this->json(['error' => 'Укажите название задачи'], 400);

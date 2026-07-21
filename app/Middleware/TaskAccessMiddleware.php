@@ -24,7 +24,8 @@ class TaskAccessMiddleware
      * Логика:
      *   - Admin (role_id=1) видит все задачи
      *   - Manager (role_id=2) видит задачи проектов, к которым подключён
-     *   - Executor (role_id=3) видит только задачи, на которые назначен
+     *   - Executor (role_id=3) видит все задачи собственного приватного проекта
+     *   - В обычных проектах Executor видит назначенные задачи
      *     (assigned_to или task_participants)
      *
      * @param int $taskId ID задачи
@@ -40,17 +41,31 @@ class TaskAccessMiddleware
         $roleId = (int) ($user['role_id'] ?? 0);
         $userId = (int) $user['id'];
 
-        // Admin видит всё
+        // Admin сохраняет системный доступ.
         if ($roleId === 1) {
             return true;
         }
 
         $db = Database::getInstance();
 
-        // Получаем задачу
-        $task = $db->fetch("SELECT * FROM tasks WHERE id = ?", [$taskId]);
+        // Получаем задачу вместе с владельцем проекта.
+        $task = $db->fetch(
+            "SELECT t.*, p.created_by AS project_created_by,
+                    creator.role_id AS project_creator_role_id
+             FROM tasks t
+             JOIN projects p ON p.id = t.project_id
+             JOIN users creator ON creator.id = p.created_by
+             WHERE t.id = ?",
+            [$taskId]
+        );
         if ($task === null) {
             return false;
+        }
+
+        // В приватном проекте исполнителя все задачи доступны только владельцу.
+        if ((int) $task['project_creator_role_id'] === Auth::ROLE_EXECUTOR) {
+            return $roleId === Auth::ROLE_EXECUTOR
+                && (int) $task['project_created_by'] === $userId;
         }
 
         // Manager — проверяем что он подключён к проекту задачи

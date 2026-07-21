@@ -154,7 +154,7 @@ $upLabel = !empty($parent['id'])
                             <button type="submit" class="ui-btn ui-btn-secondary" <?= !$canClose['can'] ? 'disabled title="Есть незавершённые доработки"' : '' ?>>Закрыть</button>
                         </form>
                     <?php endif; ?>
-                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id() || (\Helpers\Auth::isExecutor() && can('create_task', (int) $task['project_id']))): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" data-confirm-delete="Удалить задачу и все вложенные доработки? Это действие нельзя отменить." class="inline">
                             <?= csrf_field() ?>
                             <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
@@ -410,7 +410,7 @@ $upLabel = !empty($parent['id'])
                         <div class="border-t my-1"></div>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/close') ?>" onsubmit="return confirm('Закрыть и принять задачу?')"><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" <?= !$canClose['can'] ? 'disabled' : '' ?>>Закрыть</button></form>
                     <?php endif; ?>
-                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id()): ?>
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $task['created_by'] === \Helpers\Auth::id() || (\Helpers\Auth::isExecutor() && can('create_task', (int) $task['project_id']))): ?>
                         <div class="border-t my-1"></div>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/delete') ?>" data-confirm-delete="Удалить задачу и все вложенные доработки? Это действие нельзя отменить."><?= csrf_field() ?><button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Удалить</button></form>
                     <?php endif; ?>

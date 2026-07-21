@@ -223,7 +223,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
     <!-- ============================================================ -->
     <div x-show="tab === 'users'" x-transition class="flex flex-col min-h-0">
         <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
-            <?php if (can('edit_project', (int) $project['id'])): ?>
+            <?php if (can('edit_project', (int) $project['id']) && empty($isPrivateExecutorProject)): ?>
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
                         <?= csrf_field() ?>
@@ -257,7 +257,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                                     <span class="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Исполнитель</span>
                                 <?php endif; ?>
                             </div>
-                            <?php if (can('edit_project', (int) $project['id']) && (int) $u['id'] !== (int) $project['created_by']): ?>
+                            <?php if (can('edit_project', (int) $project['id']) && empty($isPrivateExecutorProject) && (int) $u['id'] !== (int) $project['created_by']): ?>
                                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/remove-user') ?>"
                                       data-confirm-delete="<?= e('Удалить участника «' . $u['name'] . '» из проекта?') ?>" class="inline flex-shrink-0">
                                     <?= csrf_field() ?>

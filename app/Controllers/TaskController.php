@@ -88,7 +88,8 @@ class TaskController extends Controller
                         JOIN task_statuses ts ON t.status_id = ts.id
                         LEFT JOIN users u ON t.assigned_to = u.id
                         LEFT JOIN users creator ON t.created_by = creator.id
-                        JOIN projects p ON t.project_id = p.id";
+                        JOIN projects p ON t.project_id = p.id
+                        JOIN users project_creator ON project_creator.id = p.created_by";
 
                 $params = [];
 
@@ -99,6 +100,11 @@ class TaskController extends Controller
                 }
 
                 $sql .= " WHERE 1=1";
+
+                if ($roleId === Auth::ROLE_MANAGER) {
+                    $sql .= " AND project_creator.role_id <> ?";
+                    $params[] = Auth::ROLE_EXECUTOR;
+                }
 
                 // Применяем фильтры
                 if (!empty($filters['status'])) {
@@ -145,13 +151,42 @@ class TaskController extends Controller
             $projects = $db->fetchAll(
                 "SELECT p.id, p.title FROM projects p
                  JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
+                 JOIN users creator ON creator.id = p.created_by
+                 WHERE creator.role_id <> ?
                  ORDER BY p.title",
-                [(int) $user['id']]
+                [(int) $user['id'], Auth::ROLE_EXECUTOR]
+            );
+        } elseif ($roleId === Auth::ROLE_EXECUTOR) {
+            $projects = $db->fetchAll(
+                "SELECT p.id, p.title FROM projects p
+                 JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
+                 JOIN users creator ON creator.id = p.created_by
+                 WHERE creator.role_id <> ? OR p.created_by = ?
+                 ORDER BY p.title",
+                [(int) $user['id'], Auth::ROLE_EXECUTOR, (int) $user['id']]
             );
         }
 
-        // Исполнители для фильтра
-        $executors = $db->fetchAll("SELECT id, name FROM users WHERE status = 'active' AND role_id != 1 ORDER BY name");
+        $taskCreationProjects = $projects;
+        if ($roleId === Auth::ROLE_EXECUTOR) {
+            $taskCreationProjects = $db->fetchAll(
+                "SELECT p.id, p.title FROM projects p
+                 JOIN users creator ON creator.id = p.created_by
+                 WHERE p.created_by = ? AND creator.role_id = ?
+                 ORDER BY p.title",
+                [(int) $user['id'], Auth::ROLE_EXECUTOR]
+            );
+        }
+
+        // Исполнитель в собственном проекте может назначать задачи только себе.
+        $executors = $roleId === Auth::ROLE_EXECUTOR
+            ? $db->fetchAll(
+                "SELECT id, name FROM users WHERE id = ? AND status = 'active'",
+                [(int) $user['id']]
+            )
+            : $db->fetchAll(
+                "SELECT id, name FROM users WHERE status = 'active' AND role_id != 1 ORDER BY name"
+            );
 
         $this->view('tasks/index', [
             'title' => 'Задачи — Traking',
@@ -159,6 +194,7 @@ class TaskController extends Controller
             'project' => $project,
             'statuses' => $statuses,
             'projects' => $projects,
+            'taskCreationProjects' => $taskCreationProjects,
             'executors' => $executors,
             'filters' => $filters,
         ]);
@@ -393,14 +429,24 @@ class TaskController extends Controller
         // Список проектов (если project_id не указан)
         $projects = [];
         if ($projectId === 0) {
-            if ($roleId === 1) {
+            if ($roleId === Auth::ROLE_ADMIN) {
                 $projects = $db->fetchAll("SELECT id, title FROM projects ORDER BY title");
-            } else {
+            } elseif ($roleId === Auth::ROLE_MANAGER) {
                 $projects = $db->fetchAll(
                     "SELECT p.id, p.title FROM projects p
                      JOIN project_users pu ON pu.project_id = p.id AND pu.user_id = ?
+                     JOIN users creator ON creator.id = p.created_by
+                     WHERE creator.role_id <> ?
                      ORDER BY p.title",
-                    [(int) $user['id']]
+                    [(int) $user['id'], Auth::ROLE_EXECUTOR]
+                );
+            } else {
+                $projects = $db->fetchAll(
+                    "SELECT p.id, p.title FROM projects p
+                     JOIN users creator ON creator.id = p.created_by
+                     WHERE p.created_by = ? AND creator.role_id = ?
+                     ORDER BY p.title",
+                    [(int) $user['id'], Auth::ROLE_EXECUTOR]
                 );
             }
         }
@@ -445,6 +491,11 @@ class TaskController extends Controller
         }
 
         $this->authorize(can('create_task', $data['project_id']), 'Недостаточно прав для создания задачи');
+
+        $data['assigned_to'] = $this->privateProjectAssignee(
+            $data['project_id'],
+            $data['assigned_to']
+        );
 
         // Валидация
         $errors = $this->validateTaskData($data);
@@ -635,6 +686,10 @@ class TaskController extends Controller
             'deadline' => $_POST['deadline'] ?? null,
             'assigned_to' => !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null,
         ];
+        $data['assigned_to'] = $this->privateProjectAssignee(
+            (int) $task['project_id'],
+            $data['assigned_to']
+        );
 
         // Валидация
         $errors = $this->validateTaskData(array_merge($data, ['project_id' => $task['project_id']]));
@@ -877,7 +932,10 @@ class TaskController extends Controller
         // Только manager/admin может переназначать
         $this->authorize(can('create_task', (int) $task['project_id']), 'Недостаточно прав для переназначения');
 
-        $assignedTo = !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null;
+        $assignedTo = $this->privateProjectAssignee(
+            (int) $task['project_id'],
+            !empty($_POST['assigned_to']) ? (int) $_POST['assigned_to'] : null
+        );
 
         // Проверяем что исполнитель является участником проекта
         if ($assignedTo !== null) {
@@ -1249,9 +1307,15 @@ class TaskController extends Controller
 
         foreach ($taskIds as $taskId) {
             $task = $this->taskModel->find($taskId);
+            $canManagePrivateProject = $task
+                && $this->isPrivateProjectOwner((int) $task['project_id']);
             $canDelete = $task
                 && TaskAccessMiddleware::check($taskId)
-                && (Auth::isAdmin() || (int) $task['created_by'] === Auth::id());
+                && (
+                    Auth::isAdmin()
+                    || (int) $task['created_by'] === Auth::id()
+                    || $canManagePrivateProject
+                );
             if (!$canDelete) {
                 Response::forbidden('Недостаточно прав для удаления одной из выбранных задач');
                 return;
@@ -1289,6 +1353,18 @@ class TaskController extends Controller
             : '/tasks';
     }
 
+    private function isPrivateProjectOwner(int $projectId): bool
+    {
+        return Auth::isExecutor()
+            && ProjectAccessMiddleware::isExecutorOwnedProject($projectId)
+            && ProjectAccessMiddleware::canManage($projectId);
+    }
+
+    private function privateProjectAssignee(int $projectId, ?int $assignedTo): ?int
+    {
+        return ProjectAccessMiddleware::executorOwnerId($projectId) ?? $assignedTo;
+    }
+
     /**
      * Удаление задачи (только создатель или admin)
      * POST /tasks/{id}/delete
@@ -1303,8 +1379,15 @@ class TaskController extends Controller
             return;
         }
 
-        // Удалять может только создатель задачи или admin
-        $canDelete = Auth::isAdmin() || (int) $task['created_by'] === Auth::id();
+        if (!TaskAccessMiddleware::check($taskId)) {
+            Response::forbidden('Нет доступа к задаче');
+            return;
+        }
+
+        // В приватном проекте владелец управляет всеми задачами проекта.
+        $canDelete = Auth::isAdmin()
+            || (int) $task['created_by'] === Auth::id()
+            || $this->isPrivateProjectOwner((int) $task['project_id']);
 
         if (!$canDelete) {
             Response::forbidden('Удалить задачу может только её создатель или администратор');
