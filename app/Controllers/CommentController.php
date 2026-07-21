@@ -41,6 +41,9 @@ class CommentController extends Controller
     /** @var int Максимальный размер файла (50 МБ) */
     private const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
+    /** @var int Максимум изображений в одной отправке */
+    private const MAX_ATTACHMENTS = 10;
+
     public function __construct()
     {
         $this->commentModel = new TaskComment();
@@ -84,7 +87,34 @@ class CommentController extends Controller
 
         // Получаем текст комментария
         $commentText = trim($_POST['comment_text'] ?? '');
-        $hasFile = isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK;
+        $uploadFiles = $this->collectUploadFiles();
+        $hasFile = count($uploadFiles) > 0;
+
+        if (count($uploadFiles) > self::MAX_ATTACHMENTS) {
+            $this->json(['error' => 'Можно отправить не более 10 изображений за раз'], 422);
+            return;
+        }
+
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        foreach ($uploadFiles as $uploadFile) {
+            $extension = strtolower(pathinfo($uploadFile['name'], PATHINFO_EXTENSION));
+            if (($uploadFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                $this->json(['error' => 'Не удалось загрузить один из файлов'], 422);
+                return;
+            }
+            if (!in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
+                $this->json(['error' => 'Недопустимый формат файла: ' . $uploadFile['name']], 422);
+                return;
+            }
+            if ((int) $uploadFile['size'] > self::MAX_FILE_SIZE) {
+                $this->json(['error' => 'Файл слишком большой: ' . $uploadFile['name']], 422);
+                return;
+            }
+            if (count($uploadFiles) > 1 && !in_array($extension, $imageExtensions, true)) {
+                $this->json(['error' => 'Группой можно отправлять только изображения'], 422);
+                return;
+            }
+        }
 
         // Валидация: текст обязателен, если нет файла
         if ($commentText === '' && !$hasFile) {
@@ -146,10 +176,13 @@ class CommentController extends Controller
 
         $commentId = $this->commentModel->create($data);
 
-        // Обрабатываем прикреплённый файл (если есть)
-        $uploadedFile = null;
-        if ($hasFile) {
-            $uploadedFile = $this->handleFileUpload($taskId, (int) $commentId, $task);
+        // Обрабатываем прикреплённые файлы (одно сообщение может содержать группу изображений)
+        $uploadedFiles = [];
+        foreach ($uploadFiles as $uploadFile) {
+            $savedFile = $this->handleFileUpload($uploadFile, $taskId, (int) $commentId, $task);
+            if ($savedFile !== null) {
+                $uploadedFiles[] = $savedFile;
+            }
         }
 
         // Уведомления о комментариях отключены — сообщения приходят через polling в чате
@@ -161,7 +194,9 @@ class CommentController extends Controller
         $senderName = $user['name'] ?? $user['login'] ?? 'Кто-то';
         $pushBody = mb_strlen($commentText) > 100 ? mb_substr($commentText, 0, 100) . '...' : $commentText;
         if ($commentText === '' || $commentText === '📎 Файл') {
-            $pushBody = '📎 Отправлен файл';
+            $pushBody = count($uploadFiles) > 1
+                ? 'Отправлено изображений: ' . count($uploadFiles)
+                : '📎 Отправлен файл';
         }
         $pushUrl = url('/tasks/' . $taskId);
         $pushService->sendToTaskParticipants(
@@ -181,7 +216,7 @@ class CommentController extends Controller
             'comment_text' => $commentText,
             'user_name' => $user['name'] ?? $user['login'] ?? '',
             'created_at' => date('Y-m-d H:i:s'),
-            'files' => $uploadedFile ? [$uploadedFile] : [],
+            'files' => $uploadedFiles,
             'links' => [],
         ];
 
@@ -196,15 +231,14 @@ class CommentController extends Controller
     /**
      * Загрузка файла, привязанного к комментарию
      *
+     * @param array $file Нормализованные данные из $_FILES
      * @param int $taskId ID задачи
      * @param int $commentId ID комментария
      * @param array $task Данные задачи
      * @return array|null Данные загруженного файла или null при ошибке
      */
-    private function handleFileUpload(int $taskId, int $commentId, array $task): ?array
+    private function handleFileUpload(array $file, int $taskId, int $commentId, array $task): ?array
     {
-        $file = $_FILES['file'];
-
         // Валидация расширения
         $originalName = $file['name'];
         $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
@@ -255,6 +289,35 @@ class CommentController extends Controller
             'file_size' => (int) $file['size'],
             'file_type' => $extension,
         ];
+    }
+
+    /**
+     * Привести одиночный file и множественный files[] к одному массиву.
+     */
+    private function collectUploadFiles(): array
+    {
+        $files = [];
+
+        if (isset($_FILES['files']['name']) && is_array($_FILES['files']['name'])) {
+            foreach ($_FILES['files']['name'] as $index => $name) {
+                if (($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+                $files[] = [
+                    'name' => $name,
+                    'type' => $_FILES['files']['type'][$index] ?? '',
+                    'tmp_name' => $_FILES['files']['tmp_name'][$index] ?? '',
+                    'error' => $_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                    'size' => (int) ($_FILES['files']['size'][$index] ?? 0),
+                ];
+            }
+        }
+
+        if (isset($_FILES['file']) && ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $files[] = $_FILES['file'];
+        }
+
+        return $files;
     }
 
     /**

@@ -107,21 +107,24 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                         </div>
-                        <!-- Прикреплённые файлы (без фона для изображений) -->
-                        <template x-for="file in msg.files" :key="file.id">
+                        <!-- Группа изображений -->
+                        <div x-show="msg.files.some(file => isImage(file.file_type))" class="mt-1 grid gap-1"
+                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+                            <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
+                                <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
+                                     @click="if (!contextMenu.show) openModal(file, msg.user_id)"
+                                     @contextmenu.stop.prevent="showImageContext($event, msg, file)"
+                                     @touchstart.stop="startImageLongPress($event, msg, file)"
+                                     @touchend="cancelLongPress()" @touchmove="cancelLongPress()"
+                                     <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
+                                     :class="msg.files.filter(item => isImage(item.file_type)).length > 1 ? 'h-36 w-full object-cover' : 'max-h-48 max-w-full object-contain'"
+                                     class="cursor-pointer rounded-lg border border-white/80 transition hover:opacity-90"
+                                     :alt="file.file_name">
+                            </template>
+                        </div>
+                        <!-- Видео и документы -->
+                        <template x-for="file in msg.files.filter(file => !isImage(file.file_type))" :key="file.id">
                             <div class="mt-1">
-                                <!-- Изображение — превью -->
-                                <template x-if="isImage(file.file_type)">
-                                    <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="if (!contextMenu.show) openModal(file, msg.user_id)"
-                                         @contextmenu.stop.prevent="showImageContext($event, msg, file)"
-                                         @touchstart.stop="startImageLongPress($event, msg, file)"
-                                         @touchend="cancelLongPress()"
-                                         @touchmove="cancelLongPress()"
-                                         <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
-                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-white/80"
-                                         :alt="file.file_name">
-                                </template>
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
@@ -198,21 +201,24 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
                         </div>
-                        <!-- Прикреплённые файлы (без фона для изображений) -->
-                        <template x-for="file in msg.files" :key="file.id">
+                        <!-- Группа изображений -->
+                        <div x-show="msg.files.some(file => isImage(file.file_type))" class="mt-1 grid gap-1"
+                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+                            <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
+                                <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
+                                     @click="if (!contextMenu.show) openModal(file, msg.user_id)"
+                                     @contextmenu.stop.prevent="showImageContext($event, msg, file)"
+                                     @touchstart.stop="startImageLongPress($event, msg, file)"
+                                     @touchend="cancelLongPress()" @touchmove="cancelLongPress()"
+                                     <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
+                                     :class="msg.files.filter(item => isImage(item.file_type)).length > 1 ? 'h-36 w-full object-cover' : 'max-h-48 max-w-full object-contain'"
+                                     class="cursor-pointer rounded-lg border border-gray-200 transition hover:opacity-90"
+                                     :alt="file.file_name">
+                            </template>
+                        </div>
+                        <!-- Видео и документы -->
+                        <template x-for="file in msg.files.filter(file => !isImage(file.file_type))" :key="file.id">
                             <div class="mt-1">
-                                <!-- Изображение — превью -->
-                                <template x-if="isImage(file.file_type)">
-                                    <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
-                                         @click="if (!contextMenu.show) openModal(file, msg.user_id)"
-                                         @contextmenu.stop.prevent="showImageContext($event, msg, file)"
-                                         @touchstart.stop="startImageLongPress($event, msg, file)"
-                                         @touchend="cancelLongPress()"
-                                         @touchmove="cancelLongPress()"
-                                         <?= $roleId <= 2 ? 'title="Правый клик — создать доработку"' : '' ?>
-                                         class="max-w-full max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition shadow-sm border border-gray-200"
-                                         :alt="file.file_name">
-                                </template>
                                 <!-- Видео — встроенный плеер -->
                                 <template x-if="isVideo(file.file_type)">
                                     <video :src="BASE_URL + '/files/' + file.id + '/download'"
@@ -435,23 +441,35 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
         </div>
     </div>
 
-    <!-- Превью прикреплённого файла -->
-    <div x-show="attachedFile" x-cloak class="px-4 py-2 border-t bg-gray-50 flex items-center gap-2" style="display:none">
-        <span class="text-xs text-gray-600">📎</span>
-        <span class="text-xs text-gray-700 truncate flex-1" x-text="attachedFile ? attachedFile.name : ''"></span>
-        <!-- Toggle Редактировать (только для изображений) -->
-        <label x-show="attachedFile && isImageFile(attachedFile)"
-               class="flex items-center gap-1 cursor-pointer select-none mr-2">
-            <span class="text-xs text-gray-500">Редактировать</span>
-            <div class="relative">
-                <input type="checkbox" x-model="editBeforeSend" class="sr-only">
-                <div class="w-8 h-4 rounded-full transition"
-                     :class="editBeforeSend ? 'bg-blue-500' : 'bg-gray-300'"></div>
-                <div class="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform"
-                     :class="editBeforeSend ? 'translate-x-4' : ''"></div>
-            </div>
-        </label>
-        <button @click="removeAttachment()" class="text-xs text-red-500 hover:text-red-700">✕</button>
+    <!-- Превью прикреплённых файлов -->
+    <div x-show="attachedFiles.length" x-cloak class="border-t bg-white px-4 py-2" style="display:none">
+        <div class="flex flex-wrap gap-2">
+            <template x-for="(attachment, index) in attachedFiles" :key="attachment.id">
+                <div class="relative h-20 w-20 overflow-hidden rounded-md border bg-gray-50">
+                    <img x-show="attachment.previewUrl" :src="attachment.previewUrl" :alt="attachment.file.name"
+                         class="h-full w-full object-cover">
+                    <div x-show="!attachment.previewUrl" class="flex h-full w-full items-center justify-center p-2 text-center text-[10px] text-gray-600">
+                        <span class="break-all" x-text="attachment.file.name"></span>
+                    </div>
+                    <button type="button" @click="removeAttachment(index)"
+                            class="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-sm font-bold leading-none text-gray-700 hover:text-black"
+                            aria-label="Удалить вложение">✕</button>
+                </div>
+            </template>
+        </div>
+        <div class="mt-2 flex items-center justify-between gap-3">
+            <span class="text-xs text-gray-500" x-text="attachedFiles.length > 1 ? 'Изображений: ' + attachedFiles.length : attachedFiles[0]?.file.name"></span>
+            <!-- Редактор доступен только для одного изображения. -->
+            <label x-show="attachedFiles.length === 1 && isImageFile(attachedFiles[0].file)"
+                   class="flex cursor-pointer select-none items-center gap-1">
+                <span class="text-xs text-gray-500">Редактировать</span>
+                <div class="relative">
+                    <input type="checkbox" x-model="editBeforeSend" class="sr-only">
+                    <div class="h-4 w-8 rounded-full transition" :class="editBeforeSend ? 'bg-blue-500' : 'bg-gray-300'"></div>
+                    <div class="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white transition-transform" :class="editBeforeSend ? 'translate-x-4' : ''"></div>
+                </div>
+            </label>
+        </div>
     </div>
 
     <!-- Блок «Ответ на...» или «Редактирование» -->
@@ -481,7 +499,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                 </svg>
-                <input type="file" class="hidden" x-ref="fileInput" @change="attachFile($event)"
+                <input type="file" multiple class="hidden" x-ref="fileInput" @change="attachFile($event)"
                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.mp4,.mov">
             </label>
 
@@ -516,7 +534,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
             <!-- Кнопка отправить -->
             <button @click="sendMessage()"
-                    :disabled="sending || (newMessage.trim() === '' && !attachedFile)"
+                    :disabled="sending || (newMessage.trim() === '' && attachedFiles.length === 0)"
                     class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -561,7 +579,8 @@ function taskChat() {
             ];
         }, $comments), JSON_UNESCAPED_UNICODE) ?>,
         newMessage: '',
-        attachedFile: null,
+        attachedFiles: [],
+        nextAttachmentId: 1,
         editBeforeSend: false,
         modalFile: null,
         modalFileOwnerId: null,
@@ -651,7 +670,7 @@ function taskChat() {
                 const fileName = e.detail.fileName || 'image.png';
                 const text = e.detail.text || '';
                 const file = new File([blob], fileName, { type: blob.type });
-                this.attachedFile = file;
+                this.setAttachedFiles([file]);
                 this.editBeforeSend = false;
                 this.newMessage = text;
                 this.$nextTick(() => this.sendMessage());
@@ -924,12 +943,12 @@ function taskChat() {
          */
         async sendMessage() {
             const text = this.newMessage.trim();
-            if (text === '' && !this.attachedFile) return;
+            if (text === '' && this.attachedFiles.length === 0) return;
             if (this.sending) return;
 
             // Если toggle «Редактировать» активен и прикреплено изображение — открываем редактор
-            if (this.editBeforeSend && this.attachedFile && this.isImageFile(this.attachedFile)) {
-                this.$dispatch('open-editor-local', { file: this.attachedFile, text: text });
+            if (this.editBeforeSend && this.attachedFiles.length === 1 && this.isImageFile(this.attachedFiles[0].file)) {
+                this.$dispatch('open-editor-local', { file: this.attachedFiles[0].file, text: text });
                 return;
             }
 
@@ -983,9 +1002,9 @@ function taskChat() {
                     formData.append('parent_comment_id', this.replyTo.id);
                 }
 
-                // Если есть прикреплённый файл — добавляем
-                if (this.attachedFile) {
-                    formData.append('file', this.attachedFile);
+                // Все выбранные изображения сохраняются у одного сообщения.
+                for (const attachment of this.attachedFiles) {
+                    formData.append('files[]', attachment.file);
                 }
 
                 const response = await fetch(BASE_URL + `/tasks/${this.taskId}/comments`, {
@@ -1072,29 +1091,61 @@ function taskChat() {
          * Прикрепить файл
          */
         attachFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const selected = Array.from(event.target.files || []);
+            if (selected.length === 0) return;
 
-            // Проверка размера (50 МБ)
-            if (file.size > 50 * 1024 * 1024) {
-                this.errorMessage = 'Файл слишком большой (максимум 50 МБ)';
-                this.$refs.fileInput.value = '';
+            const combined = [...this.attachedFiles.map(item => item.file), ...selected];
+            if (combined.length > 10) {
+                this.errorMessage = 'Можно отправить не более 10 изображений за раз';
+                event.target.value = '';
+                return;
+            }
+            if (combined.some(file => file.size > 50 * 1024 * 1024)) {
+                this.errorMessage = 'Размер каждого файла не должен превышать 50 МБ';
+                event.target.value = '';
+                return;
+            }
+            if (combined.length > 1 && combined.some(file => !this.isImageFile(file))) {
+                this.errorMessage = 'Группой можно отправлять только изображения';
+                event.target.value = '';
                 return;
             }
 
-            this.attachedFile = file;
+            for (const file of selected) {
+                this.attachedFiles.push(this.createAttachment(file));
+            }
+            if (this.attachedFiles.length !== 1) this.editBeforeSend = false;
             this.errorMessage = '';
+            event.target.value = '';
         },
 
         /**
-         * Убрать прикреплённый файл
+         * Убрать одно вложение или очистить всю группу.
          */
-        removeAttachment() {
-            this.attachedFile = null;
-            this.editBeforeSend = false;
+        removeAttachment(index = null) {
+            const removed = index === null
+                ? this.attachedFiles.splice(0)
+                : this.attachedFiles.splice(index, 1);
+            removed.forEach(item => {
+                if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+            });
+            if (this.attachedFiles.length !== 1) this.editBeforeSend = false;
             if (this.$refs.fileInput) {
                 this.$refs.fileInput.value = '';
             }
+        },
+
+        createAttachment(file) {
+            return {
+                id: this.nextAttachmentId++,
+                file,
+                previewUrl: this.isImageFile(file) ? URL.createObjectURL(file) : null,
+            };
+        },
+
+        setAttachedFiles(files) {
+            this.removeAttachment();
+            this.attachedFiles = files.map(file => this.createAttachment(file));
         },
 
         /**
