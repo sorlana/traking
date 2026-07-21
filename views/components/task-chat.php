@@ -104,12 +104,12 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 <span x-text="formatTime(msg.created_at)"></span>
                                 <!-- Галочки прочтения (WhatsApp-стиль) -->
                                 <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                         </div>
                         <!-- Группа изображений -->
                         <div x-show="msg.files.some(file => isImage(file.file_type))" class="mt-1 grid gap-1"
-                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2 overflow-hidden rounded-xl border border-gray-300 bg-white p-1' : 'grid-cols-1'">
                             <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
                                 <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                      @click="if (!contextMenu.show) openModal(file, msg.user_id)"
@@ -167,7 +167,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <span x-text="formatTime(msg.created_at)"></span>
                             <!-- Галочки прочтения (WhatsApp-стиль) -->
                             <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                     </div>
                 </div>
@@ -203,7 +203,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </div>
                         <!-- Группа изображений -->
                         <div x-show="msg.files.some(file => isImage(file.file_type))" class="mt-1 grid gap-1"
-                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+                             :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2 overflow-hidden rounded-xl border border-gray-300 bg-white p-1' : 'grid-cols-1'">
                             <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
                                 <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
                                      @click="if (!contextMenu.show) openModal(file, msg.user_id)"
