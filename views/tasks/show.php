@@ -57,6 +57,8 @@ foreach ($statuses as $s) {
 $isDone = ($task['status_code'] === 'done');
 $isRevision = ($task['status_code'] === 'revision');
 $isClosed = ($task['status_code'] === 'closed');
+$defaultSubtaskFilter = $isExecutor ? 'revision' : 'done';
+$defaultSubtaskFilterLabel = $isExecutor ? 'Доработки' : 'Готовые';
 $upUrl = !empty($parent['id'])
     ? url('/tasks/' . (int) $parent['id'])
     : url('/projects/' . (int) $task['project_id']);
@@ -188,7 +190,26 @@ $upLabel = !empty($parent['id'])
                 </nav>
             </div>
             <!-- Доработки -->
-            <div x-show="tab === 'subtasks'" x-transition data-subtask-panel class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto" x-data="{ selected: 0 }">
+            <div x-show="tab === 'subtasks'" x-transition data-subtask-panel class="bg-white rounded-b-lg shadow-sm border border-t-0 p-4 flex-1 min-h-0 overflow-y-auto"
+                 x-data="{
+                     selected: 0,
+                     subtaskFilter: '<?= $defaultSubtaskFilter ?>',
+                     setSubtaskFilter(filter, panel) {
+                         this.subtaskFilter = filter;
+                         this.selected = 0;
+                         this.$nextTick(() => {
+                             panel.querySelectorAll('.subtask-select').forEach(box => box.checked = false);
+                             const selectAll = panel.querySelector('.subtask-select-all');
+                             if (selectAll) selectAll.checked = false;
+                         });
+                     },
+                     toggleVisibleSubtasks(checked, panel) {
+                         const boxes = [...panel.querySelectorAll('.subtask-select')]
+                             .filter(box => box.closest('[data-subtask-row]')?.offsetParent !== null);
+                         boxes.forEach(box => box.checked = checked);
+                         this.selected = checked ? boxes.length : 0;
+                     }
+                 }">
                 <?php if ($canEdit): ?>
                 <div class="mb-3 border-b pb-3">
                     <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/create') ?>" class="flex items-end gap-2">
@@ -211,26 +232,50 @@ $upLabel = !empty($parent['id'])
                               data-confirm-delete="Удалить выбранные доработки и все вложенные элементы? Это действие нельзя отменить."
                               class="mb-2">
                             <?= csrf_field() ?>
-                            <div class="flex items-center justify-between gap-3 border-b pb-2">
+                            <div class="flex min-h-[2.5rem] items-center justify-between gap-3 border-b pb-2">
                                 <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
-                                    <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
-                                           @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
+                                    <input type="checkbox" class="subtask-select-all h-4 w-4 rounded border-gray-300 text-blue-600"
+                                           @change="toggleVisibleSubtasks($event.target.checked, $el.closest('[data-subtask-panel]'))">
                                     Выбрать все
                                 </label>
-                                <button type="submit"
-                                        :disabled="selected === 0"
-                                        :aria-hidden="selected === 0"
-                                        :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
-                                        :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                        class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
-                                    Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
+                                        <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
+                                                :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                                :aria-pressed="subtaskFilter === 'all'"
+                                                class="rounded px-2.5 py-1 text-xs font-medium transition">Все</button>
+                                        <button type="button" @click="setSubtaskFilter('<?= $defaultSubtaskFilter ?>', $el.closest('[data-subtask-panel]'))"
+                                                :class="subtaskFilter === '<?= $defaultSubtaskFilter ?>' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                                :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
+                                                class="rounded px-2.5 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
+                                    </div>
+                                    <button type="submit"
+                                            :disabled="selected === 0"
+                                            :aria-hidden="selected === 0"
+                                            :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
+                                            :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
+                                            class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                        Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
+                                    </button>
+                                </div>
                             </div>
                         </form>
                         <div class="space-y-1">
                             <?php renderSubtaskTree($childrenTree, $statusColors, 0, true, (int) $task['id'], 'desktop-subtask-bulk-form'); ?>
                         </div>
                     <?php else: ?>
+                        <div class="mb-2 flex min-h-[2.5rem] items-center justify-end border-b pb-2">
+                            <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
+                                <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
+                                        :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                        :aria-pressed="subtaskFilter === 'all'"
+                                        class="rounded px-2.5 py-1 text-xs font-medium transition">Все</button>
+                                <button type="button" @click="setSubtaskFilter('<?= $defaultSubtaskFilter ?>', $el.closest('[data-subtask-panel]'))"
+                                        :class="subtaskFilter === '<?= $defaultSubtaskFilter ?>' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                        :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
+                                        class="rounded px-2.5 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
+                            </div>
+                        </div>
                         <div class="space-y-1">
                             <?php renderSubtaskTree($childrenTree, $statusColors); ?>
                         </div>
@@ -442,7 +487,26 @@ $upLabel = !empty($parent['id'])
     <!-- Содержимое вкладок -->
 
     <!-- Доработки -->
-    <div x-show="tab === 'subtasks'" x-cloak data-subtask-panel class="flex-1 min-h-0 overflow-y-auto px-4" x-data="{ selected: 0 }">
+    <div x-show="tab === 'subtasks'" x-cloak data-subtask-panel class="flex-1 min-h-0 overflow-y-auto px-4"
+         x-data="{
+             selected: 0,
+             subtaskFilter: '<?= $defaultSubtaskFilter ?>',
+             setSubtaskFilter(filter, panel) {
+                 this.subtaskFilter = filter;
+                 this.selected = 0;
+                 this.$nextTick(() => {
+                     panel.querySelectorAll('.subtask-select').forEach(box => box.checked = false);
+                     const selectAll = panel.querySelector('.subtask-select-all');
+                     if (selectAll) selectAll.checked = false;
+                 });
+             },
+             toggleVisibleSubtasks(checked, panel) {
+                 const boxes = [...panel.querySelectorAll('.subtask-select')]
+                     .filter(box => box.closest('[data-subtask-row]')?.offsetParent !== null);
+                 boxes.forEach(box => box.checked = checked);
+                 this.selected = checked ? boxes.length : 0;
+             }
+         }">
         <?php if ($canEdit): ?>
         <div class="mb-3 border-b pb-3">
             <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/subtasks/create') ?>" class="flex items-end gap-2">
@@ -464,26 +528,50 @@ $upLabel = !empty($parent['id'])
                       data-confirm-delete="Удалить выбранные доработки и все вложенные элементы? Это действие нельзя отменить."
                       class="mb-2">
                     <?= csrf_field() ?>
-                    <div class="flex items-center justify-between gap-2 border-b pb-2">
+                    <div class="flex min-h-[2.5rem] items-center justify-between gap-2 border-b pb-2">
                         <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
-                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
-                                   @change="$el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').forEach(el => el.checked = $event.target.checked); selected = $event.target.checked ? $el.closest('[data-subtask-panel]').querySelectorAll('.subtask-select').length : 0">
+                            <input type="checkbox" class="subtask-select-all h-4 w-4 rounded border-gray-300 text-blue-600"
+                                   @change="toggleVisibleSubtasks($event.target.checked, $el.closest('[data-subtask-panel]'))">
                             Все
                         </label>
-                        <button type="submit"
-                                :disabled="selected === 0"
-                                :aria-hidden="selected === 0"
-                                :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
-                                :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
-                            Удалить <span class="ui-btn-count" x-text="selected"></span>
-                        </button>
+                        <div class="flex items-center gap-1">
+                            <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
+                                <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
+                                        :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                        :aria-pressed="subtaskFilter === 'all'"
+                                        class="rounded px-2 py-1 text-xs font-medium transition">Все</button>
+                                <button type="button" @click="setSubtaskFilter('<?= $defaultSubtaskFilter ?>', $el.closest('[data-subtask-panel]'))"
+                                        :class="subtaskFilter === '<?= $defaultSubtaskFilter ?>' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                        :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
+                                        class="rounded px-2 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
+                            </div>
+                            <button type="submit"
+                                    :disabled="selected === 0"
+                                    :aria-hidden="selected === 0"
+                                    :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
+                                    :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
+                                    class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                Удалить <span class="ui-btn-count" x-text="selected"></span>
+                            </button>
+                        </div>
                     </div>
                 </form>
                 <div class="space-y-1">
                     <?php renderSubtaskTree($childrenTree, $statusColors, 0, true, (int) $task['id'], 'mobile-subtask-bulk-form'); ?>
                 </div>
             <?php else: ?>
+                <div class="mb-2 flex min-h-[2.5rem] items-center justify-end border-b pb-2">
+                    <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
+                        <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
+                                :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                :aria-pressed="subtaskFilter === 'all'"
+                                class="rounded px-2 py-1 text-xs font-medium transition">Все</button>
+                        <button type="button" @click="setSubtaskFilter('<?= $defaultSubtaskFilter ?>', $el.closest('[data-subtask-panel]'))"
+                                :class="subtaskFilter === '<?= $defaultSubtaskFilter ?>' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
+                                :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
+                                class="rounded px-2 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
+                    </div>
+                </div>
                 <div class="space-y-1">
                     <?php renderSubtaskTree($childrenTree, $statusColors); ?>
                 </div>

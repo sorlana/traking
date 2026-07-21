@@ -24,7 +24,11 @@ if (!function_exists('renderSubtaskTree')) {
             $indent = $depth * 16; // px отступ для вложенности
             $hasChildren = !empty($child['children']);
         ?>
-            <div x-data="{ editing: false }" class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>" style="margin-left: <?= $indent ?>px;">
+            <div x-data="{ editing: false }" x-cloak
+                 x-show="subtaskFilter === 'all' || (subtaskFilter === 'done' ? $el.dataset.status === 'done' : ['in_progress', 'revision'].includes($el.dataset.status))"
+                 data-subtask-row data-status="<?= e($child['status_code'] ?? '') ?>"
+                 class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 <?= $childOverdue ? 'bg-red-50' : '' ?>"
+                 style="margin-left: <?= $indent ?>px;">
                 <?php if ($allowDelete): ?>
                     <input type="checkbox" name="task_ids[]" value="<?= (int) $child['id'] ?>"
                            <?= $bulkFormId !== '' ? 'form="' . e($bulkFormId) . '"' : '' ?>
