@@ -26,10 +26,10 @@ main { overflow: hidden; padding-bottom: 0 !important; }
 
   <div class="project-header">
     <!-- ДЕСКТОП: Шапка проекта (lg+) -->
-    <div class="mb-4 hidden rounded-xl border border-gray-200 bg-white px-6 py-5 lg:block">
-        <a href="<?= url('/projects') ?>" class="text-sm font-medium text-blue-600 hover:text-blue-800">Все проекты</a>
-        <div class="mt-8 flex items-center justify-between gap-6">
-            <h1 class="min-w-0 text-2xl font-bold leading-tight text-gray-900"><?= e($project['title']) ?></h1>
+    <div class="mb-4 hidden rounded-lg border bg-white p-4 shadow-sm lg:block">
+        <a href="<?= url('/projects') ?>" class="mb-2 block text-xs font-medium text-blue-600 hover:text-blue-800">Все проекты</a>
+        <div class="flex items-center justify-between gap-4">
+            <h1 class="min-w-0 truncate text-xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
             <?php if (can('edit_project', (int) $project['id'])): ?>
                 <div class="flex flex-shrink-0 items-center gap-2">
                     <button type="button" @click="showEditProject = true"
