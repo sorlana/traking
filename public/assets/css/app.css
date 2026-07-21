@@ -693,6 +693,23 @@ nav[class*="fixed"] {
     --ui-accent-hover: #4f6bed;
 }
 
+/* Dashboard status cards keep their semantic top accents over the shared card border. */
+.app-shell .dashboard-stat-card--in-progress {
+    border-top-color: #fbbf24 !important;
+}
+
+.app-shell .dashboard-stat-card--revision {
+    border-top-color: #f97316 !important;
+}
+
+.app-shell .dashboard-stat-card--done {
+    border-top-color: #22c55e !important;
+}
+
+.app-shell .dashboard-stat-card--closed {
+    border-top-color: #6366f1 !important;
+}
+
 .app-shell {
     color: var(--ui-text);
     background: var(--ui-canvas);

@@ -71,22 +71,22 @@ main { overflow: hidden; height: 100%; }
 
             <!-- Stats_Panel: только десктоп -->
             <div class="hidden md:grid grid-cols-5 gap-4">
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-amber-400 p-2 md:p-4">
+                <div class="dashboard-stat-card dashboard-stat-card--in-progress bg-white rounded-lg shadow-sm border border-t-4 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.in_progress"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-orange-500 p-2 md:p-4">
+                <div class="dashboard-stat-card dashboard-stat-card--revision bg-white rounded-lg shadow-sm border border-t-4 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-green-500 p-2 md:p-4">
+                <div class="dashboard-stat-card dashboard-stat-card--done bg-white rounded-lg shadow-sm border border-t-4 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg shadow-sm border border-t-4 border-t-indigo-500 p-2 md:p-4">
+                <div class="dashboard-stat-card dashboard-stat-card--closed bg-white rounded-lg shadow-sm border border-t-4 p-2 md:p-4">
                     <div class="text-xs text-gray-500 mb-1">Закрыто</div>
                     <div class="text-lg md:text-2xl font-bold text-gray-800" x-text="currentStats.closed"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
@@ -221,8 +221,8 @@ main { overflow: hidden; height: 100%; }
 
                 <!-- Колонка «В работе» -->
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
-                    <div class="bg-amber-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
-                        <h3 class="text-sm font-medium text-amber-800 mb-3 flex-shrink-0">В работе</h3>
+                    <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">В работе</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.in_progress" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
@@ -252,8 +252,8 @@ main { overflow: hidden; height: 100%; }
 
                 <!-- Колонка «Доработки» -->
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
-                    <div class="bg-orange-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
-                        <h3 class="text-sm font-medium text-orange-800 mb-3 flex-shrink-0">Доработки</h3>
+                    <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Доработки</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.revision" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
@@ -283,8 +283,8 @@ main { overflow: hidden; height: 100%; }
 
                 <!-- Колонка «Готово» -->
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
-                    <div class="bg-green-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
-                        <h3 class="text-sm font-medium text-green-800 mb-3 flex-shrink-0">Готово</h3>
+                    <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Готово</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.done" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
@@ -314,8 +314,8 @@ main { overflow: hidden; height: 100%; }
 
                 <!-- Колонка «Закрыто» (принято руководителем) -->
                 <div class="flex-1 min-w-0 flex flex-col min-h-0">
-                    <div class="bg-indigo-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
-                        <h3 class="text-sm font-medium text-indigo-800 mb-3 flex-shrink-0">Закрыто</h3>
+                    <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
+                        <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Закрыто</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
                             <template x-for="task in currentBoard.closed" :key="task.id">
                                 <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
@@ -369,22 +369,22 @@ main { overflow: hidden; height: 100%; }
                 </button>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <div class="bg-white rounded-lg border border-t-4 border-t-amber-400 p-2">
+                <div class="dashboard-stat-card dashboard-stat-card--in-progress bg-white rounded-lg border border-t-4 p-2">
                     <div class="text-xs text-gray-500 mb-1">В работе</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.in_progress"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.in_progress / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-orange-500 p-2">
+                <div class="dashboard-stat-card dashboard-stat-card--revision bg-white rounded-lg border border-t-4 p-2">
                     <div class="text-xs text-gray-500 mb-1">Доработки</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.revision"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.revision / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-green-500 p-2">
+                <div class="dashboard-stat-card dashboard-stat-card--done bg-white rounded-lg border border-t-4 p-2">
                     <div class="text-xs text-gray-500 mb-1">Готово</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.done"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.done / currentStats.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="bg-white rounded-lg border border-t-4 border-t-indigo-500 p-2">
+                <div class="dashboard-stat-card dashboard-stat-card--closed bg-white rounded-lg border border-t-4 p-2">
                     <div class="text-xs text-gray-500 mb-1">Закрыто</div>
                     <div class="text-lg font-bold text-gray-800" x-text="currentStats.closed"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="(currentStats.total > 0 ? Math.round(currentStats.closed / currentStats.total * 100) : 0) + '%'"></div>
