@@ -206,9 +206,6 @@ main { overflow: hidden; height: 100%; }
                                         </svg>
                                     </button>
                                 </template>
-                                <template x-if="(task.children || []).length === 0">
-                                    <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
-                                </template>
                                 <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                       :class="statusDotClass(task.status_code)"
                                       :title="task.status_name"></span>
@@ -256,9 +253,6 @@ main { overflow: hidden; height: 100%; }
                                                 </svg>
                                             </button>
                                         </template>
-                                        <template x-if="(task.children || []).length === 0">
-                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
-                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
@@ -299,9 +293,6 @@ main { overflow: hidden; height: 100%; }
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
                                                 </svg>
                                             </button>
-                                        </template>
-                                        <template x-if="(task.children || []).length === 0">
-                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
                                         </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
@@ -344,9 +335,6 @@ main { overflow: hidden; height: 100%; }
                                                 </svg>
                                             </button>
                                         </template>
-                                        <template x-if="(task.children || []).length === 0">
-                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
-                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
@@ -387,9 +375,6 @@ main { overflow: hidden; height: 100%; }
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
                                                 </svg>
                                             </button>
-                                        </template>
-                                        <template x-if="(task.children || []).length === 0">
-                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
                                         </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
                                               :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
