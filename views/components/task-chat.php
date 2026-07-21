@@ -103,7 +103,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
                                 <span x-text="formatTime(msg.created_at)"></span>
                                 <!-- Галочки прочтения (WhatsApp-стиль) -->
-                                <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </div>
                         </div>
@@ -163,7 +163,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
                             <span x-text="formatTime(msg.created_at)"></span>
                             <!-- Галочки прочтения (WhatsApp-стиль) -->
-                            <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             <svg x-show="!msg.read_by_others" class="w-4 h-4 text-gray-400" viewBox="0 0 16 12" fill="none"><path d="M3.5 6.5L7 10L13 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                     </div>
