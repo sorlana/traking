@@ -239,6 +239,14 @@ $upLabel = !empty($parent['id'])
                                     Выбрать все
                                 </label>
                                 <div class="flex items-center gap-2">
+                                    <button type="submit"
+                                            :disabled="selected === 0"
+                                            :aria-hidden="selected === 0"
+                                            :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
+                                            :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
+                                            class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                        Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
+                                    </button>
                                     <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
                                         <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
                                                 :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
@@ -249,14 +257,6 @@ $upLabel = !empty($parent['id'])
                                                 :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
                                                 class="rounded px-2.5 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
                                     </div>
-                                    <button type="submit"
-                                            :disabled="selected === 0"
-                                            :aria-hidden="selected === 0"
-                                            :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
-                                            :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                            class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
-                                        Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
-                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -535,6 +535,14 @@ $upLabel = !empty($parent['id'])
                             Все
                         </label>
                         <div class="flex items-center gap-1">
+                            <button type="submit"
+                                    :disabled="selected === 0"
+                                    :aria-hidden="selected === 0"
+                                    :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
+                                    :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
+                                    class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                Удалить <span class="ui-btn-count" x-text="selected"></span>
+                            </button>
                             <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
                                 <button type="button" @click="setSubtaskFilter('all', $el.closest('[data-subtask-panel]'))"
                                         :class="subtaskFilter === 'all' ? 'bg-white text-blue-600' : 'text-gray-500 hover:text-gray-800'"
@@ -545,14 +553,6 @@ $upLabel = !empty($parent['id'])
                                         :aria-pressed="subtaskFilter === '<?= $defaultSubtaskFilter ?>'"
                                         class="rounded px-2 py-1 text-xs font-medium transition"><?= $defaultSubtaskFilterLabel ?></button>
                             </div>
-                            <button type="submit"
-                                    :disabled="selected === 0"
-                                    :aria-hidden="selected === 0"
-                                    :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
-                                    :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                    class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
-                                Удалить <span class="ui-btn-count" x-text="selected"></span>
-                            </button>
                         </div>
                     </div>
                 </form>
