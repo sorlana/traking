@@ -20,26 +20,29 @@ main { overflow: hidden; padding-bottom: 0 !important; }
 }
 </style>
 
-<div x-data="{ tab: 'info', showProject: false }" class="project-page">
+<div x-data="{ tab: 'info', showProject: false, showEditProject: false }"
+     @keydown.escape.window="showProject = false; showEditProject = false"
+     class="project-page">
 
   <div class="project-header">
     <!-- ДЕСКТОП: Шапка проекта (lg+) -->
-    <div class="hidden lg:block bg-white rounded-lg shadow-sm border p-4 mb-4">
-        <div class="flex items-center justify-between mb-3">
-            <h1 class="text-xl font-bold text-gray-800"><?= e($project['title']) ?></h1>
-            <a href="<?= url('/projects') ?>" class="text-xs text-blue-600 hover:text-blue-800">Все проекты</a>
+    <div class="mb-4 hidden rounded-xl border border-gray-200 bg-white px-6 py-5 lg:block">
+        <a href="<?= url('/projects') ?>" class="text-sm font-medium text-blue-600 hover:text-blue-800">Все проекты</a>
+        <div class="mt-8 flex items-center justify-between gap-6">
+            <h1 class="min-w-0 text-2xl font-bold leading-tight text-gray-900"><?= e($project['title']) ?></h1>
+            <?php if (can('edit_project', (int) $project['id'])): ?>
+                <div class="flex flex-shrink-0 items-center gap-2">
+                    <button type="button" @click="showEditProject = true"
+                            class="ui-btn ui-btn-secondary">Редактировать</button>
+                    <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
+                        <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
-        <?php if (can('edit_project', (int) $project['id'])): ?>
-            <div class="flex items-center gap-2">
-                <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="ui-btn ui-btn-secondary">Редактировать</a>
-                <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
-                    <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>" class="inline">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="ui-btn ui-btn-secondary">Удалить</button>
-                    </form>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
     </div>
 
     <!-- МОБИЛЬНЫЕ: заголовок проекта + ссылка «Все проекты» (<lg) -->
@@ -69,7 +72,8 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                 <button @click="projActions = !projActions" class="ui-btn ui-btn-light">Действия</button>
                 <div x-show="projActions" @click.outside="projActions = false" x-cloak x-transition
                      class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
-                    <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
+                    <button type="button" @click="projActions = false; showEditProject = true"
+                            class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">Редактировать</button>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                         <div class="border-t my-1"></div>
                         <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>" data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>">
@@ -443,8 +447,8 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                 </div>
                 <?php if (can('edit_project', (int) $project['id'])): ?>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <a href="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>"
-                           class="ui-btn ui-btn-secondary">Редактировать</a>
+                        <button type="button" @click="showProject = false; showEditProject = true"
+                                class="ui-btn ui-btn-secondary">Редактировать</button>
                         <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
                             <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/delete') ?>"
                                   data-confirm-delete="<?= e('Удалить проект «' . $project['title'] . '» и все его задачи? Это действие нельзя отменить.') ?>" class="inline">
@@ -455,6 +459,70 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+    </div>
+
+    <!-- ===== Модалка: Редактирование проекта ===== -->
+    <div x-show="showEditProject" x-cloak x-transition.opacity
+         role="dialog" aria-modal="true" aria-labelledby="edit-project-title"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+         @click.self="showEditProject = false" style="display: none;">
+        <div class="max-h-[86vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white shadow-xl" @click.stop>
+            <div class="flex items-center justify-between border-b p-4">
+                <h2 id="edit-project-title" class="text-lg font-bold text-gray-800">Редактирование проекта</h2>
+                <button type="button" @click="showEditProject = false"
+                        class="a11y-icon-button text-xl text-gray-400 hover:text-black"
+                        aria-label="Закрыть окно редактирования проекта">&times;</button>
+            </div>
+            <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/edit') ?>" class="space-y-4 p-4">
+                <?= csrf_field() ?>
+
+                <div>
+                    <label for="edit_project_title_input" class="mb-1 block text-xs font-medium text-gray-500">
+                        Название проекта <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="edit_project_title_input" name="title" value="<?= e($project['title']) ?>"
+                           required maxlength="255" class="ui-control">
+                </div>
+
+                <div>
+                    <label for="edit_project_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
+                    <textarea id="edit_project_description" name="description" rows="3"
+                              placeholder="Описание проекта" class="ui-control"><?= e($project['description'] ?? '') ?></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label for="edit_project_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок сдачи</label>
+                        <input type="date" id="edit_project_deadline" name="deadline"
+                               value="<?= e($project['deadline'] ?? '') ?>" class="ui-control">
+                    </div>
+                    <div>
+                        <label for="edit_project_estimated_hours" class="mb-1 block text-xs font-medium text-gray-500">Расчётное время</label>
+                        <input type="number" id="edit_project_estimated_hours" name="estimated_hours"
+                               value="<?= e($project['estimated_hours'] ?? '') ?>" step="0.5" min="0.5" placeholder="Часы" class="ui-control">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit_project_status" class="mb-1 block text-xs font-medium text-gray-500">
+                        Статус <span class="text-red-500">*</span>
+                    </label>
+                    <select id="edit_project_status" name="status_id" required class="ui-control">
+                        <?php foreach ($statuses as $projectStatus): ?>
+                            <option value="<?= (int) $projectStatus['id'] ?>"
+                                <?= (int) $projectStatus['id'] === (int) $project['status_id'] ? 'selected' : '' ?>>
+                                <?= e($projectStatus['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="flex gap-2 border-t pt-4">
+                    <button type="submit" class="ui-btn ui-btn-primary">Сохранить</button>
+                    <button type="button" @click="showEditProject = false" class="ui-btn ui-btn-secondary">Отмена</button>
+                </div>
+            </form>
         </div>
     </div>
 
