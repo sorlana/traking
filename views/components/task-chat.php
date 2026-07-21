@@ -31,8 +31,10 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                       x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></span>
                 <template x-if="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.files?.length">
                     <button type="button" @click.stop="openModal(messages.filter(m => m.is_pinned)[0].files[0], messages.filter(m => m.is_pinned)[0].user_id)"
-                            class="min-w-0 flex-1 truncate text-left text-xs font-medium text-blue-600 hover:text-blue-800"
-                            x-text="'📎 ' + messages.filter(m => m.is_pinned)[0].files[0].file_name"></button>
+                            class="flex min-w-0 flex-1 items-center gap-1 text-left text-xs font-medium text-blue-600 hover:text-blue-800">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        <span class="truncate" x-text="messages.filter(m => m.is_pinned)[0].files[0].file_name"></span>
+                    </button>
                 </template>
                 <svg class="w-4 h-4 text-blue-400 transition-transform flex-shrink-0 ml-auto" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -47,8 +49,10 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <div x-show="pin.files?.length" class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                             <template x-for="file in pin.files" :key="'pinned-file-' + file.id">
                                 <button type="button" @click.stop="openModal(file, pin.user_id)"
-                                        class="truncate text-left font-medium text-blue-600 hover:text-blue-800"
-                                        x-text="'📎 ' + file.file_name"></button>
+                                        class="flex min-w-0 items-center gap-1 text-left font-medium text-blue-600 hover:text-blue-800">
+                                    <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                    <span class="truncate" x-text="file.file_name"></span>
+                                </button>
                             </template>
                         </div>
                         <button @click.stop="togglePin(pin)" class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Открепить">
@@ -88,8 +92,10 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                          class="text-gray-500 truncate" x-text="getParentMessage(msg).comment_text"></div>
                                     <template x-for="file in (getParentMessage(msg).files || [])" :key="'own-quote-file-' + file.id">
                                         <button type="button" @click.stop="openModal(file, getParentMessage(msg).user_id)"
-                                                class="block max-w-full truncate text-left font-medium text-blue-600 hover:text-blue-800"
-                                                x-text="'📎 ' + file.file_name"></button>
+                                                class="flex max-w-full items-center gap-1 text-left font-medium text-blue-600 hover:text-blue-800">
+                                            <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                            <span class="truncate" x-text="file.file_name"></span>
+                                        </button>
                                     </template>
                                 </div>
                             </template>
@@ -182,8 +188,10 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                          class="text-gray-600 truncate" x-text="getParentMessage(msg).comment_text"></div>
                                     <template x-for="file in (getParentMessage(msg).files || [])" :key="'other-quote-file-' + file.id">
                                         <button type="button" @click.stop="openModal(file, getParentMessage(msg).user_id)"
-                                                class="block max-w-full truncate text-left font-medium text-blue-600 hover:text-blue-800"
-                                                x-text="'📎 ' + file.file_name"></button>
+                                                class="flex max-w-full items-center gap-1 text-left font-medium text-blue-600 hover:text-blue-800">
+                                            <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                            <span class="truncate" x-text="file.file_name"></span>
+                                        </button>
                                     </template>
                                 </div>
                             </template>
@@ -452,8 +460,10 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             <span x-show="replyTo" class="flex-shrink-0">↩ Ответ: <strong x-text="replyTo ? replyTo.user_name : ''"></strong></span>
             <template x-if="replyTo?.files?.length">
                 <button type="button" @click="openModal(replyTo.files[0], replyTo.user_id)"
-                        class="min-w-0 truncate font-medium text-blue-600 hover:text-blue-800"
-                        x-text="'📎 ' + replyTo.files[0].file_name"></button>
+                        class="flex min-w-0 items-center gap-1 font-medium text-blue-600 hover:text-blue-800">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <span class="truncate" x-text="replyTo.files[0].file_name"></span>
+                </button>
             </template>
             <span x-show="editingMsg" class="font-semibold text-gray-700">Редактирование</span>
         </div>
