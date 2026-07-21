@@ -11,9 +11,9 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
 $priorityLabels = [
     'low' => ['label' => 'Низкий', 'class' => 'bg-gray-100 text-gray-700'],
-    'medium' => ['label' => 'Средний', 'class' => 'bg-blue-100 text-blue-700'],
-    'high' => ['label' => 'Высокий', 'class' => 'bg-orange-100 text-orange-700'],
-    'urgent' => ['label' => 'Срочный', 'class' => 'bg-red-100 text-red-700'],
+    'medium' => ['label' => 'Средний', 'class' => 'bg-gray-100 text-gray-700'],
+    'high' => ['label' => 'Высокий', 'class' => 'bg-gray-100 text-gray-700'],
+    'urgent' => ['label' => 'Срочный', 'class' => 'bg-gray-100 text-gray-700'],
 ];
 
 $statusColors = [
@@ -313,7 +313,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 hidden sm:table-cell">
-                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium <?= $prio['class'] ?>">
+                                    <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium <?= $prio['class'] ?>">
                                         <?= $prio['label'] ?>
                                     </span>
                                 </td>
