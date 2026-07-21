@@ -642,7 +642,7 @@ class TaskController extends Controller
         if (!empty($errors)) {
             Session::flash('errors', $errors);
             Session::flash('old', $data);
-            $this->redirect("/tasks/{$taskId}/edit");
+            $this->redirect(isset($_POST['redirect_to']) ? $this->tasksReturnUrl() : "/tasks/{$taskId}/edit");
             return;
         }
 
@@ -667,7 +667,7 @@ class TaskController extends Controller
         }
 
         Session::flash('success', 'Задача обновлена');
-        $this->redirect('/tasks/' . $taskId);
+        $this->redirect(isset($_POST['redirect_to']) ? $this->tasksReturnUrl() : '/tasks/' . $taskId);
     }
 
     /**
@@ -1223,42 +1223,6 @@ class TaskController extends Controller
         }
 
         return count($allTaskIds);
-    }
-
-    /**
-     * Быстрое редактирование названия из общей таблицы задач.
-     */
-    public function updateTitle(string $id): void
-    {
-        $taskId = (int) $id;
-        $task = $this->taskModel->find($taskId);
-
-        if (!$task || !TaskAccessMiddleware::check($taskId)) {
-            Response::notFound('Задача не найдена');
-            return;
-        }
-
-        $this->authorize(can('create_task', (int) $task['project_id']), 'Недостаточно прав для редактирования');
-
-        $title = trim($_POST['title'] ?? '');
-        if ($title === '' || mb_strlen($title) > 255) {
-            Session::flash('error', $title === '' ? 'Введите название задачи' : 'Название не должно превышать 255 символов');
-            $this->redirect($this->tasksReturnUrl());
-            return;
-        }
-
-        $this->taskModel->update($taskId, ['title' => $title]);
-        $this->activityLogService->log(
-            Auth::id(),
-            (int) $task['project_id'],
-            $taskId,
-            'task_updated',
-            $task['title'],
-            $title
-        );
-
-        Session::flash('success', 'Название задачи обновлено');
-        $this->redirect($this->tasksReturnUrl());
     }
 
     /**

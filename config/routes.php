@@ -124,7 +124,6 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->get('/tasks/{id}', [\Controllers\TaskController::class, 'show']);
     $router->get('/tasks/{id}/edit', [\Controllers\TaskController::class, 'edit']);
     $router->post('/tasks/{id}/edit', [\Controllers\TaskController::class, 'update']);
-    $router->post('/tasks/{id}/title', [\Controllers\TaskController::class, 'updateTitle'], ['csrf']);
     $router->post('/tasks/{id}/status', [\Controllers\TaskController::class, 'changeStatus']);
     $router->post('/tasks/{id}/close', [\Controllers\TaskController::class, 'close']);
     $router->post('/tasks/{id}/reassign', [\Controllers\TaskController::class, 'reassign']);

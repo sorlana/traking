@@ -102,14 +102,23 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
      x-data="{
          showFilters: false,
          showCreate: false,
+         showEdit: false,
+         editTask: {},
          expandedTasks: {},
          selectedTasks: [],
          deletableTaskIds: <?= json_encode(array_map('intval', array_keys($deletableTaskIds))) ?>,
          toggleTask(id) { this.expandedTasks[id] = !this.expandedTasks[id] },
          taskVisible(ancestorIds) { return ancestorIds.every(id => this.expandedTasks[id]) },
-         toggleAllTasks(checked) { this.selectedTasks = checked ? [...this.deletableTaskIds] : [] }
+         toggleAllTasks(checked) { this.selectedTasks = checked ? [...this.deletableTaskIds] : [] },
+         openEdit(task) {
+             this.editTask = { ...task };
+             this.showCreate = false;
+             this.showFilters = false;
+             this.showEdit = true;
+             this.$nextTick(() => this.$refs.editTaskTitle?.focus());
+         }
      }"
-     @keydown.escape.window="showFilters = false; showCreate = false">
+     @keydown.escape.window="showFilters = false; showCreate = false; showEdit = false">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
     <div class="flex items-center justify-between gap-4">
         <h1 class="text-xl font-bold text-gray-800">
@@ -256,10 +265,8 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                             $canEditTask = isset($editableTaskIds[$taskId]);
                             $canDeleteTask = isset($deletableTaskIds[$taskId]);
                             $rowBackground = $treeDepth > 0 ? 'bg-gray-50' : ($isOverdue ? 'bg-red-50' : '');
-                            $titleFormId = 'task-title-form-' . $taskId;
                             ?>
-                            <tr x-data="{ editing: false }"
-                                x-show='taskVisible(<?= json_encode($treeAncestors) ?>)'
+                            <tr x-show='taskVisible(<?= json_encode($treeAncestors) ?>)'
                                 <?= $treeDepth > 0 ? 'x-cloak style="display:none"' : '' ?>
                                 class="transition hover:bg-gray-100 <?= $rowBackground ?>">
                                 <td class="px-4 py-3">
@@ -287,7 +294,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                         <?php elseif (!empty($deletableTaskIds)): ?>
                                             <span class="mx-1 h-4 w-4 flex-shrink-0" aria-hidden="true"></span>
                                         <?php endif; ?>
-                                        <div x-show="!editing" class="min-w-0">
+                                        <div class="min-w-0">
                                             <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="font-medium text-blue-600 hover:text-blue-800">
                                                 <?= e($task['title']) ?>
                                             </a>
@@ -295,16 +302,6 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                                 <span class="ml-1 text-xs font-medium text-red-600">Просрочено</span>
                                             <?php endif; ?>
                                         </div>
-                                        <?php if ($canEditTask): ?>
-                                            <form x-show="editing" x-cloak id="<?= $titleFormId ?>" method="POST"
-                                                  action="<?= url('/tasks/' . $taskId . '/title') ?>" class="min-w-0 flex-1">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
-                                                <input type="text" name="title" value="<?= e($task['title']) ?>" maxlength="255" required
-                                                       @keydown.escape.prevent="editing = false"
-                                                       class="ui-control py-1 text-sm" aria-label="Новое название задачи">
-                                            </form>
-                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
@@ -333,10 +330,19 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                 <?php if ($hasTaskActions): ?>
                                     <td class="px-2 py-1 text-right">
                                         <?php if ($canEditTask || $canDeleteTask): ?>
-                                            <div x-show="!editing" class="flex items-center justify-end -space-x-3">
+                                            <div class="flex items-center justify-end -space-x-3">
                                                 <?php if ($canEditTask): ?>
                                                     <button type="button"
-                                                            @click="editing = true; $nextTick(() => $el.closest('tr').querySelector('input[name=title]')?.select())"
+                                                            @click='openEdit(<?= json_encode([
+                                                                'id' => $taskId,
+                                                                'title' => $task['title'],
+                                                                'description' => $task['description'] ?? '',
+                                                                'status_id' => (int) $task['status_id'],
+                                                                'priority' => $task['priority'] ?? 'medium',
+                                                                'deadline' => $task['deadline'] ?? '',
+                                                                'assigned_to' => $task['assigned_to'] ?? '',
+                                                                'project_title' => $task['project_title'] ?? ($project['title'] ?? ''),
+                                                            ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>)'
                                                             class="a11y-icon-button text-gray-400 hover:text-black"
                                                             aria-label="Редактировать задачу <?= e($task['title']) ?>" title="Редактировать">
                                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -354,16 +360,6 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                                     </form>
                                                 <?php endif; ?>
                                             </div>
-                                            <?php if ($canEditTask): ?>
-                                                <div x-show="editing" x-cloak class="flex items-center justify-end -space-x-3">
-                                                    <button type="submit" form="<?= $titleFormId ?>" class="a11y-icon-button text-blue-600 hover:text-blue-800" aria-label="Сохранить название" title="Сохранить">
-                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                    </button>
-                                                    <button type="button" @click="editing = false" class="a11y-icon-button text-gray-400 hover:text-black" aria-label="Отменить редактирование" title="Отмена">
-                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                    </button>
-                                                </div>
-                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </td>
                                 <?php endif; ?>
@@ -472,6 +468,86 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 <div class="flex gap-2 pt-2 border-t">
                     <button type="submit" class="ui-btn ui-btn-dark">Создать</button>
                     <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка: Редактирование задачи -->
+    <div x-show="showEdit" x-cloak x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="edit-task-title"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+         @click.self="showEdit = false" style="display: none;">
+        <div class="max-h-[86vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white shadow-xl" @click.stop>
+            <div class="flex items-center justify-between border-b p-4">
+                <h2 id="edit-task-title" class="text-lg font-bold text-gray-800">Редактирование задачи</h2>
+                <button type="button" @click="showEdit = false"
+                        class="a11y-icon-button text-xl text-gray-400 hover:text-black"
+                        aria-label="Закрыть окно редактирования задачи">&times;</button>
+            </div>
+            <form method="POST" :action="'<?= url('/tasks') ?>/' + editTask.id + '/edit'"
+                  class="space-y-4 p-4" data-mobile-form-validation>
+                <?= csrf_field() ?>
+                <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-gray-500">Проект</label>
+                    <div class="ui-control bg-gray-50 text-gray-700" x-text="editTask.project_title"></div>
+                </div>
+
+                <div>
+                    <label for="edit_task_title_input" class="mb-1 block text-xs font-medium text-gray-500">
+                        Название <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="edit_task_title_input" name="title" x-ref="editTaskTitle"
+                           x-model="editTask.title" required maxlength="255" class="ui-control">
+                </div>
+
+                <div>
+                    <label for="edit_task_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
+                    <textarea id="edit_task_description" name="description" x-model="editTask.description"
+                              rows="3" placeholder="Короткое описание" class="ui-control"></textarea>
+                </div>
+
+                <div>
+                    <label for="edit_task_status" class="mb-1 block text-xs font-medium text-gray-500">Статус</label>
+                    <select id="edit_task_status" name="status_id" x-model="editTask.status_id" required class="ui-control">
+                        <?php foreach ($statuses as $status): ?>
+                            <option value="<?= (int) $status['id'] ?>"><?= e($status['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label for="edit_task_priority" class="mb-1 block text-xs font-medium text-gray-500">Приоритет</label>
+                        <select id="edit_task_priority" name="priority" x-model="editTask.priority" class="ui-control">
+                            <?php foreach ($createPriorityOptions as $value => $label): ?>
+                                <option value="<?= e($value) ?>"><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit_task_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок</label>
+                        <input type="date" id="edit_task_deadline" name="deadline" x-model="editTask.deadline" class="ui-control">
+                    </div>
+                </div>
+
+                <?php if ($roleId <= 2): ?>
+                    <div>
+                        <label for="edit_task_assigned" class="mb-1 block text-xs font-medium text-gray-500">Исполнитель</label>
+                        <select id="edit_task_assigned" name="assigned_to" x-model="editTask.assigned_to" class="ui-control">
+                            <?php foreach ($createExecutorOptions as $value => $label): ?>
+                                <option value="<?= e($value) ?>"><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php else: ?>
+                    <input type="hidden" name="assigned_to" :value="editTask.assigned_to">
+                <?php endif; ?>
+
+                <div class="flex gap-2 border-t pt-4">
+                    <button type="submit" class="ui-btn ui-btn-dark">Сохранить</button>
+                    <button type="button" @click="showEdit = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
         </div>
