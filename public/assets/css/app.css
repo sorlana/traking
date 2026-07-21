@@ -947,8 +947,8 @@ nav[class*="fixed"] {
 
 .a11y-icon-button.task-up-link {
     position: relative;
-    width: 0.75rem;
-    min-width: 0.75rem;
+    width: 0.625rem;
+    min-width: 0.625rem;
     justify-content: flex-start;
 }
 
