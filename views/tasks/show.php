@@ -233,18 +233,18 @@ $upLabel = !empty($parent['id'])
                               class="mb-2">
                             <?= csrf_field() ?>
                             <div class="flex min-h-[2.5rem] items-center justify-between gap-3 border-b pb-2">
-                                <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+                                <label class="flex cursor-pointer items-center gap-2 whitespace-nowrap text-xs text-gray-600">
                                     <input type="checkbox" class="subtask-select-all h-4 w-4 rounded border-gray-300 text-blue-600"
                                            @change="toggleVisibleSubtasks($event.target.checked, $el.closest('[data-subtask-panel]'))">
                                     Выбрать все
                                 </label>
-                                <div class="flex items-center gap-2">
+                                <div class="relative flex flex-shrink-0 items-center">
                                     <button type="submit"
                                             :disabled="selected === 0"
                                             :aria-hidden="selected === 0"
                                             :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
                                             :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                            class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                            class="ui-btn ui-btn-subtle absolute right-full mr-2 whitespace-nowrap transition-opacity" style="visibility: hidden;">
                                         Удалить выбранные <span class="ui-btn-count" x-text="selected"></span>
                                     </button>
                                     <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
@@ -534,13 +534,13 @@ $upLabel = !empty($parent['id'])
                                    @change="toggleVisibleSubtasks($event.target.checked, $el.closest('[data-subtask-panel]'))">
                             Все
                         </label>
-                        <div class="flex items-center gap-1">
+                        <div class="relative flex flex-shrink-0 items-center">
                             <button type="submit"
                                     :disabled="selected === 0"
                                     :aria-hidden="selected === 0"
                                     :style="{ visibility: selected > 0 ? 'visible' : 'hidden' }"
                                     :class="selected > 0 ? 'opacity-100' : 'invisible opacity-0 pointer-events-none'"
-                                    class="ui-btn ui-btn-subtle transition-opacity" style="visibility: hidden;">
+                                    class="ui-btn ui-btn-subtle absolute right-full mr-1 whitespace-nowrap transition-opacity" style="visibility: hidden;">
                                 Удалить <span class="ui-btn-count" x-text="selected"></span>
                             </button>
                             <div class="inline-flex rounded-md bg-gray-100 p-0.5" role="group" aria-label="Фильтр доработок">
