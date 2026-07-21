@@ -78,6 +78,24 @@ if ($project ?? null) {
         $createExecutorLabel = $allExecutors[0]['name'];
     }
 }
+
+$editableTaskIds = [];
+$deletableTaskIds = [];
+foreach ($tasks ?? [] as $listedTask) {
+    $listedTaskId = (int) $listedTask['id'];
+    if (can('create_task', (int) $listedTask['project_id'])) {
+        $editableTaskIds[$listedTaskId] = true;
+    }
+    if ($roleId === 1 || (int) $listedTask['created_by'] === (int) ($currentUser['id'] ?? 0)) {
+        $deletableTaskIds[$listedTaskId] = true;
+    }
+}
+$hasTaskActions = !empty($editableTaskIds) || !empty($deletableTaskIds);
+$taskFilterQuery = http_build_query(array_filter(
+    $filters ?? [],
+    static fn(mixed $value): bool => $value !== '' && $value !== null
+));
+$tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery : '');
 ?>
 
 <div class="space-y-4"
@@ -85,8 +103,11 @@ if ($project ?? null) {
          showFilters: false,
          showCreate: false,
          expandedTasks: {},
+         selectedTasks: [],
+         deletableTaskIds: <?= json_encode(array_map('intval', array_keys($deletableTaskIds))) ?>,
          toggleTask(id) { this.expandedTasks[id] = !this.expandedTasks[id] },
-         taskVisible(ancestorIds) { return ancestorIds.every(id => this.expandedTasks[id]) }
+         taskVisible(ancestorIds) { return ancestorIds.every(id => this.expandedTasks[id]) },
+         toggleAllTasks(checked) { this.selectedTasks = checked ? [...this.deletableTaskIds] : [] }
      }"
      @keydown.escape.window="showFilters = false; showCreate = false">
     <!-- Заголовок + Создать + Фильтры (мобильная кнопка) -->
@@ -182,6 +203,25 @@ if ($project ?? null) {
         </div>
     <?php else: ?>
         <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <?php if (!empty($deletableTaskIds)): ?>
+                <form id="tasks-bulk-delete-form" method="POST" action="<?= url('/tasks/delete') ?>"
+                      data-confirm-delete="Удалить выбранные задачи и все вложенные элементы? Это действие нельзя отменить."
+                      class="flex h-[53px] items-center justify-between gap-3 border-b bg-white px-4">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+                    <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+                        <input type="checkbox"
+                               class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                               :checked="deletableTaskIds.length > 0 && selectedTasks.length === deletableTaskIds.length"
+                               @change="toggleAllTasks($event.target.checked)">
+                        Выбрать все
+                    </label>
+                    <button type="submit" :disabled="selectedTasks.length === 0"
+                            class="ui-btn ui-btn-subtle">
+                        Удалить выбранные <span class="ui-btn-count" x-text="selectedTasks.length">0</span>
+                    </button>
+                </form>
+            <?php endif; ?>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
@@ -193,6 +233,9 @@ if ($project ?? null) {
                             <th class="text-left px-4 py-3 font-medium text-gray-600 hidden lg:table-cell">Срок</th>
                             <?php if (!($project ?? null)): ?>
                             <th class="text-left px-4 py-3 font-medium text-gray-600 hidden xl:table-cell">Проект</th>
+                            <?php endif; ?>
+                            <?php if ($hasTaskActions): ?>
+                                <th class="w-20 px-2 py-3"><span class="sr-only">Действия</span></th>
                             <?php endif; ?>
                         </tr>
                     </thead>
@@ -208,9 +251,17 @@ if ($project ?? null) {
                             $prio = $priorityLabels[$task['priority'] ?? 'medium'] ?? $priorityLabels['medium'];
                             $statusClass = $statusColors[$task['status_code'] ?? ''] ?? 'bg-gray-100 text-gray-800';
                             ?>
-                            <tr x-show='taskVisible(<?= json_encode($treeAncestors) ?>)'
+                            <?php
+                            $taskId = (int) $task['id'];
+                            $canEditTask = isset($editableTaskIds[$taskId]);
+                            $canDeleteTask = isset($deletableTaskIds[$taskId]);
+                            $rowBackground = $treeDepth > 0 ? 'bg-gray-50' : ($isOverdue ? 'bg-red-50' : '');
+                            $titleFormId = 'task-title-form-' . $taskId;
+                            ?>
+                            <tr x-data="{ editing: false }"
+                                x-show='taskVisible(<?= json_encode($treeAncestors) ?>)'
                                 <?= $treeDepth > 0 ? 'x-cloak style="display:none"' : '' ?>
-                                class="hover:bg-gray-50 transition <?= $isOverdue ? 'bg-red-50' : '' ?>">
+                                class="transition hover:bg-gray-100 <?= $rowBackground ?>">
                                 <td class="px-4 py-3">
                                     <div class="flex min-w-0 items-center gap-1" style="padding-left: <?= $treeDepth * 20 ?>px">
                                         <?php if ($treeHasChildren): ?>
@@ -228,7 +279,15 @@ if ($project ?? null) {
                                         <?php else: ?>
                                             <span class="h-6 w-6 flex-shrink-0" aria-hidden="true"></span>
                                         <?php endif; ?>
-                                        <div class="min-w-0">
+                                        <?php if ($canDeleteTask): ?>
+                                            <input type="checkbox" name="task_ids[]" value="<?= $taskId ?>"
+                                                   form="tasks-bulk-delete-form" x-model.number="selectedTasks"
+                                                   class="mx-1 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600"
+                                                   aria-label="Выбрать задачу <?= e($task['title']) ?>">
+                                        <?php elseif (!empty($deletableTaskIds)): ?>
+                                            <span class="mx-1 h-4 w-4 flex-shrink-0" aria-hidden="true"></span>
+                                        <?php endif; ?>
+                                        <div x-show="!editing" class="min-w-0">
                                             <a href="<?= url('/tasks/' . (int) $task['id']) ?>" class="font-medium text-blue-600 hover:text-blue-800">
                                                 <?= e($task['title']) ?>
                                             </a>
@@ -236,6 +295,16 @@ if ($project ?? null) {
                                                 <span class="ml-1 text-xs font-medium text-red-600">Просрочено</span>
                                             <?php endif; ?>
                                         </div>
+                                        <?php if ($canEditTask): ?>
+                                            <form x-show="editing" x-cloak id="<?= $titleFormId ?>" method="POST"
+                                                  action="<?= url('/tasks/' . $taskId . '/title') ?>" class="min-w-0 flex-1">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+                                                <input type="text" name="title" value="<?= e($task['title']) ?>" maxlength="255" required
+                                                       @keydown.escape.prevent="editing = false"
+                                                       class="ui-control py-1 text-sm" aria-label="Новое название задачи">
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
@@ -260,6 +329,43 @@ if ($project ?? null) {
                                         <?= e($task['project_title'] ?? '') ?>
                                     </a>
                                 </td>
+                                <?php endif; ?>
+                                <?php if ($hasTaskActions): ?>
+                                    <td class="px-2 py-1 text-right">
+                                        <?php if ($canEditTask || $canDeleteTask): ?>
+                                            <div x-show="!editing" class="flex items-center justify-end -space-x-3">
+                                                <?php if ($canEditTask): ?>
+                                                    <button type="button"
+                                                            @click="editing = true; $nextTick(() => $el.closest('tr').querySelector('input[name=title]')?.select())"
+                                                            class="a11y-icon-button text-gray-400 hover:text-black"
+                                                            aria-label="Редактировать задачу <?= e($task['title']) ?>" title="Редактировать">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                    </button>
+                                                <?php endif; ?>
+                                                <?php if ($canDeleteTask): ?>
+                                                    <form method="POST" action="<?= url('/tasks/' . $taskId . '/delete') ?>"
+                                                          data-confirm-delete="<?= e('Удалить задачу «' . $task['title'] . '» и все вложенные элементы? Это действие нельзя отменить.') ?>">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+                                                        <button type="submit" class="a11y-icon-button text-gray-400 hover:text-black"
+                                                                aria-label="Удалить задачу <?= e($task['title']) ?>" title="Удалить">
+                                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($canEditTask): ?>
+                                                <div x-show="editing" x-cloak class="flex items-center justify-end -space-x-3">
+                                                    <button type="submit" form="<?= $titleFormId ?>" class="a11y-icon-button text-blue-600 hover:text-blue-800" aria-label="Сохранить название" title="Сохранить">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    </button>
+                                                    <button type="button" @click="editing = false" class="a11y-icon-button text-gray-400 hover:text-black" aria-label="Отменить редактирование" title="Отмена">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </td>
                                 <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>

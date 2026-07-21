@@ -1226,6 +1226,106 @@ class TaskController extends Controller
     }
 
     /**
+     * Быстрое редактирование названия из общей таблицы задач.
+     */
+    public function updateTitle(string $id): void
+    {
+        $taskId = (int) $id;
+        $task = $this->taskModel->find($taskId);
+
+        if (!$task || !TaskAccessMiddleware::check($taskId)) {
+            Response::notFound('Задача не найдена');
+            return;
+        }
+
+        $this->authorize(can('create_task', (int) $task['project_id']), 'Недостаточно прав для редактирования');
+
+        $title = trim($_POST['title'] ?? '');
+        if ($title === '' || mb_strlen($title) > 255) {
+            Session::flash('error', $title === '' ? 'Введите название задачи' : 'Название не должно превышать 255 символов');
+            $this->redirect($this->tasksReturnUrl());
+            return;
+        }
+
+        $this->taskModel->update($taskId, ['title' => $title]);
+        $this->activityLogService->log(
+            Auth::id(),
+            (int) $task['project_id'],
+            $taskId,
+            'task_updated',
+            $task['title'],
+            $title
+        );
+
+        Session::flash('success', 'Название задачи обновлено');
+        $this->redirect($this->tasksReturnUrl());
+    }
+
+    /**
+     * Массовое удаление задач из общей таблицы.
+     */
+    public function deleteTasks(): void
+    {
+        $db = Database::getInstance();
+        $taskIds = array_values(array_unique(array_filter(
+            array_map('intval', (array) ($_POST['task_ids'] ?? [])),
+            static fn(int $id): bool => $id > 0
+        )));
+
+        if (empty($taskIds)) {
+            Session::flash('error', 'Выберите хотя бы одну задачу');
+            $this->redirect($this->tasksReturnUrl());
+            return;
+        }
+        if (count($taskIds) > 200) {
+            Session::flash('error', 'За один раз можно удалить не более 200 задач');
+            $this->redirect($this->tasksReturnUrl());
+            return;
+        }
+
+        foreach ($taskIds as $taskId) {
+            $task = $this->taskModel->find($taskId);
+            $canDelete = $task
+                && TaskAccessMiddleware::check($taskId)
+                && (Auth::isAdmin() || (int) $task['created_by'] === Auth::id());
+            if (!$canDelete) {
+                Response::forbidden('Недостаточно прав для удаления одной из выбранных задач');
+                return;
+            }
+        }
+
+        // Если выбраны родитель и его потомок, удаляем только корень ветки.
+        $selectedLookup = array_fill_keys($taskIds, true);
+        $rootIds = array_values(array_filter($taskIds, function (int $taskId) use ($selectedLookup, $db): bool {
+            $current = $db->fetch('SELECT parent_id FROM tasks WHERE id = ?', [$taskId]);
+            $depth = 0;
+            while ($current && !empty($current['parent_id']) && $depth++ < 50) {
+                $ancestorId = (int) $current['parent_id'];
+                if (isset($selectedLookup[$ancestorId])) {
+                    return false;
+                }
+                $current = $db->fetch('SELECT parent_id FROM tasks WHERE id = ?', [$ancestorId]);
+            }
+            return true;
+        }));
+
+        $deletedCount = $this->deleteTaskRoots($rootIds, $db);
+        Session::flash('success', "Удалено задач: {$deletedCount}");
+        $this->redirect($this->tasksReturnUrl());
+    }
+
+    /**
+     * Разрешить возврат только на общую страницу задач с её GET-фильтрами.
+     */
+    private function tasksReturnUrl(): string
+    {
+        $returnUrl = (string) ($_POST['redirect_to'] ?? '/tasks');
+        return $returnUrl === '/tasks' || str_starts_with($returnUrl, '/tasks?')
+            ? $returnUrl
+            : '/tasks';
+    }
+
+    /**
      * Удаление задачи (только создатель или admin)
      * POST /tasks/{id}/delete
      */
@@ -1272,7 +1372,8 @@ class TaskController extends Controller
         $this->taskModel->delete($taskId);
 
         Session::flash('success', 'Задача «' . $task['title'] . '» удалена');
-        $this->redirect('/projects/' . $projectId);
+        $returnUrl = $this->tasksReturnUrl();
+        $this->redirect($returnUrl !== '/tasks' || isset($_POST['redirect_to']) ? $returnUrl : '/projects/' . $projectId);
     }
 
     /**
