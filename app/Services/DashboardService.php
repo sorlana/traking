@@ -74,6 +74,7 @@ class DashboardService
         $db = Database::getInstance();
 
         $sql = "SELECT t.id, t.title, t.priority, t.deadline, t.assigned_to,
+                       t.parent_id, t.sort_order,
                        ts.code AS status_code, ts.name AS status_name,
                        u.name AS assigned_name
                 FROM tasks t
@@ -89,7 +90,7 @@ class DashboardService
             $params[] = $userId;
         }
 
-        $sql .= " ORDER BY FIELD(t.priority, 'urgent', 'high', 'medium', 'low'), t.deadline ASC";
+        $sql .= " ORDER BY t.sort_order ASC, t.created_at DESC";
 
         $tasks = $db->fetchAll($sql, $params);
 
@@ -97,7 +98,10 @@ class DashboardService
     }
 
     /**
-     * Группировка задач по статусу
+     * Построение дерева задач и группировка корневых веток по статусу.
+     *
+     * Дочерние задачи остаются внутри родительской ветки даже при другом статусе.
+     * Если родитель недоступен из-за ролевого фильтра, задача становится корневой.
      *
      * @param array $tasks Плоский массив задач
      * @return array ['in_progress' => [...], 'revision' => [...], 'done' => [...], 'closed' => [...]]
@@ -111,10 +115,62 @@ class DashboardService
             'closed' => [],
         ];
 
+        $tasksById = [];
+        $childrenByParent = [];
+        $rootIds = [];
+
         foreach ($tasks as $task) {
-            $status = $task['status_code'] ?? '';
-            if (isset($grouped[$status])) {
-                $grouped[$status][] = $task;
+            $tasksById[(int) $task['id']] = $task;
+        }
+
+        foreach ($tasks as $task) {
+            $taskId = (int) $task['id'];
+            $parentId = !empty($task['parent_id']) ? (int) $task['parent_id'] : null;
+
+            if ($parentId !== null && $parentId !== $taskId && isset($tasksById[$parentId])) {
+                $childrenByParent[$parentId][] = $taskId;
+            } else {
+                $rootIds[] = $taskId;
+            }
+        }
+
+        $visited = [];
+        $buildBranch = function (int $taskId) use (&$buildBranch, &$visited, $tasksById, $childrenByParent): ?array {
+            if (isset($visited[$taskId]) || !isset($tasksById[$taskId])) {
+                return null;
+            }
+
+            $visited[$taskId] = true;
+            $task = $tasksById[$taskId];
+            $task['children'] = [];
+
+            foreach ($childrenByParent[$taskId] ?? [] as $childId) {
+                $child = $buildBranch($childId);
+                if ($child !== null) {
+                    $task['children'][] = $child;
+                }
+            }
+
+            return $task;
+        };
+
+        foreach ($rootIds as $rootId) {
+            $root = $buildBranch($rootId);
+            $status = $root['status_code'] ?? '';
+            if ($root !== null && isset($grouped[$status])) {
+                $grouped[$status][] = $root;
+            }
+        }
+
+        // Защита от некорректных циклических связей: задача не должна исчезать с доски.
+        foreach (array_keys($tasksById) as $taskId) {
+            if (isset($visited[$taskId])) {
+                continue;
+            }
+            $root = $buildBranch($taskId);
+            $status = $root['status_code'] ?? '';
+            if ($root !== null && isset($grouped[$status])) {
+                $grouped[$status][] = $root;
             }
         }
 

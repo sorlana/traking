@@ -167,39 +167,55 @@ main { overflow: hidden; height: 100%; }
                     <button @click="boardTab = 'in_progress'"
                             :class="boardTab === 'in_progress' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
-                        В работе<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.in_progress.length + ')'"></span>
+                        В работе<br><span class="text-xs opacity-70" x-text="'(' + currentStats.in_progress + ')'"></span>
                     </button>
                     <button @click="boardTab = 'revision'"
                             :class="boardTab === 'revision' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
-                        Доработки<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.revision.length + ')'"></span>
+                        Доработки<br><span class="text-xs opacity-70" x-text="'(' + currentStats.revision + ')'"></span>
                     </button>
                     <button @click="boardTab = 'done'"
                             :class="boardTab === 'done' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
-                        Готово<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.done.length + ')'"></span>
+                        Готово<br><span class="text-xs opacity-70" x-text="'(' + currentStats.done + ')'"></span>
                     </button>
                     <button @click="boardTab = 'closed'"
                             :class="boardTab === 'closed' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 border-b-2 border-transparent'"
                             class="flex-1 py-2.5 text-sm font-medium text-center transition leading-tight">
-                        Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentBoard.closed.length + ')'"></span>
+                        Закрыто<br><span class="text-xs opacity-70" x-text="'(' + currentStats.closed + ')'"></span>
                     </button>
                 </div>
 
                 <!-- Содержимое вкладок -->
                 <div class="space-y-2 mobile-task-scroll pb-16">
-                    <template x-for="task in (boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed)" :key="task.id">
-                        <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                    <template x-for="task in visibleBoardTasks(boardTab)" :key="task.id">
+                        <div class="rounded-lg border p-3 transition-colors"
+                             :class="task._depth > 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'"
+                             :style="task._depth > 0 ? 'margin-left: ' + (task._depth * 16) + 'px' : ''">
                             <div class="flex items-start gap-2">
+                                <template x-if="(task.children || []).length > 0">
+                                    <button type="button"
+                                            @click.stop="toggleDashboardTask(task.id)"
+                                            :aria-expanded="Boolean(expandedTasks[task.id])"
+                                            class="-ml-1 flex h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                            aria-label="Показать или скрыть вложенные задачи">
+                                        <svg class="h-4 w-4 transition-transform"
+                                             :class="{ 'rotate-180': expandedTasks[task.id] }"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                        </svg>
+                                    </button>
+                                </template>
+                                <template x-if="(task.children || []).length === 0">
+                                    <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
+                                </template>
                                 <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
-                                      :class="{
-                                          'bg-red-500': task.priority === 'urgent',
-                                          'bg-orange-500': task.priority === 'high',
-                                          'bg-yellow-400': task.priority === 'medium',
-                                          'bg-green-500': task.priority === 'low'
-                                      }"></span>
+                                      :class="statusDotClass(task.status_code)"
+                                      :title="task.status_name"></span>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                    <a :href="BASE_URL + '/tasks/' + task.id"
+                                       class="block text-sm font-medium text-gray-800 truncate hover:text-blue-600"
+                                       x-text="task.title"></a>
                                     <div class="mt-1 flex items-center gap-2 flex-wrap">
                                         <template x-if="task.deadline">
                                             <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -208,7 +224,7 @@ main { overflow: hidden; height: 100%; }
                                     </div>
                                 </div>
                             </div>
-                        </a>
+                        </div>
                     </template>
                     <template x-if="(boardTab === 'in_progress' ? currentBoard.in_progress : boardTab === 'revision' ? currentBoard.revision : boardTab === 'done' ? currentBoard.done : currentBoard.closed).length === 0">
                         <p class="text-sm text-gray-400 text-center py-4">Нет задач</p>
@@ -224,18 +240,31 @@ main { overflow: hidden; height: 100%; }
                     <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">В работе</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
-                            <template x-for="task in currentBoard.in_progress" :key="task.id">
-                                <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                            <template x-for="task in visibleBoardTasks('in_progress')" :key="task.id">
+                                <div class="rounded-lg border p-3 transition-colors"
+                                     :class="task._depth > 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'"
+                                     :style="task._depth > 0 ? 'margin-left: ' + (task._depth * 16) + 'px' : ''">
                                     <div class="flex items-start gap-2">
+                                        <template x-if="(task.children || []).length > 0">
+                                            <button type="button" @click.stop="toggleDashboardTask(task.id)"
+                                                    :aria-expanded="Boolean(expandedTasks[task.id])"
+                                                    class="-ml-1 flex h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                                    aria-label="Показать или скрыть вложенные задачи">
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': expandedTasks[task.id] }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template x-if="(task.children || []).length === 0">
+                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
+                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
-                                              :class="{
-                                                  'bg-red-500': task.priority === 'urgent',
-                                                  'bg-orange-500': task.priority === 'high',
-                                                  'bg-yellow-400': task.priority === 'medium',
-                                                  'bg-green-500': task.priority === 'low'
-                                              }"></span>
+                                              :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                            <a :href="BASE_URL + '/tasks/' + task.id"
+                                               class="block text-sm font-medium text-gray-800 truncate hover:text-blue-600"
+                                               x-text="task.title"></a>
                                             <div class="mt-1 flex items-center gap-2 flex-wrap">
                                                 <template x-if="task.deadline">
                                                     <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -244,7 +273,7 @@ main { overflow: hidden; height: 100%; }
                                             </div>
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -255,18 +284,31 @@ main { overflow: hidden; height: 100%; }
                     <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Доработки</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
-                            <template x-for="task in currentBoard.revision" :key="task.id">
-                                <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                            <template x-for="task in visibleBoardTasks('revision')" :key="task.id">
+                                <div class="rounded-lg border p-3 transition-colors"
+                                     :class="task._depth > 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'"
+                                     :style="task._depth > 0 ? 'margin-left: ' + (task._depth * 16) + 'px' : ''">
                                     <div class="flex items-start gap-2">
+                                        <template x-if="(task.children || []).length > 0">
+                                            <button type="button" @click.stop="toggleDashboardTask(task.id)"
+                                                    :aria-expanded="Boolean(expandedTasks[task.id])"
+                                                    class="-ml-1 flex h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                                    aria-label="Показать или скрыть вложенные задачи">
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': expandedTasks[task.id] }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template x-if="(task.children || []).length === 0">
+                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
+                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
-                                              :class="{
-                                                  'bg-red-500': task.priority === 'urgent',
-                                                  'bg-orange-500': task.priority === 'high',
-                                                  'bg-yellow-400': task.priority === 'medium',
-                                                  'bg-green-500': task.priority === 'low'
-                                              }"></span>
+                                              :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                            <a :href="BASE_URL + '/tasks/' + task.id"
+                                               class="block text-sm font-medium text-gray-800 truncate hover:text-blue-600"
+                                               x-text="task.title"></a>
                                             <div class="mt-1 flex items-center gap-2 flex-wrap">
                                                 <template x-if="task.deadline">
                                                     <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -275,7 +317,7 @@ main { overflow: hidden; height: 100%; }
                                             </div>
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -286,18 +328,31 @@ main { overflow: hidden; height: 100%; }
                     <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Готово</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
-                            <template x-for="task in currentBoard.done" :key="task.id">
-                                <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                            <template x-for="task in visibleBoardTasks('done')" :key="task.id">
+                                <div class="rounded-lg border p-3 transition-colors"
+                                     :class="task._depth > 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'"
+                                     :style="task._depth > 0 ? 'margin-left: ' + (task._depth * 16) + 'px' : ''">
                                     <div class="flex items-start gap-2">
+                                        <template x-if="(task.children || []).length > 0">
+                                            <button type="button" @click.stop="toggleDashboardTask(task.id)"
+                                                    :aria-expanded="Boolean(expandedTasks[task.id])"
+                                                    class="-ml-1 flex h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                                    aria-label="Показать или скрыть вложенные задачи">
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': expandedTasks[task.id] }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template x-if="(task.children || []).length === 0">
+                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
+                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
-                                              :class="{
-                                                  'bg-red-500': task.priority === 'urgent',
-                                                  'bg-orange-500': task.priority === 'high',
-                                                  'bg-yellow-400': task.priority === 'medium',
-                                                  'bg-green-500': task.priority === 'low'
-                                              }"></span>
+                                              :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                            <a :href="BASE_URL + '/tasks/' + task.id"
+                                               class="block text-sm font-medium text-gray-800 truncate hover:text-blue-600"
+                                               x-text="task.title"></a>
                                             <div class="mt-1 flex items-center gap-2 flex-wrap">
                                                 <template x-if="task.deadline">
                                                     <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -306,7 +361,7 @@ main { overflow: hidden; height: 100%; }
                                             </div>
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -317,18 +372,31 @@ main { overflow: hidden; height: 100%; }
                     <div class="bg-gray-50 rounded-lg p-3 flex flex-col flex-1 min-h-0">
                         <h3 class="text-sm font-medium text-gray-700 mb-3 flex-shrink-0">Закрыто</h3>
                         <div class="space-y-2 overflow-y-auto flex-1 min-h-0 pb-4">
-                            <template x-for="task in currentBoard.closed" :key="task.id">
-                                <a :href="BASE_URL + '/tasks/' + task.id" class="block bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow">
+                            <template x-for="task in visibleBoardTasks('closed')" :key="task.id">
+                                <div class="rounded-lg border p-3 transition-colors"
+                                     :class="task._depth > 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-50'"
+                                     :style="task._depth > 0 ? 'margin-left: ' + (task._depth * 16) + 'px' : ''">
                                     <div class="flex items-start gap-2">
+                                        <template x-if="(task.children || []).length > 0">
+                                            <button type="button" @click.stop="toggleDashboardTask(task.id)"
+                                                    :aria-expanded="Boolean(expandedTasks[task.id])"
+                                                    class="-ml-1 flex h-5 w-5 flex-shrink-0 items-center justify-center p-0 text-gray-500 hover:text-black"
+                                                    aria-label="Показать или скрыть вложенные задачи">
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': expandedTasks[task.id] }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template x-if="(task.children || []).length === 0">
+                                            <span class="h-5 w-5 flex-shrink-0" aria-hidden="true"></span>
+                                        </template>
                                         <span class="mobile-task-dot mt-1 w-2 h-2 rounded-full flex-shrink-0"
-                                              :class="{
-                                                  'bg-red-500': task.priority === 'urgent',
-                                                  'bg-orange-500': task.priority === 'high',
-                                                  'bg-yellow-400': task.priority === 'medium',
-                                                  'bg-green-500': task.priority === 'low'
-                                              }"></span>
+                                              :class="statusDotClass(task.status_code)" :title="task.status_name"></span>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-medium text-gray-800 truncate" x-text="task.title"></div>
+                                            <a :href="BASE_URL + '/tasks/' + task.id"
+                                               class="block text-sm font-medium text-gray-800 truncate hover:text-blue-600"
+                                               x-text="task.title"></a>
                                             <div class="mt-1 flex items-center gap-2 flex-wrap">
                                                 <template x-if="task.deadline">
                                                     <span class="text-xs text-gray-500" x-text="task.deadline"></span>
@@ -337,7 +405,7 @@ main { overflow: hidden; height: 100%; }
                                             </div>
                                         </div>
                                     </div>
-                                </a>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -481,6 +549,7 @@ document.addEventListener('alpine:init', () => {
         showTreeModal: false,
         treeData: [],
         treeLoading: false,
+        expandedTasks: {},
 
         init() {
             if (this.projects.length > 0) {
@@ -494,17 +563,47 @@ document.addEventListener('alpine:init', () => {
 
         get currentStats() {
             const board = this.currentBoard;
-            const inProgress = board.in_progress.length;
-            const revision = board.revision.length;
-            const done = board.done.length;
-            const closed = board.closed.length;
-            return {
-                in_progress: inProgress,
-                revision: revision,
-                done: done,
-                closed: closed,
-                total: inProgress + revision + done + closed,
+            const counts = { in_progress: 0, revision: 0, done: 0, closed: 0 };
+            const countBranch = (tasks) => {
+                tasks.forEach((task) => {
+                    if (Object.prototype.hasOwnProperty.call(counts, task.status_code)) {
+                        counts[task.status_code]++;
+                    }
+                    countBranch(task.children || []);
+                });
             };
+            Object.values(board).forEach(countBranch);
+            return {
+                ...counts,
+                total: counts.in_progress + counts.revision + counts.done + counts.closed,
+            };
+        },
+
+        toggleDashboardTask(taskId) {
+            this.expandedTasks[taskId] = !this.expandedTasks[taskId];
+        },
+
+        visibleBoardTasks(status) {
+            const visible = [];
+            const appendBranch = (tasks, depth = 0) => {
+                tasks.forEach((task) => {
+                    visible.push({ ...task, _depth: depth });
+                    if ((task.children || []).length > 0 && this.expandedTasks[task.id]) {
+                        appendBranch(task.children, depth + 1);
+                    }
+                });
+            };
+            appendBranch(this.currentBoard[status] || []);
+            return visible;
+        },
+
+        statusDotClass(status) {
+            return {
+                in_progress: 'bg-yellow-400',
+                revision: 'bg-orange-500',
+                done: 'bg-green-500',
+                closed: 'bg-indigo-500',
+            }[status] || 'bg-gray-400';
         },
 
         get currentTimeData() {
