@@ -102,7 +102,9 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
      x-data="{
          showFilters: false,
          showCreate: false,
+         showCreateExtra: false,
          showEdit: false,
+         showEditExtra: false,
          editTask: {},
          expandedTasks: {},
          selectedTasks: [],
@@ -113,6 +115,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
          openEdit(task) {
              this.editTask = { ...task };
              this.showCreate = false;
+             this.showEditExtra = false;
              this.showFilters = false;
              this.showEdit = true;
              this.$nextTick(() => this.$refs.editTaskTitle?.focus());
@@ -132,7 +135,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
         <div class="flex items-center gap-2">
             <?php if (can('create_task', $project['id'] ?? null)): ?>
                 <button type="button"
-                        @click="showCreate = true; showFilters = false; $nextTick(() => $refs.createTaskTitle?.focus())"
+                        @click="showCreate = true; showCreateExtra = false; showEdit = false; showFilters = false; $nextTick(() => $refs.createTaskTitle?.focus())"
                         class="ui-btn ui-btn-primary">
                     Создать
                 </button>
@@ -417,36 +420,6 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                            class="ui-control">
                 </div>
 
-                <div>
-                    <label for="create_task_description" class="block text-xs font-medium text-gray-500 mb-1">Описание</label>
-                    <textarea name="description" id="create_task_description" rows="3" placeholder="Короткое описание"
-                              class="ui-control"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="mobile-filter-field">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
-                        <input type="hidden" name="priority" value="<?= e($createPriorityValue) ?>">
-                        <details class="mobile-filter-details">
-                            <summary class="mobile-filter-trigger">
-                                <span class="mobile-filter-label"><?= e($createPriorityOptions[$createPriorityValue] ?? 'Средний') ?></span>
-                                <svg class="mobile-filter-arrow w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </summary>
-                            <div class="mobile-filter-menu">
-                                <?php foreach ($createPriorityOptions as $value => $label): ?>
-                                    <button type="button" class="mobile-filter-option <?= $createPriorityValue === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
-                                <?php endforeach; ?>
-                            </div>
-                        </details>
-                    </div>
-
-                    <div>
-                        <label for="create_task_deadline" class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
-                        <input type="date" name="deadline" id="create_task_deadline"
-                               class="ui-control">
-                    </div>
-                </div>
-
                 <?php if ($roleId <= 2): ?>
                     <div class="mobile-filter-field">
                         <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
@@ -465,8 +438,49 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                     </div>
                 <?php endif; ?>
 
+                <button type="button" @click="showCreateExtra = !showCreateExtra"
+                        class="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        :aria-expanded="showCreateExtra">
+                    <span x-text="showCreateExtra ? 'Скрыть' : 'Дополнительно'">Дополнительно</span>
+                    <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': showCreateExtra }"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div x-show="showCreateExtra" x-cloak class="space-y-4" style="display: none;">
+                    <div>
+                        <label for="create_task_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
+                        <textarea name="description" id="create_task_description" rows="3" placeholder="Короткое описание"
+                                  class="ui-control"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div class="mobile-filter-field">
+                            <label class="mb-1 block text-xs font-medium text-gray-500">Приоритет</label>
+                            <input type="hidden" name="priority" value="<?= e($createPriorityValue) ?>">
+                            <details class="mobile-filter-details">
+                                <summary class="mobile-filter-trigger">
+                                    <span class="mobile-filter-label"><?= e($createPriorityOptions[$createPriorityValue] ?? 'Средний') ?></span>
+                                    <svg class="mobile-filter-arrow h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </summary>
+                                <div class="mobile-filter-menu">
+                                    <?php foreach ($createPriorityOptions as $value => $label): ?>
+                                        <button type="button" class="mobile-filter-option <?= $createPriorityValue === (string) $value ? 'is-selected' : '' ?>" data-value="<?= e($value) ?>" data-label="<?= e($label) ?>"><?= e($label) ?></button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </details>
+                        </div>
+
+                        <div>
+                            <label for="create_task_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок</label>
+                            <input type="date" name="deadline" id="create_task_deadline" class="ui-control">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex gap-2 pt-2 border-t">
-                    <button type="submit" class="ui-btn ui-btn-dark">Создать</button>
+                    <button type="submit" class="ui-btn ui-btn-primary">Создать</button>
                     <button type="button" @click="showCreate = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
@@ -502,36 +516,6 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                            x-model="editTask.title" required maxlength="255" class="ui-control">
                 </div>
 
-                <div>
-                    <label for="edit_task_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
-                    <textarea id="edit_task_description" name="description" x-model="editTask.description"
-                              rows="3" placeholder="Короткое описание" class="ui-control"></textarea>
-                </div>
-
-                <div>
-                    <label for="edit_task_status" class="mb-1 block text-xs font-medium text-gray-500">Статус</label>
-                    <select id="edit_task_status" name="status_id" x-model="editTask.status_id" required class="ui-control">
-                        <?php foreach ($statuses as $status): ?>
-                            <option value="<?= (int) $status['id'] ?>"><?= e($status['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                        <label for="edit_task_priority" class="mb-1 block text-xs font-medium text-gray-500">Приоритет</label>
-                        <select id="edit_task_priority" name="priority" x-model="editTask.priority" class="ui-control">
-                            <?php foreach ($createPriorityOptions as $value => $label): ?>
-                                <option value="<?= e($value) ?>"><?= e($label) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="edit_task_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок</label>
-                        <input type="date" id="edit_task_deadline" name="deadline" x-model="editTask.deadline" class="ui-control">
-                    </div>
-                </div>
-
                 <?php if ($roleId <= 2): ?>
                     <div>
                         <label for="edit_task_assigned" class="mb-1 block text-xs font-medium text-gray-500">Исполнитель</label>
@@ -545,8 +529,50 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                     <input type="hidden" name="assigned_to" :value="editTask.assigned_to">
                 <?php endif; ?>
 
+                <button type="button" @click="showEditExtra = !showEditExtra"
+                        class="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        :aria-expanded="showEditExtra">
+                    <span x-text="showEditExtra ? 'Скрыть' : 'Дополнительно'">Дополнительно</span>
+                    <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': showEditExtra }"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div x-show="showEditExtra" x-cloak class="space-y-4" style="display: none;">
+                    <div>
+                        <label for="edit_task_description" class="mb-1 block text-xs font-medium text-gray-500">Описание</label>
+                        <textarea id="edit_task_description" name="description" x-model="editTask.description"
+                                  rows="3" placeholder="Короткое описание" class="ui-control"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="edit_task_status" class="mb-1 block text-xs font-medium text-gray-500">Статус</label>
+                        <select id="edit_task_status" name="status_id" x-model="editTask.status_id" required class="ui-control">
+                            <?php foreach ($statuses as $status): ?>
+                                <option value="<?= (int) $status['id'] ?>"><?= e($status['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label for="edit_task_priority" class="mb-1 block text-xs font-medium text-gray-500">Приоритет</label>
+                            <select id="edit_task_priority" name="priority" x-model="editTask.priority" class="ui-control">
+                                <?php foreach ($createPriorityOptions as $value => $label): ?>
+                                    <option value="<?= e($value) ?>"><?= e($label) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="edit_task_deadline" class="mb-1 block text-xs font-medium text-gray-500">Срок</label>
+                            <input type="date" id="edit_task_deadline" name="deadline" x-model="editTask.deadline" class="ui-control">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex gap-2 border-t pt-4">
-                    <button type="submit" class="ui-btn ui-btn-dark">Сохранить</button>
+                    <button type="submit" class="ui-btn ui-btn-primary">Сохранить</button>
                     <button type="button" @click="showEdit = false" class="ui-btn ui-btn-secondary">Отмена</button>
                 </div>
             </form>
