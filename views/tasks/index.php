@@ -147,10 +147,10 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
         </div>
     </div>
 
-    <!-- Десктопные фильтры (lg+) -->
-    <form method="GET" action="<?= url('/tasks') ?>" class="hidden lg:block bg-white rounded-lg shadow-sm border p-4">
-        <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-            <div>
+    <!-- Десктопные фильтры и массовые действия (lg+) -->
+    <div class="hidden items-end gap-4 rounded-lg border bg-white p-4 shadow-sm lg:flex">
+        <form method="GET" action="<?= url('/tasks') ?>" class="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+            <div class="w-28">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Статус</label>
                 <select name="status" class="ui-control">
                     <option value="">Все</option>
@@ -159,7 +159,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div>
+            <div class="w-32">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Приоритет</label>
                 <select name="priority" class="ui-control">
                     <option value="">Все</option>
@@ -170,7 +170,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 </select>
             </div>
             <?php if ($roleId <= 2): ?>
-            <div>
+            <div class="w-36">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Исполнитель</label>
                 <select name="assigned_to" class="ui-control">
                     <option value="">Все</option>
@@ -180,7 +180,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 </select>
             </div>
             <?php endif; ?>
-            <div>
+            <div class="w-36">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Срок</label>
                 <select name="deadline" class="ui-control">
                     <option value="">Все</option>
@@ -190,7 +190,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 </select>
             </div>
             <?php if (!($project ?? null) && !empty($projects)): ?>
-            <div>
+            <div class="w-40">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Проект</label>
                 <select name="project_id" class="ui-control">
                     <option value="">Все проекты</option>
@@ -200,13 +200,45 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                 </select>
             </div>
             <?php endif; ?>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="ui-btn ui-btn-dark">Фильтр</button>
-                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>" class="ui-btn ui-btn-secondary">Сбросить</a>
+            <div class="flex items-end gap-1">
+                <button type="submit" class="ui-btn ui-btn-primary flex h-11 w-11 items-center justify-center px-0"
+                        aria-label="Применить фильтры" title="Применить фильтры">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L14 13.667V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.333L3.2 4.6A1 1 0 013 4z"/>
+                    </svg>
+                </button>
+                <a href="<?= url('/tasks') ?><?= ($project ?? null) ? '?project_id=' . (int) $project['id'] : '' ?>"
+                   class="ui-btn ui-btn-secondary flex h-11 w-11 items-center justify-center px-0"
+                   aria-label="Сбросить фильтры" title="Сбросить фильтры">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </a>
             </div>
-        </div>
-        <?php if ($project ?? null): ?><input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>"><?php endif; ?>
-    </form>
+            <?php if ($project ?? null): ?><input type="hidden" name="project_id" value="<?= (int) $project['id'] ?>"><?php endif; ?>
+        </form>
+
+        <?php if (!empty($deletableTaskIds) && !empty($tasks)): ?>
+            <form method="POST" action="<?= url('/tasks/delete') ?>"
+                  data-confirm-delete="Удалить выбранные задачи и все вложенные элементы? Это действие нельзя отменить."
+                  class="flex flex-shrink-0 items-center gap-2 border-l pl-4">
+                <?= csrf_field() ?>
+                <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+                <template x-for="taskId in selectedTasks" :key="'desktop-selected-' + taskId">
+                    <input type="hidden" name="task_ids[]" :value="taskId">
+                </template>
+                <label class="flex cursor-pointer items-center gap-2 whitespace-nowrap text-xs text-gray-600">
+                    <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                           :checked="deletableTaskIds.length > 0 && selectedTasks.length === deletableTaskIds.length"
+                           @change="toggleAllTasks($event.target.checked)">
+                    Выбрать все
+                </label>
+                <button type="submit" :disabled="selectedTasks.length === 0" class="ui-btn ui-btn-subtle whitespace-nowrap">
+                    Удалить выбранные <span class="ui-btn-count" x-text="selectedTasks.length">0</span>
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
 
     <!-- Таблица задач -->
     <?php if (empty($tasks)): ?>
@@ -216,11 +248,14 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
     <?php else: ?>
         <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
             <?php if (!empty($deletableTaskIds)): ?>
-                <form id="tasks-bulk-delete-form" method="POST" action="<?= url('/tasks/delete') ?>"
+                <form method="POST" action="<?= url('/tasks/delete') ?>"
                       data-confirm-delete="Удалить выбранные задачи и все вложенные элементы? Это действие нельзя отменить."
-                      class="flex h-[53px] items-center justify-between gap-3 border-b bg-white px-4">
+                      class="flex h-[53px] items-center justify-between gap-3 border-b bg-white px-4 lg:hidden">
                     <?= csrf_field() ?>
                     <input type="hidden" name="redirect_to" value="<?= e($tasksReturnUrl) ?>">
+                    <template x-for="taskId in selectedTasks" :key="'mobile-selected-' + taskId">
+                        <input type="hidden" name="task_ids[]" :value="taskId">
+                    </template>
                     <label class="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
                         <input type="checkbox"
                                class="h-4 w-4 rounded border-gray-300 text-blue-600"
@@ -290,8 +325,7 @@ $tasksReturnUrl = '/tasks' . ($taskFilterQuery !== '' ? '?' . $taskFilterQuery :
                                             <span class="h-6 w-6 flex-shrink-0" aria-hidden="true"></span>
                                         <?php endif; ?>
                                         <?php if ($canDeleteTask): ?>
-                                            <input type="checkbox" name="task_ids[]" value="<?= $taskId ?>"
-                                                   form="tasks-bulk-delete-form" x-model.number="selectedTasks"
+                                            <input type="checkbox" value="<?= $taskId ?>" x-model.number="selectedTasks"
                                                    class="mx-1 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600"
                                                    aria-label="Выбрать задачу <?= e($task['title']) ?>">
                                         <?php elseif (!empty($deletableTaskIds)): ?>
