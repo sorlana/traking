@@ -622,10 +622,7 @@ document.addEventListener('click', async function (e) {
 
         if (response.ok && data.success) {
             const savedValue = data.time_spent !== undefined ? data.time_spent : timeSpent;
-            input.value = savedValue;
-
-            // Переключаем в режим просмотра
-            switchToViewMode(container, savedValue);
+            syncTimeContainers(taskId, container.dataset.timeType || 'executor', savedValue);
             showToast('Время сохранено', 'success');
         } else {
             // Ошибка от сервера
@@ -713,9 +710,7 @@ document.addEventListener('click', async function (e) {
         }
 
         const total = Number(data.time_spent);
-        const mainInput = container.querySelector('.js-time-input');
-        if (mainInput) mainInput.value = total;
-        switchToViewMode(container, total);
+        syncTimeContainers(container.dataset.taskId, container.dataset.timeType || 'executor', total);
         input.value = '';
         if (dateInput?.max) dateInput.value = dateInput.max;
         form.classList.add('hidden');
@@ -752,6 +747,21 @@ function switchToViewMode(container, value) {
 
     // Показываем кнопку редактирования
     editBtn.classList.remove('hidden');
+}
+
+/**
+ * Синхронизировать все контролы времени одной задачи на странице.
+ */
+function syncTimeContainers(taskId, timeType, value) {
+    const selector = timeType === 'manager'
+        ? `.js-time-container[data-task-id="${taskId}"][data-time-type="manager"]`
+        : `.js-time-container[data-task-id="${taskId}"]:not([data-time-type="manager"])`;
+
+    document.querySelectorAll(selector).forEach((timeContainer) => {
+        const input = timeContainer.querySelector('.js-time-input');
+        if (input) input.value = value;
+        switchToViewMode(timeContainer, value);
+    });
 }
 
 /**
@@ -894,9 +904,7 @@ document.addEventListener('alpine:init', () => {
                     if (response.ok && data.success) {
                         // Обновляем отображение на вкладке Информация
                         if (container) {
-                            const input = container.querySelector('.js-time-input');
-                            if (input) input.value = data.time_spent;
-                            switchToViewMode(container, data.time_spent);
+                            syncTimeContainers(this.taskId, this.timeType, data.time_spent);
                         }
                         showToast(`Время сохранено: +${timeToSave} ч (всего ${data.time_spent} ч)`, 'success');
                     } else {
