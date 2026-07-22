@@ -48,7 +48,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </div>
             <!-- Развёрнутый список -->
             <div x-show="openPinGroup" x-transition class="mt-2 max-h-40 space-y-1.5 overflow-y-auto">
-                <div class="px-1 text-xs font-medium text-gray-500" x-text="openPinGroup === 'personal' ? 'Личные закрепы' : 'Общие закрепы'"></div>
+                <div class="px-1 text-xs font-medium text-gray-500" x-text="openPinGroup === 'personal' ? 'Личные ссылки' : 'Общие ссылки'"></div>
                 <template x-for="pin in pinnedEntries().filter(entry => entry.pin_type === openPinGroup)" :key="'pin-' + pin.pin_type + '-' + pin.id">
                     <div @click="openPinGroup = null; $nextTick(() => scrollToMessage(pin.id))"
                          @keydown.enter="openPinGroup = null; $nextTick(() => scrollToMessage(pin.id))"
