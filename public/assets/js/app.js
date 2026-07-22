@@ -95,7 +95,10 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
         const submitter = event.submitter;
         const confirmed = await window.confirmDeletion(
             form.dataset.confirmDelete,
-            { title: form.dataset.confirmTitle || 'Подтвердите удаление' }
+            {
+                title: form.dataset.confirmTitle || 'Подтвердите удаление',
+                confirmLabel: form.dataset.confirmLabel || 'Удалить'
+            }
         );
         if (!confirmed) return;
 
