@@ -130,7 +130,7 @@ $upLabel = !empty($parent['id'])
                            class="js-time-input w-20 rounded-md border-gray-300 px-2 py-1.5 text-sm placeholder:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <span class="js-time-unit text-xs text-gray-500">ч</span>
                     <div class="task-time-icon-group">
-                        <label class="task-time-icon-button relative cursor-pointer text-blue-600 transition hover:text-blue-800"
+                        <label class="task-time-icon-button relative cursor-pointer text-gray-500 transition hover:text-black"
                                title="Выбрать дату записи времени">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3v3m8-3v3M4.5 9.5h15M6.5 5h11a2 2 0 012 2v11a2 2 0 01-2 2h-11a2 2 0 01-2-2V7a2 2 0 012-2z"/>
@@ -140,12 +140,12 @@ $upLabel = !empty($parent['id'])
                                    aria-label="Дата записи времени">
                         </label>
                         <button type="button"
-                                class="js-save-time task-time-icon-button text-blue-600 transition hover:text-blue-800"
+                                class="js-save-time task-time-icon-button text-gray-500 transition hover:text-black"
                                 title="Сохранить время" aria-label="Сохранить время">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 13l4 4L19 7"/></svg>
                         </button>
                         <button type="button"
-                                class="js-toggle-add-time task-time-icon-button text-blue-600 transition hover:text-blue-800"
+                                class="js-toggle-add-time task-time-icon-button task-time-add-button text-gray-500 transition hover:text-black"
                                 title="Добавить время" aria-label="Добавить время">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14M5 12h14"/>
