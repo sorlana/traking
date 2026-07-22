@@ -106,6 +106,10 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     $router->post('/projects/{id}/remove-user', [\Controllers\ProjectController::class, 'removeUser']);
     $router->post('/projects/{id}/add-document', [\Controllers\ProjectController::class, 'addDocument']);
     $router->get('/projects/documents/{id}/view', [\Controllers\ProjectController::class, 'viewDocument']);
+    $router->post('/projects/{id}/link-groups', [\Controllers\ProjectLinkController::class, 'createGroup'], ['csrf']);
+    $router->post('/project-link-groups/{id}/items', [\Controllers\ProjectLinkController::class, 'createItem'], ['csrf']);
+    $router->get('/project-link-items/{id}/value', [\Controllers\ProjectLinkController::class, 'value']);
+    $router->get('/project-link-groups/{id}/icon', [\Controllers\ProjectLinkController::class, 'icon']);
     $router->post('/projects/{id}/status', [\Controllers\ProjectController::class, 'changeStatus']);
     $router->post('/projects/{id}/delete', [\Controllers\ProjectController::class, 'delete']);
 

@@ -18,6 +18,7 @@ use Middleware\ProjectAccessMiddleware;
 use Models\Project;
 use Models\ProjectUser;
 use Models\ProjectDocument;
+use Services\ProjectLinkService;
 
 class ProjectController extends Controller
 {
@@ -167,6 +168,7 @@ class ProjectController extends Controller
         $status = $this->projectModel->getStatus((int) $id);
         $users = $this->projectModel->getUsers((int) $id);
         $documents = $this->projectModel->getDocuments((int) $id);
+        $linkGroups = (new ProjectLinkService())->getGroups((int) $id);
         $tasks = $this->projectModel->getTasks((int) $id, null); // Корневые задачи
         $taskStats = $this->projectModel->getTaskStats((int) $id);
 
@@ -193,6 +195,7 @@ class ProjectController extends Controller
             'status' => $status,
             'users' => $users,
             'documents' => $documents,
+            'linkGroups' => $linkGroups,
             'tasks' => $tasks,
             'taskStats' => $taskStats,
             'allUsers' => $allUsers,
@@ -847,6 +850,19 @@ class ProjectController extends Controller
         foreach ($projectDocs as $doc) {
             $fullPath = BASE_PATH . '/storage/uploads/' . $doc['file_path'];
             if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        // Удаляем иконки групп ссылок проекта.
+        (new ProjectLinkService())->ensureTables();
+        $linkGroupIcons = $db->fetchAll(
+            'SELECT icon_path FROM project_link_groups WHERE project_id = ? AND icon_path IS NOT NULL',
+            [$projectId]
+        );
+        foreach ($linkGroupIcons as $groupIcon) {
+            $fullPath = BASE_PATH . '/storage/uploads/' . $groupIcon['icon_path'];
+            if (is_file($fullPath)) {
                 @unlink($fullPath);
             }
         }

@@ -5,6 +5,8 @@
  * Мобильные: кнопка «Проект» → модалка + вкладки
  */
 $layout = 'layouts/app';
+$allowedTabs = ['info', 'users', 'documents', 'links', 'tasks'];
+$initialTab = in_array($_GET['tab'] ?? '', $allowedTabs, true) ? $_GET['tab'] : 'info';
 ?>
 
 <style>
@@ -20,7 +22,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
 }
 </style>
 
-<div x-data="{ tab: 'info', showProject: false, showEditProject: false }"
+<div x-data="{ tab: '<?= e($initialTab) ?>', showProject: false, showEditProject: false, showLinkGroupForm: false }"
      @keydown.escape.window="showProject = false; showEditProject = false"
      class="project-page">
 
@@ -99,6 +101,9 @@ main { overflow: hidden; padding-bottom: 0 !important; }
             <button @click="tab = 'documents'"
                     :class="tab === 'documents' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Документы <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= count($documents) ?></span></button>
+            <button @click="tab = 'links'"
+                    :class="tab === 'links' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Ссылки <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= count($linkGroups) ?></span></button>
             <button @click="tab = 'tasks'"
                     :class="tab === 'tasks' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition">Задачи <span class="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full ml-1"><?= $taskStats['total'] ?></span></button>
@@ -336,6 +341,123 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Вкладка: Ссылки -->
+    <!-- ============================================================ -->
+    <div x-show="tab === 'links'" x-transition class="flex min-h-0 flex-col">
+        <div class="flex min-h-0 flex-1 flex-col rounded-lg border bg-white">
+            <?php if (can('edit_project', (int) $project['id'])): ?>
+                <div class="flex flex-shrink-0 items-center justify-between gap-3 border-b bg-gray-50 p-4 rounded-t-lg">
+                    <div>
+                        <h2 class="text-sm font-semibold text-gray-800">Ссылки и доступы</h2>
+                        <p class="mt-0.5 text-xs text-gray-500">Объединяйте ссылки, логины и пароли в группы.</p>
+                    </div>
+                    <button type="button" @click="showLinkGroupForm = !showLinkGroupForm" class="ui-btn ui-btn-primary whitespace-nowrap">Создать группу</button>
+                </div>
+                <form x-show="showLinkGroupForm" x-cloak method="POST" enctype="multipart/form-data"
+                      action="<?= url('/projects/' . (int) $project['id'] . '/link-groups') ?>"
+                      class="grid flex-shrink-0 gap-3 border-b p-4 sm:grid-cols-[minmax(180px,1fr)_minmax(220px,1.5fr)_minmax(180px,auto)_auto] sm:items-end">
+                    <?= csrf_field() ?>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-gray-600">Название группы</label>
+                        <input type="text" name="group_title" required maxlength="255" class="ui-control" placeholder="Например, Сайт">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-gray-600">Подпись</label>
+                        <input type="text" name="group_caption" maxlength="500" class="ui-control" placeholder="Краткое пояснение">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-gray-600">Иконка</label>
+                        <input type="file" name="group_icon" accept="image/jpeg,image/png,image/webp"
+                               class="block w-full text-xs text-gray-500 file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:text-gray-700 hover:file:bg-gray-200">
+                    </div>
+                    <button type="submit" class="ui-btn ui-btn-primary justify-center">Создать</button>
+                </form>
+            <?php endif; ?>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-4">
+                <?php if (empty($linkGroups)): ?>
+                    <div class="py-10 text-center text-sm text-gray-500">Групп пока нет</div>
+                <?php else: ?>
+                    <div class="grid gap-4 xl:grid-cols-2">
+                        <?php foreach ($linkGroups as $linkGroup): ?>
+                            <section class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                <div class="flex items-center gap-3 border-b bg-gray-50 p-4">
+                                    <?php if (!empty($linkGroup['icon_path'])): ?>
+                                        <img src="<?= url('/project-link-groups/' . (int) $linkGroup['id'] . '/icon') ?>"
+                                             alt="" class="h-10 w-10 flex-shrink-0 rounded-md border border-gray-200 object-cover">
+                                    <?php else: ?>
+                                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500" aria-hidden="true">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M10 13a5 5 0 007.07.07l2-2a5 5 0 00-7.07-7.07l-1.15 1.15m3.15 5.85a5 5 0 01-7.07-.07l-2 2A5 5 0 0012 20l1.15-1.15"/></svg>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="min-w-0">
+                                        <h3 class="truncate text-sm font-semibold text-gray-800"><?= e($linkGroup['title']) ?></h3>
+                                        <?php if (!empty($linkGroup['caption'])): ?>
+                                            <p class="mt-0.5 line-clamp-2 text-xs text-gray-500"><?= e($linkGroup['caption']) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div class="divide-y divide-gray-100">
+                                    <?php if (empty($linkGroup['items'])): ?>
+                                        <p class="px-4 py-5 text-center text-xs text-gray-400">Записей нет</p>
+                                    <?php else: ?>
+                                        <?php foreach ($linkGroup['items'] as $linkItem): ?>
+                                            <?php
+                                            $itemType = $linkItem['item_type'];
+                                            $typeLabel = ['link' => 'Ссылка', 'login' => 'Логин', 'password' => 'Пароль'][$itemType] ?? '';
+                                            ?>
+                                            <div class="flex items-center gap-3 px-4 py-3">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="truncate text-xs font-medium text-gray-700"><?= e($linkItem['label']) ?></span>
+                                                        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500"><?= e($typeLabel) ?></span>
+                                                    </div>
+                                                    <?php if ($itemType === 'password'): ?>
+                                                        <p class="mt-1 truncate text-sm tracking-widest text-gray-600" aria-label="Пароль скрыт">••••••••••••</p>
+                                                    <?php elseif ($itemType === 'link'): ?>
+                                                        <a href="<?= e($linkItem['value_text']) ?>" target="_blank" rel="noopener noreferrer"
+                                                           class="mt-1 block truncate text-sm text-blue-600 hover:underline"><?= e($linkItem['value_text']) ?></a>
+                                                    <?php else: ?>
+                                                        <p class="mt-1 truncate text-sm text-gray-700"><?= e($linkItem['value_text']) ?></p>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <button type="button"
+                                                        class="js-copy-project-link flex h-8 w-8 flex-shrink-0 items-center justify-center text-gray-500 transition hover:text-black"
+                                                        data-value-url="<?= url('/project-link-items/' . (int) $linkItem['id'] . '/value') ?>"
+                                                        title="Копировать" aria-label="Копировать <?= e(mb_strtolower($typeLabel)) ?>">
+                                                    <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M8 8V6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2h-2m-8-8H4a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-2m-8-8h6a2 2 0 012 2v6"/></svg>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+
+                                <?php if (can('edit_project', (int) $project['id'])): ?>
+                                    <form method="POST" action="<?= url('/project-link-groups/' . (int) $linkGroup['id'] . '/items') ?>"
+                                          class="grid gap-2 border-t bg-gray-50 p-3 sm:grid-cols-[110px_minmax(120px,0.8fr)_minmax(160px,1.2fr)_auto] sm:items-center"
+                                          x-data="{ itemType: 'link' }">
+                                        <?= csrf_field() ?>
+                                        <select name="item_type" x-model="itemType" class="ui-control text-sm">
+                                            <option value="link">Ссылка</option>
+                                            <option value="login">Логин</option>
+                                            <option value="password">Пароль</option>
+                                        </select>
+                                        <input type="text" name="item_label" required maxlength="255" class="ui-control text-sm" placeholder="Название">
+                                        <input :type="itemType === 'password' ? 'password' : 'text'" name="item_value" required maxlength="2048"
+                                               class="ui-control text-sm" :placeholder="itemType === 'link' ? 'https://...' : 'Значение'" autocomplete="off">
+                                        <button type="submit" class="ui-btn ui-btn-primary justify-center">Добавить</button>
+                                    </form>
+                                <?php endif; ?>
+                            </section>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -659,6 +781,52 @@ document.addEventListener('alpine:init', () => {
             } catch (e) {}
         }
     }));
+});
+</script>
+
+<script>
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('.js-copy-project-link');
+    if (!button || button.disabled) return;
+
+    button.disabled = true;
+    button.classList.add('opacity-50');
+    try {
+        const response = await fetch(button.dataset.valueUrl, {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store',
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Не удалось получить значение');
+        }
+
+        let copied = false;
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(data.value);
+                copied = true;
+            } catch (clipboardError) {}
+        }
+        if (!copied) {
+            const temporary = document.createElement('textarea');
+            temporary.value = data.value;
+            temporary.style.position = 'fixed';
+            temporary.style.opacity = '0';
+            document.body.appendChild(temporary);
+            temporary.select();
+            copied = document.execCommand('copy');
+            temporary.remove();
+        }
+        if (!copied) throw new Error('Браузер не разрешил копирование');
+        if (typeof showToast === 'function') showToast('Скопировано', 'success');
+    } catch (error) {
+        if (typeof showToast === 'function') showToast(error.message || 'Не удалось скопировать', 'error');
+    } finally {
+        button.disabled = false;
+        button.classList.remove('opacity-50');
+    }
 });
 </script>
 
