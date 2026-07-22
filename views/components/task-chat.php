@@ -269,7 +269,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
          x-transition
          @click.outside="contextMenu.show = false"
          :style="'position: fixed; left: ' + contextMenu.x + 'px; top: ' + contextMenu.y + 'px;'"
-         class="z-[200] bg-white rounded-lg shadow-lg border py-1 min-w-[150px]"
+         class="z-[200] overflow-hidden bg-white rounded-lg shadow-lg border py-1 min-w-[150px]"
          style="display: none;">
         <!-- Создать доработку по изображению (руководитель/администратор) -->
         <button x-show="contextMenu.file && canCreateRevision"

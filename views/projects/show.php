@@ -73,7 +73,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
             <div class="relative" x-data="{ projActions: false }">
                 <button @click="projActions = !projActions" class="ui-btn ui-btn-light">Действия</button>
                 <div x-show="projActions" @click.outside="projActions = false" x-cloak x-transition
-                     class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
+                     class="absolute right-0 top-full mt-1 overflow-hidden bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
                     <button type="button" @click="projActions = false; showEditProject = true"
                             class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">Редактировать</button>
                     <?php if (\Helpers\Auth::isAdmin() || (int) $project['created_by'] === \Helpers\Auth::id()): ?>
@@ -146,7 +146,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
                                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                         </button>
                                         <div x-show="open" @click.outside="open = false" x-transition x-cloak
-                                             class="absolute z-20 mt-1 w-full bg-white border rounded-md shadow-lg py-1" style="display:none">
+                                             class="absolute z-20 mt-1 w-full overflow-hidden bg-white border rounded-md shadow-lg py-1" style="display:none">
                                             <?php foreach ($statuses as $s): ?>
                                                 <button type="button" @click="selected = '<?= e($s['id']) ?>'; selectedName = '<?= e($s['name']) ?>'; open = false"
                                                         class="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition"
@@ -231,7 +231,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
     <!-- Вкладка: Участники -->
     <!-- ============================================================ -->
     <div x-show="tab === 'users'" x-transition class="flex flex-col min-h-0">
-        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
             <?php if (can('edit_project', (int) $project['id']) && empty($isPrivateExecutorProject)): ?>
                 <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                     <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-user') ?>" class="flex flex-col sm:flex-row gap-3">
@@ -286,7 +286,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
     <!-- Вкладка: Документы -->
     <!-- ============================================================ -->
     <div x-show="tab === 'documents'" x-transition class="flex flex-col min-h-0">
-        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
             <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">
                 <form method="POST" action="<?= url('/projects/' . (int) $project['id'] . '/add-document') ?>" enctype="multipart/form-data" class="space-y-3">
                     <?= csrf_field() ?>
@@ -466,7 +466,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
     <!-- Вкладка: Задачи -->
     <!-- ============================================================ -->
     <div x-show="tab === 'tasks'" x-transition x-data="projectTasks(<?= (int) $project['id'] ?>)" class="flex flex-col min-h-0">
-        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0">
+        <div class="bg-white rounded-lg shadow-sm border flex flex-col flex-1 min-h-0 overflow-hidden">
             <!-- Форма быстрого создания задачи (фиксированная) -->
             <?php if (can('create_task', (int) $project['id'])): ?>
             <div class="p-4 border-b bg-gray-50 rounded-t-lg flex-shrink-0">

@@ -189,7 +189,7 @@ $upLabel = !empty($parent['id'])
                     <?php if ($canEdit && !$isClosed): ?>
                         <div class="relative">
                             <button @click="reassignOpen = !reassignOpen" class="ui-btn ui-btn-secondary">Переназначить</button>
-                            <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50" style="display: none;">
+                            <div x-show="reassignOpen" @click.outside="reassignOpen = false" x-transition class="absolute right-0 top-full mt-1 overflow-hidden bg-white rounded-lg shadow-lg border py-1 min-w-[200px] z-50" style="display: none;">
                                 <?php foreach ($projectUsers as $pu): ?>
                                     <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/reassign') ?>">
                                         <?= csrf_field() ?><input type="hidden" name="assigned_to" value="<?= (int) $pu['id'] ?>">
@@ -429,7 +429,7 @@ $upLabel = !empty($parent['id'])
             <div class="relative" x-data="{ actionsOpen: false }">
                 <button @click="actionsOpen = !actionsOpen" class="ui-btn ui-btn-light">Действия</button>
                 <div x-show="actionsOpen" @click.outside="actionsOpen = false" x-cloak x-transition
-                     class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
+                     class="absolute right-0 top-full mt-1 overflow-hidden bg-white rounded-lg shadow-lg border py-1 min-w-[180px] z-50" style="display:none">
                     <a href="<?= url('/tasks/' . (int) $task['id'] . '/edit') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Редактировать</a>
                     <?php if (!$isClosed && !$isRevision && $task['status_code'] !== 'closed'): ?>
                         <form method="POST" action="<?= url('/tasks/' . (int) $task['id'] . '/status') ?>"><?= csrf_field() ?><input type="hidden" name="status_id" value="<?= $revisionStatusId ?>"><button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Доработать</button></form>

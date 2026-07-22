@@ -81,7 +81,7 @@ $typeIcons = [
             </p>
         </div>
     <?php else: ?>
-        <div class="bg-white rounded-lg shadow-sm border divide-y">
+        <div class="bg-white rounded-lg shadow-sm border divide-y overflow-hidden">
             <?php foreach ($notifications as $notification): ?>
                 <?php
                 $isRead = (bool) $notification['is_read'];

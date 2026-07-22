@@ -218,7 +218,7 @@ if ($currentUser) {
             <!-- Выпадающее меню «Ещё» -->
             <div id="mobile-more-menu" x-show="moreOpen" @click.outside="moreOpen = false" x-cloak x-transition
                  aria-label="Дополнительная навигация"
-                 class="absolute bottom-14 right-2 bg-white rounded-lg shadow-lg border py-2 min-w-[160px]" style="display:none">
+                 class="absolute bottom-14 right-2 overflow-hidden bg-white rounded-lg shadow-lg border py-2 min-w-[160px]" style="display:none">
                 <?php if (!\Helpers\Auth::isAdmin()): ?>
                     <a href="<?= url('/calendar') ?>" class="flex items-center gap-3 px-4 py-2.5 text-sm <?= str_contains($currentPath, '/calendar') ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:bg-gray-50' ?>">
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
