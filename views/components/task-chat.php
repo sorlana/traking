@@ -80,7 +80,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     </template>
 
     <!-- Область сообщений (скролл) -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages" style="visibility: hidden;">
+    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-messages" x-ref="chatMessages">
         <!-- Пустое состояние -->
         <div x-show="messages.length === 0" class="flex items-center justify-center h-full">
             <p class="text-sm text-gray-400">Сообщений пока нет. Начните обсуждение!</p>
@@ -129,6 +129,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                              :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2 overflow-hidden rounded-xl border border-gray-300 bg-white p-1' : 'grid-cols-1'">
                             <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
                                 <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
+                                     loading="lazy" decoding="async"
                                      @click="if (!contextMenu.show) openModal(file, msg.user_id)"
                                      @contextmenu.stop.prevent="showImageContext($event, msg, file)"
                                      @touchstart.stop="startImageLongPress($event, msg, file)"
@@ -165,7 +166,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="mt-1">
                                 <template x-if="isReferencedImageLink(link)">
                                     <button type="button" @click="openReferencedImage(link)" class="block max-w-full text-left">
-                                        <img :src="link.url" :alt="referencedImageName(link)"
+                                        <img :src="link.url" :alt="referencedImageName(link)" loading="lazy" decoding="async"
                                              class="max-h-48 max-w-full cursor-zoom-in rounded-lg border border-white/80 hover:opacity-90 transition">
                                         <span class="mt-1 block max-w-full truncate text-xs text-blue-700" x-text="referencedImageName(link)"></span>
                                     </button>
@@ -232,6 +233,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                              :class="msg.files.filter(file => isImage(file.file_type)).length > 1 ? 'grid-cols-2 overflow-hidden rounded-xl border border-gray-300 bg-white p-1' : 'grid-cols-1'">
                             <template x-for="file in msg.files.filter(file => isImage(file.file_type))" :key="file.id">
                                 <img :src="BASE_URL + '/files/' + file.id + '/download?t=' + (file.updated || file.id)"
+                                     loading="lazy" decoding="async"
                                      @click="if (!contextMenu.show) openModal(file, msg.user_id)"
                                      @contextmenu.stop.prevent="showImageContext($event, msg, file)"
                                      @touchstart.stop="startImageLongPress($event, msg, file)"
@@ -268,7 +270,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             <div class="mt-1">
                                 <template x-if="isReferencedImageLink(link)">
                                     <button type="button" @click="openReferencedImage(link)" class="block max-w-full text-left">
-                                        <img :src="link.url" :alt="referencedImageName(link)"
+                                        <img :src="link.url" :alt="referencedImageName(link)" loading="lazy" decoding="async"
                                              class="max-h-48 max-w-full cursor-zoom-in rounded-lg border border-gray-200 hover:opacity-90 transition">
                                         <span class="mt-1 block max-w-full truncate text-xs text-blue-600" x-text="referencedImageName(link)"></span>
                                     </button>
@@ -648,44 +650,31 @@ function taskChat() {
          */
         init() {
             const container = this.$refs.chatMessages;
-
-            // Функция: скролл вниз + показать контейнер
-            const revealChat = () => {
-                if (container) {
-                    container.scrollTop = container.scrollHeight;
-                    container.style.visibility = 'visible';
-                }
-            };
-
-            // Ждём загрузки всех изображений в чате, потом скроллим и показываем
             this.$nextTick(() => {
                 this.updateLastMessageId();
                 this.markMessagesAsRead();
 
                 if (container) {
-                    const images = container.querySelectorAll('img');
-                    if (images.length === 0) {
-                        revealChat();
-                    } else {
-                        let loaded = 0;
-                        const total = images.length;
-                        const onLoad = () => {
-                            loaded++;
-                            if (loaded >= total) revealChat();
-                        };
-                        images.forEach(img => {
-                            if (img.complete) {
-                                onLoad();
-                            } else {
-                                img.addEventListener('load', onLoad, { once: true });
-                                img.addEventListener('error', onLoad, { once: true });
+                    // Сообщения показываются сразу. Загрузка изображений больше не
+                    // блокирует чат; при изменении их размера сохраняем позицию внизу,
+                    // пока пользователь сам не начал просматривать историю.
+                    container.scrollTop = container.scrollHeight;
+                    let userMovedFromBottom = false;
+                    container.addEventListener('scroll', () => {
+                        const distance = container.scrollHeight - container.scrollTop - container.clientHeight;
+                        if (distance > 80) userMovedFromBottom = true;
+                    }, { passive: true });
+
+                    container.querySelectorAll('img').forEach(img => {
+                        if (img.complete) return;
+                        const keepInitialPosition = () => {
+                            if (!userMovedFromBottom && this.$root.offsetParent !== null) {
+                                container.scrollTop = container.scrollHeight;
                             }
-                        });
-                        // Подстраховка: показать через 3 сек если изображения не загрузились
-                        setTimeout(revealChat, 3000);
-                    }
-                } else {
-                    revealChat();
+                        };
+                        img.addEventListener('load', keepInitialPosition, { once: true });
+                        img.addEventListener('error', keepInitialPosition, { once: true });
+                    });
                 }
             });
 
@@ -859,7 +848,7 @@ function taskChat() {
          */
         markMessagesAsRead() {
             // Помечаем прочитанными ТОЛЬКО если вкладка активна (пользователь реально видит чат)
-            if (document.visibilityState !== 'visible') return;
+            if (document.visibilityState !== 'visible' || this.$root.offsetParent === null) return;
 
             // Собираем ID чужих сообщений
             const unreadIds = this.messages
@@ -891,7 +880,9 @@ function taskChat() {
          * Polling: запрос новых/изменённых/удалённых сообщений с сервера
          */
         async pollNewMessages() {
-            if (!this.taskId) return;
+            // На странице одновременно присутствуют адаптивные desktop/mobile
+            // представления. Невидимая копия не должна дублировать polling.
+            if (!this.taskId || this.$root.offsetParent === null) return;
             try {
                 // Передаём список ID текущих сообщений для определения удалённых
                 const currentIds = this.messages.map(m => m.id).join(',');

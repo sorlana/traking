@@ -321,16 +321,29 @@ class TaskController extends Controller
         $files = $this->taskModel->getFiles($taskId);
         $links = $this->taskModel->getLinks($taskId);
 
-        // Подтягиваем файлы и ссылки к каждому комментарию (для чат-интерфейса)
+        // Группируем уже загруженные файлы и ссылки в памяти. Раньше здесь
+        // выполнялось по два SQL-запроса на каждое сообщение (N+1), из-за чего
+        // открытие задач с длинным чатом заметно замедлялось.
+        $filesByComment = [];
+        foreach ($files as $file) {
+            $commentId = (int) ($file['comment_id'] ?? 0);
+            if ($commentId > 0) {
+                $filesByComment[$commentId][] = $file;
+            }
+        }
+
+        $linksByComment = [];
+        foreach ($links as $link) {
+            $commentId = (int) ($link['comment_id'] ?? 0);
+            if ($commentId > 0) {
+                $linksByComment[$commentId][] = $link;
+            }
+        }
+
         foreach ($comments as &$comment) {
-            $comment['files'] = $db->fetchAll(
-                "SELECT id, file_name, file_size, file_type FROM task_files WHERE comment_id = ?",
-                [(int) $comment['id']]
-            );
-            $comment['links'] = $db->fetchAll(
-                "SELECT id, url, title FROM task_links WHERE comment_id = ?",
-                [(int) $comment['id']]
-            );
+            $commentId = (int) $comment['id'];
+            $comment['files'] = $filesByComment[$commentId] ?? [];
+            $comment['links'] = $linksByComment[$commentId] ?? [];
         }
         unset($comment);
 
@@ -342,12 +355,15 @@ class TaskController extends Controller
                  WHERE comment_id IN (SELECT id FROM task_comments WHERE task_id = ?) AND user_id != ?",
                 [$taskId, Auth::id()]
             );
-            $readByOthers = array_map(fn($r) => (int) $r['comment_id'], $readRows);
+            $readByOthers = array_fill_keys(
+                array_map(fn($r) => (int) $r['comment_id'], $readRows),
+                true
+            );
         } catch (\Throwable $e) {}
 
         // Добавляем read_by_others к каждому комментарию
         foreach ($comments as &$comment) {
-            $comment['read_by_others'] = in_array((int) $comment['id'], $readByOthers);
+            $comment['read_by_others'] = isset($readByOthers[(int) $comment['id']]);
         }
         unset($comment);
         $parent = $this->taskModel->getParent($taskId);
