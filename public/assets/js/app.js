@@ -582,6 +582,8 @@ document.addEventListener('click', async function (e) {
     const taskId = container.dataset.taskId;
     const input = container.querySelector('.js-time-input');
     if (!input) return;
+    const isDatedEntry = container.dataset.timeAlwaysEdit === 'true';
+    const entryDateInput = container.querySelector('.js-time-entry-date');
 
     const rawValue = input.value.trim();
 
@@ -606,7 +608,16 @@ document.addEventListener('click', async function (e) {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
             },
-            body: JSON.stringify({ time_spent: timeSpent, type: container.dataset.timeType || 'executor' }),
+            body: JSON.stringify(isDatedEntry
+                ? {
+                    add_time: timeSpent,
+                    type: container.dataset.timeType || 'executor',
+                    entry_date: entryDateInput?.value || null,
+                }
+                : {
+                    time_spent: timeSpent,
+                    type: container.dataset.timeType || 'executor',
+                }),
         });
 
         // Проверяем, что ответ — JSON (сервер может вернуть HTML при ошибке)
@@ -623,7 +634,14 @@ document.addEventListener('click', async function (e) {
         if (response.ok && data.success) {
             const savedValue = data.time_spent !== undefined ? data.time_spent : timeSpent;
             syncTimeContainers(taskId, container.dataset.timeType || 'executor', savedValue);
-            showToast('Время сохранено', 'success');
+            if (isDatedEntry) {
+                if (entryDateInput) entryDateInput.value = '';
+                const savedDate = (data.entry_date || new Date().toISOString().slice(0, 10))
+                    .split('-').reverse().join('.');
+                showToast(`Время записано на ${savedDate}`, 'success');
+            } else {
+                showToast('Время сохранено', 'success');
+            }
         } else {
             // Ошибка от сервера
             const errorMsg = data.error || 'Ошибка при сохранении времени';
@@ -738,7 +756,7 @@ function switchToViewMode(container, value) {
 
     if (container.dataset.timeAlwaysEdit === 'true') {
         display.style.display = 'none';
-        input.value = value;
+        input.value = '';
         input.classList.remove('hidden');
         unit.classList.remove('hidden');
         saveBtn.classList.remove('hidden');
