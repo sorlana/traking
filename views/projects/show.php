@@ -349,7 +349,7 @@ main { overflow: hidden; padding-bottom: 0 !important; }
     <!-- Вкладка: Ссылки -->
     <!-- ============================================================ -->
     <div x-show="tab === 'links'" x-transition class="flex min-h-0 flex-col">
-        <div class="flex min-h-0 flex-1 flex-col rounded-lg border bg-white">
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-white">
             <?php if (can('edit_project', (int) $project['id'])): ?>
                 <div class="flex flex-shrink-0 items-center justify-between gap-3 border-b bg-gray-50 p-4 rounded-t-lg">
                     <div>
