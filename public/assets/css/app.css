@@ -1055,3 +1055,21 @@ nav[class*="fixed"] {
         text-decoration: underline;
     }
 }
+.task-time-icon-group {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(3, 1.625rem);
+    align-items: center;
+    gap: 0;
+}
+
+.task-time-icon-button {
+    display: flex;
+    width: 1.625rem;
+    height: 2rem;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
