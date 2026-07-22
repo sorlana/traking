@@ -95,7 +95,7 @@ $upLabel = !empty($parent['id'])
             <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
                 <?php if ($canEditTime || $canManagerEditTime): ?>
                 <!-- Таймер учёта времени -->
-                <div class="flex items-center gap-2 rounded-lg border border-gray-300 py-1 pl-2 pr-3">
+                <div class="flex items-center gap-2 rounded-lg border border-gray-300 py-1 pl-2 pr-4">
                 <div class="flex items-center gap-1.5" x-data="taskTimer(<?= (int) $task['id'] ?>, '<?= $canManagerEditTime && !$canEditTime ? 'manager' : 'executor' ?>')">
                     <!-- Кнопка запуска таймера -->
                     <button x-show="!running && !paused" @click="start()" class="p-1 text-gray-400 hover:text-blue-600 transition" title="Запустить таймер">
