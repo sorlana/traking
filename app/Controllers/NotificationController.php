@@ -117,6 +117,7 @@ class NotificationController extends Controller
                 'title' => $n['title'],
                 'message' => $n['message'],
                 'task_id' => $n['task_id'] ? (int) $n['task_id'] : null,
+                'task_title' => $n['task_title'] ?? null,
                 'is_read' => (bool) $n['is_read'],
                 'created_at' => $n['created_at'],
             ];

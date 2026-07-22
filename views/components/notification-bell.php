@@ -70,6 +70,7 @@
             <template x-for="item in items" :key="item.id">
                 <a :href="item.task_id ? BASE_URL + '/tasks/' + item.task_id : BASE_URL + '/notifications'"
                    @click="markAsRead(item)"
+                   :title="item.task_title || item.title"
                    class="block px-4 py-3 hover:bg-gray-50 transition"
                    :class="{ 'bg-blue-50': !item.is_read }">
                     <div class="flex items-start gap-3">
