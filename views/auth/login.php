@@ -116,17 +116,5 @@
         </p>
     </main>
 
-    <!-- Маскировка URL: скрываем /traking из адресной строки -->
-    <script>
-    (function() {
-        var basePath = '<?= rtrim($GLOBALS['config']['base_path'] ?? '', '/') ?>';
-        if (basePath && window.location.pathname.indexOf(basePath) === 0) {
-            var cleanPath = window.location.pathname.substring(basePath.length) || '/';
-            var newUrl = window.location.origin + cleanPath + window.location.search + window.location.hash;
-            window.history.replaceState({ _realUrl: window.location.href }, '', newUrl);
-        }
-    })();
-    </script>
-
 </body>
 </html>
