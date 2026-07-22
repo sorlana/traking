@@ -315,7 +315,7 @@ if ($currentUser) {
     </script>
 
     <!-- Общий JS (CSRF, fetch-утилиты, toast, Service Worker) -->
-    <script src="<?= asset('/assets/js/app.js') ?>?v=14"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>?v=15"></script>
 
     <!-- Динамический theme-color для модалок -->
     <script>
