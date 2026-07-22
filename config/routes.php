@@ -85,6 +85,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
 
     // Календарь дневных затрат текущего пользователя
     $router->get('/calendar', [\Controllers\CalendarController::class, 'index']);
+    $router->post('/calendar/manual-entry', [\Controllers\CalendarController::class, 'storeManualEntry'], ['csrf']);
 
     // Уведомления
     $router->get('/notifications', [\Controllers\NotificationController::class, 'index']);

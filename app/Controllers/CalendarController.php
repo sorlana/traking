@@ -3,6 +3,8 @@
 namespace Controllers;
 
 use Helpers\Auth;
+use Helpers\Session;
+use Middleware\TaskAccessMiddleware;
 use Services\TimeTrackingService;
 
 class CalendarController extends Controller
@@ -21,12 +23,22 @@ class CalendarController extends Controller
         $roleId = (int) ($user['role_id'] ?? 0);
         $visibleTimeType = $roleId === 2 ? 'manager' : ($roleId === 3 ? 'executor' : null);
         $service = new TimeTrackingService();
+        $manualTimeType = $roleId === Auth::ROLE_MANAGER
+            ? 'manager'
+            : ($roleId === Auth::ROLE_EXECUTOR ? 'executor' : null);
         $entries = $service->getCalendarEntries(
             (int) Auth::id(),
             $monthStart->format('Y-m-d'),
             $monthEnd->format('Y-m-d'),
             $visibleTimeType
         );
+        $recoverableTasks = $manualTimeType === null
+            ? []
+            : array_values(array_filter(
+                $service->getRecoverableTasks((int) Auth::id(), $manualTimeType),
+                static fn(array $task): bool => TaskAccessMiddleware::check((int) $task['id'])
+            ));
+        $manualOld = Session::getFlash('calendar_manual_old', []);
 
         $days = [];
         for ($day = $monthStart; $day <= $monthEnd; $day = $day->modify('+1 day')) {
@@ -79,6 +91,77 @@ class CalendarController extends Controller
             'nextMonth' => $month->modify('+1 month')->format('Y-m'),
             'currentMonth' => $month->format('Y-m'),
             'visibleTimeType' => $visibleTimeType,
+            'recoverableTasks' => $recoverableTasks,
+            'manualOld' => $manualOld,
         ]);
+    }
+
+    /** Перенести ранее учтённое время в календарь, не меняя итог задачи. */
+    public function storeManualEntry(): void
+    {
+        $user = Auth::user();
+        $userId = (int) Auth::id();
+        $roleId = (int) ($user['role_id'] ?? 0);
+        $type = $roleId === Auth::ROLE_MANAGER
+            ? 'manager'
+            : ($roleId === Auth::ROLE_EXECUTOR ? 'executor' : null);
+
+        $taskId = (int) ($_POST['task_id'] ?? 0);
+        $rawHours = trim((string) ($_POST['hours'] ?? ''));
+        $entryDate = trim((string) ($_POST['entry_date'] ?? ''));
+        $old = ['task_id' => $taskId, 'hours' => $rawHours, 'entry_date' => $entryDate];
+
+        if ($type === null) {
+            Session::flash('error', 'Ручной перенос доступен руководителям и исполнителям');
+            $this->redirect('/calendar');
+            return;
+        }
+        if ($taskId <= 0 || !is_numeric($rawHours) || $entryDate === '') {
+            Session::flash('error', 'Выберите задачу, дату и укажите количество часов');
+            Session::flash('calendar_manual_old', $old);
+            $this->redirect('/calendar');
+            return;
+        }
+        if (!TaskAccessMiddleware::check($taskId)) {
+            Session::flash('error', 'Нет доступа к выбранной задаче');
+            $this->redirect('/calendar');
+            return;
+        }
+
+        try {
+            $service = new TimeTrackingService();
+            $recoverableTaskIds = array_map(
+                static fn(array $task): int => (int) $task['id'],
+                $service->getRecoverableTasks($userId, $type)
+            );
+            if (!in_array($taskId, $recoverableTaskIds, true)) {
+                Session::flash('error', 'У этой задачи нет доступного для переноса времени');
+                $this->redirect('/calendar');
+                return;
+            }
+
+            $result = $service->addHistoricalTimeEntry(
+                $taskId,
+                $userId,
+                (float) $rawHours,
+                $type,
+                $entryDate
+            );
+        } catch (\Throwable $e) {
+            Session::flash('error', 'Не удалось перенести время. Попробуйте ещё раз');
+            Session::flash('calendar_manual_old', $old);
+            $this->redirect('/calendar');
+            return;
+        }
+
+        if (!$result['success']) {
+            Session::flash('error', $result['error']);
+            Session::flash('calendar_manual_old', $old);
+            $this->redirect('/calendar?month=' . substr($entryDate, 0, 7));
+            return;
+        }
+
+        Session::flash('success', 'Время перенесено в календарь без изменения общей суммы');
+        $this->redirect('/calendar?month=' . substr($entryDate, 0, 7));
     }
 }

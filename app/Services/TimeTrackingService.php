@@ -155,6 +155,125 @@ class TimeTrackingService
     }
 
     /**
+     * Задачи с ранее учтённым, но ещё не разнесённым по календарю временем.
+     */
+    public function getRecoverableTasks(int $userId, string $type): array
+    {
+        $this->ensureTimeEntriesTable();
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+        $accessSql = $type === 'manager'
+            ? 'EXISTS (SELECT 1 FROM project_users pu WHERE pu.project_id = t.project_id AND pu.user_id = ?)'
+            : 't.assigned_to = ?';
+
+        $rows = Database::getInstance()->fetchAll(
+            "SELECT t.id, t.title, t.project_id, p.title AS project_title,
+                    COALESCE(t.{$field}, 0) AS total_hours,
+                    COALESCE((
+                        SELECT SUM(te.hours)
+                        FROM time_entries te
+                        WHERE te.task_id = t.id AND te.time_type = ?
+                    ), 0) AS logged_hours
+             FROM tasks t
+             JOIN projects p ON p.id = t.project_id
+             WHERE COALESCE(t.{$field}, 0) > 0 AND {$accessSql}
+             ORDER BY p.title, t.title",
+            [$type, $userId]
+        );
+
+        $result = [];
+        foreach ($rows as $row) {
+            $available = round((float) $row['total_hours'] - (float) $row['logged_hours'], 2);
+            if ($available <= 0) {
+                continue;
+            }
+            $row['available_hours'] = $available;
+            $result[] = $row;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Перенести ранее учтённое время в дневной журнал без изменения итога задачи.
+     */
+    public function addHistoricalTimeEntry(
+        int $taskId,
+        int $userId,
+        float $hours,
+        string $type,
+        string $entryDate
+    ): array {
+        $errors = $this->validateTimeValue($hours);
+        if (!empty($errors)) {
+            return ['success' => false, 'error' => $errors[0]];
+        }
+
+        $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $entryDate);
+        if (!$parsedDate || $parsedDate->format('Y-m-d') !== $entryDate) {
+            return ['success' => false, 'error' => 'Укажите корректную дату'];
+        }
+        if ($entryDate > date('Y-m-d')) {
+            return ['success' => false, 'error' => 'Нельзя перенести время на будущую дату'];
+        }
+
+        $this->ensureTimeEntriesTable();
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+        $db = Database::getInstance();
+        $pdo = $db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+            $task = $db->fetch(
+                "SELECT id, COALESCE({$field}, 0) AS total_hours FROM tasks WHERE id = ? FOR UPDATE",
+                [$taskId]
+            );
+            if (!$task) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Задача не найдена'];
+            }
+
+            $logged = $db->fetch(
+                'SELECT COALESCE(SUM(hours), 0) AS total FROM time_entries WHERE task_id = ? AND time_type = ?',
+                [$taskId, $type]
+            );
+            $available = round((float) $task['total_hours'] - (float) ($logged['total'] ?? 0), 2);
+            if ($available <= 0) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Всё учтённое время этой задачи уже перенесено в календарь'];
+            }
+            if ($hours > $available + 0.001) {
+                $pdo->rollBack();
+                return [
+                    'success' => false,
+                    'error' => 'Можно перенести не более ' . rtrim(rtrim(number_format($available, 2, '.', ''), '0'), '.') . ' ч',
+                ];
+            }
+
+            $db->insert('time_entries', [
+                'task_id' => $taskId,
+                'user_id' => $userId,
+                'time_type' => $type,
+                'hours' => $hours,
+                'entry_date' => $entryDate,
+            ]);
+            $pdo->commit();
+
+            return [
+                'success' => true,
+                'error' => null,
+                'remaining' => round($available - $hours, 2),
+            ];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Валидация значения затраченного времени
      *
      * Проверяет: значение > 0, <= 999.5, кратно 0.5.
