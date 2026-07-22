@@ -101,6 +101,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
+                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                                <svg x-show="msg.updated_at" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                                 <span x-text="formatTime(msg.created_at)"></span>
                                 <!-- Галочки прочтения (WhatsApp-стиль) -->
                                 <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -164,6 +166,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </template>
                         <!-- Время (если есть файлы/ссылки — показываем отдельно) + галочки -->
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
+                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                            <svg x-show="msg.updated_at" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                             <span x-text="formatTime(msg.created_at)"></span>
                             <!-- Галочки прочтения (WhatsApp-стиль) -->
                             <svg x-show="msg.read_by_others" class="w-4 h-4 text-blue-500" viewBox="0 0 16 12" fill="none"><path d="M1.5 6.5L5 10L11 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 6.5L9 10L15 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -199,7 +203,11 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 </div>
                             </template>
                             <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
-                            <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
+                            <div x-show="!msg.files.length && !msg.links.length" class="mt-1 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
+                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                                <svg x-show="msg.updated_at" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
+                                <span x-text="formatTime(msg.created_at)"></span>
+                            </div>
                         </div>
                         <!-- Группа изображений -->
                         <div x-show="msg.files.some(file => isImage(file.file_type))" class="mt-1 grid gap-1"
@@ -257,7 +265,11 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             </div>
                         </template>
                         <!-- Время -->
-                        <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-400 mt-1 text-right" x-text="formatTime(msg.created_at)"></div>
+                        <div x-show="msg.files.length || msg.links.length" class="mt-1 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
+                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                            <svg x-show="msg.updated_at" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
+                            <span x-text="formatTime(msg.created_at)"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -558,6 +570,7 @@ function taskChat() {
                 'comment_text' => $c['comment_text'],
                 'user_name' => $c['user_name'] ?? $c['user_login'] ?? '',
                 'created_at' => $c['created_at'],
+                'updated_at' => $c['updated_at'] ?? null,
                 'parent_comment_id' => $c['parent_comment_id'] ? (int) $c['parent_comment_id'] : null,
                 'is_pinned' => (int) ($c['is_pinned'] ?? 0),
                 'read_by_others' => (bool) ($c['read_by_others'] ?? false),
@@ -903,6 +916,7 @@ function taskChat() {
                             this.messages[idx] = {
                                 ...existing,
                                 comment_text: upd.comment_text,
+                                updated_at: upd.updated_at || existing.updated_at || new Date().toISOString(),
                                 files: upd.files && upd.files.length > 0
                                     ? upd.files.map(f => ({...f, updated: f.updated || Date.now()}))
                                     : (existing.files || []).map(f => ({...f, updated: Date.now()})),
@@ -979,6 +993,7 @@ function taskChat() {
                         const idx = this.messages.findIndex(m => m.id === this.editingMsg.id);
                         if (idx !== -1) {
                             this.messages[idx].comment_text = text;
+                            this.messages[idx].updated_at = data.updated_at || new Date().toISOString();
                         }
                         this.newMessage = '';
                         this.editingMsg = null;
@@ -1028,6 +1043,7 @@ function taskChat() {
                         comment_text: data.comment.comment_text,
                         user_name: data.comment.user_name,
                         created_at: data.comment.created_at,
+                        updated_at: null,
                         parent_comment_id: this.replyTo ? this.replyTo.id : null,
                         is_pinned: 0,
                         read_by_others: false,

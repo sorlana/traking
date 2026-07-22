@@ -409,7 +409,7 @@ class CommentController extends Controller
         $updated = [];
         if ($clientIds !== '') {
             $updatedRows = $db->fetchAll(
-                "SELECT id, comment_text FROM task_comments 
+                "SELECT id, comment_text, updated_at FROM task_comments
                  WHERE task_id = ? AND updated_at IS NOT NULL AND updated_at >= DATE_SUB(NOW(), INTERVAL 30 SECOND)",
                 [$taskId]
             );
@@ -422,6 +422,7 @@ class CommentController extends Controller
                 $updated[] = [
                     'id' => (int) $row['id'],
                     'comment_text' => $row['comment_text'],
+                    'updated_at' => $row['updated_at'],
                     'files' => array_map(function($f) {
                         return [
                             'id' => (int) $f['id'],
@@ -523,13 +524,14 @@ class CommentController extends Controller
         }
 
         // Обновляем комментарий (с updated_at для синхронизации через polling)
+        $updatedAt = date('Y-m-d H:i:s');
         $this->commentModel->update($commentId, [
             'comment_text' => $commentText,
-            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_at' => $updatedAt,
         ]);
 
         if ($this->isAjax()) {
-            $this->json(['success' => true, 'comment_text' => $commentText]);
+            $this->json(['success' => true, 'comment_text' => $commentText, 'updated_at' => $updatedAt]);
         } else {
             Session::flash('success', 'Комментарий обновлён');
             $this->redirect("/tasks/{$comment['task_id']}");
