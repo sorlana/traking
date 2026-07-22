@@ -95,6 +95,7 @@ $upLabel = !empty($parent['id'])
             <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
                 <?php if ($canEditTime || $canManagerEditTime): ?>
                 <!-- Таймер учёта времени -->
+                <div class="flex items-center gap-2 rounded-lg border border-gray-300 px-2 py-1">
                 <div class="flex items-center gap-1.5" x-data="taskTimer(<?= (int) $task['id'] ?>, '<?= $canManagerEditTime && !$canEditTime ? 'manager' : 'executor' ?>')">
                     <!-- Кнопка запуска таймера -->
                     <button x-show="!running && !paused" @click="start()" class="p-1 text-gray-400 hover:text-blue-600 transition" title="Запустить таймер">
@@ -119,7 +120,7 @@ $upLabel = !empty($parent['id'])
                 $headerTimeIsManager = $canManagerEditTime && !$canEditTime;
                 $headerTimeValue = $headerTimeIsManager ? $manager_time_spent : $time_spent;
                 ?>
-                <div class="js-time-container relative flex items-center gap-1.5"
+                <div class="js-time-container relative flex items-center gap-2"
                      data-task-id="<?= (int) $task['id'] ?>"
                      data-time-always-edit="true"
                      <?= $headerTimeIsManager ? 'data-time-type="manager"' : '' ?>>
@@ -128,8 +129,8 @@ $upLabel = !empty($parent['id'])
                            placeholder="0.5" aria-label="Затраченное время в часах"
                            class="js-time-input w-20 rounded-md border-gray-300 px-2 py-1.5 text-sm placeholder:text-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <span class="js-time-unit text-xs text-gray-500">ч</span>
-                    <div class="flex items-center gap-0">
-                        <label class="relative flex h-9 w-6 cursor-pointer items-center justify-center text-blue-600 transition hover:text-blue-800"
+                    <div class="flex items-center gap-1">
+                        <label class="relative flex h-8 w-8 cursor-pointer items-center justify-center text-blue-600 transition hover:text-blue-800"
                                title="Выбрать дату записи времени">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3v3m8-3v3M4.5 9.5h15M6.5 5h11a2 2 0 012 2v11a2 2 0 01-2 2h-11a2 2 0 01-2-2V7a2 2 0 012-2z"/>
@@ -139,12 +140,12 @@ $upLabel = !empty($parent['id'])
                                    aria-label="Дата записи времени">
                         </label>
                         <button type="button"
-                                class="js-save-time flex h-9 w-6 items-center justify-center text-blue-600 transition hover:text-blue-800"
+                                class="js-save-time flex h-8 w-8 items-center justify-center text-blue-600 transition hover:text-blue-800"
                                 title="Сохранить время" aria-label="Сохранить время">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 13l4 4L19 7"/></svg>
                         </button>
                         <button type="button"
-                                class="js-toggle-add-time flex h-9 w-6 items-center justify-center text-blue-600 transition hover:text-blue-800"
+                                class="js-toggle-add-time flex h-8 w-8 items-center justify-center text-blue-600 transition hover:text-blue-800"
                                 title="Добавить время" aria-label="Добавить время">
                             <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14M5 12h14"/>
@@ -164,6 +165,7 @@ $upLabel = !empty($parent['id'])
                         </button>
                         <button type="button" class="js-cancel-added-time p-1 text-gray-400 hover:text-black" title="Отмена" aria-label="Отменить">×</button>
                     </div>
+                </div>
                 </div>
                 <?php endif; ?>
                 <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>"><?= e($task['status_name'] ?? '') ?></span>
