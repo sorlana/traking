@@ -217,6 +217,7 @@ CREATE TABLE `task_participants` (
 -- ------------------------------------------------------------
 -- 11. Комментарии к задачам
 -- ------------------------------------------------------------
+DROP TABLE IF EXISTS `task_comment_personal_pins`;
 DROP TABLE IF EXISTS `task_comments`;
 CREATE TABLE `task_comments` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -226,6 +227,7 @@ CREATE TABLE `task_comments` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NULL DEFAULT NULL,
     `parent_comment_id` INT UNSIGNED NULL DEFAULT NULL,
+    `is_pinned` TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
     INDEX `idx_task_comments_task_id` (`task_id`),
     INDEX `idx_task_comments_user_id` (`user_id`),
@@ -236,6 +238,18 @@ CREATE TABLE `task_comments` (
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT `fk_task_comments_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `task_comments` (`id`)
         ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `task_comment_personal_pins` (
+    `comment_id` INT UNSIGNED NOT NULL,
+    `user_id` INT UNSIGNED NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`comment_id`, `user_id`),
+    INDEX `idx_personal_pins_user` (`user_id`),
+    CONSTRAINT `fk_personal_pins_comment` FOREIGN KEY (`comment_id`) REFERENCES `task_comments` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_personal_pins_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------

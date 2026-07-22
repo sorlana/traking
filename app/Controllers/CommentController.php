@@ -21,6 +21,7 @@ use Models\Task;
 use Services\NotificationService;
 use Services\PushService;
 use Services\ActivityLogService;
+use Services\CommentPinService;
 
 class CommentController extends Controller
 {
@@ -29,6 +30,7 @@ class CommentController extends Controller
     private Task $taskModel;
     private NotificationService $notificationService;
     private ActivityLogService $activityLogService;
+    private CommentPinService $commentPinService;
 
     /** @var array Допустимые расширения файлов */
     private const ALLOWED_EXTENSIONS = [
@@ -51,6 +53,7 @@ class CommentController extends Controller
         $this->taskModel = new Task();
         $this->notificationService = new NotificationService();
         $this->activityLogService = new ActivityLogService();
+        $this->commentPinService = new CommentPinService();
     }
 
     /**
@@ -366,6 +369,7 @@ class CommentController extends Controller
             $msg['is_pinned'] = (int) ($msg['is_pinned'] ?? 0);
         }
         unset($msg);
+        $this->commentPinService->annotateMessages($messages, Auth::id());
 
         // Добавляем read_by_others к новым сообщениям (для галочек прочтения)
         $currentUserId = Auth::id();
@@ -402,6 +406,26 @@ class CommentController extends Controller
                 $existingIds = array_column($existing, 'id');
                 $existingIds = array_map('intval', $existingIds);
                 $deleted = array_values(array_diff($idArray, $existingIds));
+            }
+        }
+
+        // Актуальные общие и личные закрепы для уже загруженных сообщений.
+        $pinStates = [];
+        if ($clientIds !== '') {
+            $stateIds = array_values(array_filter(array_map('intval', explode(',', $clientIds))));
+            if ($stateIds !== []) {
+                $placeholders = implode(',', array_fill(0, count($stateIds), '?'));
+                $pinStates = $db->fetchAll(
+                    "SELECT id, is_pinned FROM task_comments WHERE task_id = ? AND id IN ({$placeholders})",
+                    array_merge([$taskId], $stateIds)
+                );
+                $this->commentPinService->annotateMessages($pinStates, Auth::id());
+                foreach ($pinStates as &$pinState) {
+                    $pinState['id'] = (int) $pinState['id'];
+                    $pinState['is_pinned'] = (int) ($pinState['is_pinned'] ?? 0);
+                    $pinState['is_personal_pinned'] = (int) ($pinState['is_personal_pinned'] ?? 0);
+                }
+                unset($pinState);
             }
         }
 
@@ -460,6 +484,7 @@ class CommentController extends Controller
             'messages' => $messages,
             'deleted' => $deleted,
             'updated' => $updated,
+            'pin_states' => $pinStates,
             'newly_read' => $newlyRead,
             'task_status' => $taskStatus,
         ]);
@@ -619,7 +644,7 @@ class CommentController extends Controller
     }
 
     /**
-     * Закрепить/открепить сообщение
+     * Добавить/убрать сообщение из личных или общих закрепов
      * POST /comments/{id}/pin
      *
      * @param string $id ID комментария
@@ -635,13 +660,30 @@ class CommentController extends Controller
             return;
         }
 
-        // Переключаем is_pinned
-        $newValue = ((int)($comment['is_pinned'] ?? 0)) === 1 ? 0 : 1;
+        if (!TaskAccessMiddleware::check((int) $comment['task_id'])) {
+            $this->json(['error' => 'Нет доступа к сообщению'], 403);
+            return;
+        }
 
         $db = Database::getInstance();
-        $db->update('task_comments', ['is_pinned' => $newValue], 'id = ?', [$commentId]);
+        $pinType = ($_POST['pin_type'] ?? 'shared') === 'personal' ? 'personal' : 'shared';
 
-        $this->json(['success' => true, 'is_pinned' => $newValue]);
+        if ($pinType === 'personal') {
+            $personalValue = $this->commentPinService->togglePersonal($commentId, Auth::id());
+            $sharedValue = (int) ($comment['is_pinned'] ?? 0);
+        } else {
+            $sharedValue = ((int) ($comment['is_pinned'] ?? 0)) === 1 ? 0 : 1;
+            $db->update('task_comments', ['is_pinned' => $sharedValue], 'id = ?', [$commentId]);
+            $state = [['id' => $commentId]];
+            $this->commentPinService->annotateMessages($state, Auth::id());
+            $personalValue = (int) ($state[0]['is_personal_pinned'] ?? 0);
+        }
+
+        $this->json([
+            'success' => true,
+            'is_pinned' => $sharedValue,
+            'is_personal_pinned' => $personalValue,
+        ]);
     }
 
     /**

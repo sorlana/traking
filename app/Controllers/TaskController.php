@@ -25,6 +25,7 @@ use Services\TimeTrackingService;
 use Services\NotificationService;
 use Services\PushService;
 use Services\ActivityLogService;
+use Services\CommentPinService;
 
 class TaskController extends Controller
 {
@@ -34,6 +35,7 @@ class TaskController extends Controller
     private TimeTrackingService $timeTrackingService;
     private NotificationService $notificationService;
     private ActivityLogService $activityLogService;
+    private CommentPinService $commentPinService;
 
     public function __construct()
     {
@@ -43,6 +45,7 @@ class TaskController extends Controller
         $this->timeTrackingService = new TimeTrackingService();
         $this->notificationService = new NotificationService();
         $this->activityLogService = new ActivityLogService();
+        $this->commentPinService = new CommentPinService();
     }
 
     /**
@@ -314,6 +317,7 @@ class TaskController extends Controller
         $children = $this->taskModel->getChildren($taskId);
         $childrenTree = $this->treeService->getChildrenTree($taskId);
         $comments = $this->taskModel->getComments($taskId);
+        $this->commentPinService->annotateMessages($comments, Auth::id());
         $files = $this->taskModel->getFiles($taskId);
         $links = $this->taskModel->getLinks($taskId);
 

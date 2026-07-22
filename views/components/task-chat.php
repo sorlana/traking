@@ -18,27 +18,27 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
 
 <div class="task-chat-panel bg-white lg:rounded-lg lg:shadow-sm lg:border flex flex-col flex-1 min-h-0 relative" x-data="taskChat()">
 
-    <!-- Закреплённые сообщения -->
-    <template x-if="messages.filter(m => m.is_pinned).length > 0">
+    <!-- Личные и общие закреплённые сообщения -->
+    <template x-if="messages.some(m => m.is_personal_pinned || m.is_pinned)">
         <div class="border-b border-gray-200 bg-white px-3 py-2 flex-shrink-0" x-data="{ pinsOpen: false }">
-            <!-- Одна строка: иконка + счётчик/текст + стрелка (фиксированная справа) -->
-            <div class="flex cursor-pointer items-center gap-2"
-                 @click="if (!pinsOpen) scrollToMessage(messages.filter(m => m.is_pinned)[0]?.id)">
-                <span class="text-blue-500 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></span>
-                <span class="text-xs font-medium text-blue-700 flex-shrink-0"
-                      x-text="messages.filter(m => m.is_pinned).length"></span>
-                <button type="button"
-                        @click.stop="scrollToMessage(messages.filter(m => m.is_pinned)[0]?.id); pinsOpen = false"
-                        class="min-w-0 flex-1 truncate text-left text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                        x-show="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.comment_text !== '📎 Файл'"
-                        x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></button>
-                <template x-if="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.files?.length">
-                    <button type="button" @click.stop="openModal(messages.filter(m => m.is_pinned)[0].files[0], messages.filter(m => m.is_pinned)[0].user_id)"
-                            class="flex min-w-0 flex-1 items-center gap-1 text-left text-xs font-medium text-blue-600 hover:text-blue-800">
-                        <svg class="h-3.5 w-3.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                        <span class="truncate" x-text="messages.filter(m => m.is_pinned)[0].files[0].file_name"></span>
+            <div class="flex min-w-0 items-center gap-2">
+                <div x-show="messages.some(m => m.is_personal_pinned)" class="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-blue-600">
+                    <button type="button" @click="scrollToMessage(messages.find(m => m.is_personal_pinned)?.id); pinsOpen = false" class="flex flex-shrink-0 items-center gap-1 hover:text-blue-800" title="Перейти к личному закрепу">
+                        <svg class="h-4 w-4" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                        <span class="font-medium" x-text="messages.filter(m => m.is_personal_pinned).length"></span>
                     </button>
-                </template>
+                    <button type="button" x-show="!messages.find(m => m.is_personal_pinned)?.files?.length" @click="scrollToMessage(messages.find(m => m.is_personal_pinned)?.id); pinsOpen = false" class="min-w-0 truncate text-left hover:text-blue-800 hover:underline" x-text="messages.find(m => m.is_personal_pinned)?.comment_text || 'Личный закреп'"></button>
+                    <button type="button" x-show="messages.find(m => m.is_personal_pinned)?.files?.length" @click="openModal(messages.find(m => m.is_personal_pinned).files[0], messages.find(m => m.is_personal_pinned).user_id)" class="min-w-0 truncate text-left font-medium hover:text-blue-800 hover:underline" x-text="messages.find(m => m.is_personal_pinned)?.files?.[0]?.file_name"></button>
+                </div>
+                <span x-show="messages.some(m => m.is_personal_pinned) && messages.some(m => m.is_pinned)" class="h-4 w-px flex-shrink-0 bg-gray-200" aria-hidden="true"></span>
+                <div x-show="messages.some(m => m.is_pinned)" class="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-blue-600">
+                    <button type="button" @click="scrollToMessage(messages.find(m => m.is_pinned)?.id); pinsOpen = false" class="flex flex-shrink-0 items-center gap-1 hover:text-blue-800" title="Перейти к общему закрепу">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
+                        <span class="font-medium" x-text="messages.filter(m => m.is_pinned).length"></span>
+                    </button>
+                    <button type="button" x-show="!messages.find(m => m.is_pinned)?.files?.length" @click="scrollToMessage(messages.find(m => m.is_pinned)?.id); pinsOpen = false" class="min-w-0 truncate text-left hover:text-blue-800 hover:underline" x-text="messages.find(m => m.is_pinned)?.comment_text || 'Общий закреп'"></button>
+                    <button type="button" x-show="messages.find(m => m.is_pinned)?.files?.length" @click="openModal(messages.find(m => m.is_pinned).files[0], messages.find(m => m.is_pinned).user_id)" class="min-w-0 truncate text-left font-medium hover:text-blue-800 hover:underline" x-text="messages.find(m => m.is_pinned)?.files?.[0]?.file_name"></button>
+                </div>
                 <button type="button" @click.stop="pinsOpen = !pinsOpen" class="ml-auto flex h-6 w-6 flex-shrink-0 items-center justify-center text-blue-400 hover:text-blue-700" aria-label="Показать закреплённые сообщения">
                     <svg class="w-4 h-4 transition-transform" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -47,11 +47,13 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </div>
             <!-- Развёрнутый список -->
             <div x-show="pinsOpen" x-transition class="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
-                <template x-for="pin in messages.filter(m => m.is_pinned)" :key="'pin-' + pin.id">
+                <template x-for="pin in messages.filter(m => m.is_personal_pinned || m.is_pinned)" :key="'pin-' + pin.id">
                     <div @click="pinsOpen = false; $nextTick(() => scrollToMessage(pin.id))"
                          @keydown.enter="pinsOpen = false; $nextTick(() => scrollToMessage(pin.id))"
                          role="link" tabindex="0" :aria-label="'Перейти к сообщению пользователя ' + pin.user_name"
                          class="group flex cursor-pointer items-center gap-2 rounded border border-blue-100 bg-white px-2 py-1.5 text-xs hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        <svg x-show="pin.is_personal_pinned" class="h-3.5 w-3.5 flex-shrink-0 text-blue-600" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-label="Личный закреп"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                        <svg x-show="pin.is_pinned" class="h-3.5 w-3.5 flex-shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Общий закреп"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                         <span class="font-medium text-blue-700 flex-shrink-0" x-text="pin.user_name"></span>
                         <span x-show="pin.comment_text !== '📎 Файл'" class="min-w-0 flex-1 truncate text-blue-600 group-hover:underline" x-text="pin.comment_text"></span>
                         <div x-show="pin.files?.length" class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
@@ -63,10 +65,11 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                                 </button>
                             </template>
                         </div>
-                        <button @click.stop="togglePin(pin)" class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Открепить">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
+                        <button x-show="pin.is_personal_pinned" @click.stop="togglePin(pin, 'personal')" class="flex-shrink-0 text-gray-500 hover:text-black" title="Убрать из личных закрепов">
+                            <svg class="h-3.5 w-3.5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                        </button>
+                        <button x-show="pin.is_pinned" @click.stop="togglePin(pin, 'shared')" class="flex-shrink-0 text-gray-500 hover:text-black" title="Убрать из общих закрепов">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                         </button>
                     </div>
                 </template>
@@ -110,7 +113,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             </template>
                             <div class="text-sm whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
-                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                                <svg x-show="msg.is_personal_pinned" class="h-3.5 w-3.5 text-gray-400" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-label="Личный закреп"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Общий закреп"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                                 <svg x-show="msg.updated_at" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                                 <span x-text="formatTime(msg.created_at)"></span>
                                 <!-- Галочки прочтения (WhatsApp-стиль) -->
@@ -175,7 +179,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </template>
                         <!-- Время (если есть файлы/ссылки — показываем отдельно) + галочки -->
                         <div x-show="msg.files.length || msg.links.length" class="text-xs text-gray-500 mt-1 text-right flex items-center justify-end gap-1">
-                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                            <svg x-show="msg.is_personal_pinned" class="h-3.5 w-3.5 text-gray-400" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-label="Личный закреп"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Общий закреп"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                             <svg x-show="msg.updated_at" class="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                             <span x-text="formatTime(msg.created_at)"></span>
                             <!-- Галочки прочтения (WhatsApp-стиль) -->
@@ -214,7 +219,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                             </template>
                             <div class="text-sm text-gray-800 whitespace-pre-wrap" x-html="linkify(msg.comment_text)"></div>
                             <div x-show="!msg.files.length && !msg.links.length" class="mt-1 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
-                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                                <svg x-show="msg.is_personal_pinned" class="h-3.5 w-3.5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-label="Личный закреп"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                                <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Общий закреп"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                                 <svg x-show="msg.updated_at" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                                 <span x-text="formatTime(msg.created_at)"></span>
                             </div>
@@ -276,7 +282,8 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         </template>
                         <!-- Время -->
                         <div x-show="msg.files.length || msg.links.length" class="mt-1 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
-                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение закреплено"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4h8l-1.5 5 3 3v1H6.5v-1l3-3L8 4zm4 9v7"/></svg>
+                            <svg x-show="msg.is_personal_pinned" class="h-3.5 w-3.5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-label="Личный закреп"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+                            <svg x-show="msg.is_pinned" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Общий закреп"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
                             <svg x-show="msg.updated_at" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Сообщение отредактировано"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l2.651 2.651M18.5 2.849a1.875 1.875 0 112.651 2.652L8.25 18.401 4 19.75l1.349-4.25L18.5 2.849z"/></svg>
                             <span x-text="formatTime(msg.created_at)"></span>
                         </div>
@@ -311,14 +318,17 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
             </svg>
             Ответить
         </button>
-        <!-- Закрепить/Открепить -->
-        <button @click="togglePin(contextMenu.msg); contextMenu.show = false"
+        <!-- Личный закреп -->
+        <button @click="togglePin(contextMenu.msg, 'personal'); contextMenu.show = false"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-            </svg>
-            <span x-text="contextMenu.msg && contextMenu.msg.is_pinned ? 'Открепить' : 'Закрепить'"></span>
+            <svg class="w-4 h-4" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linejoin="round" stroke-width="1.5" d="M12 3.5l2.65 5.37 5.93.86-4.29 4.18 1.01 5.91L12 17.03l-5.3 2.79 1.01-5.91-4.29-4.18 5.93-.86L12 3.5z"/></svg>
+            <span x-text="contextMenu.msg && contextMenu.msg.is_personal_pinned ? 'Убрать из личных' : 'В личные закрепы'"></span>
+        </button>
+        <!-- Общий закреп -->
+        <button @click="togglePin(contextMenu.msg, 'shared'); contextMenu.show = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 4v16m0-15h11l-2 4 2 4H5"/></svg>
+            <span x-text="contextMenu.msg && contextMenu.msg.is_pinned ? 'Убрать из общих' : 'В общие закрепы'"></span>
         </button>
         <!-- Редактировать (только свои) -->
         <button x-show="contextMenu.msg && contextMenu.msg.user_id == currentUserId"
@@ -583,6 +593,7 @@ function taskChat() {
                 'updated_at' => $c['updated_at'] ?? null,
                 'parent_comment_id' => $c['parent_comment_id'] ? (int) $c['parent_comment_id'] : null,
                 'is_pinned' => (int) ($c['is_pinned'] ?? 0),
+                'is_personal_pinned' => (int) ($c['is_personal_pinned'] ?? 0),
                 'read_by_others' => (bool) ($c['read_by_others'] ?? false),
                 'files' => array_map(function($f) {
                     return [
@@ -916,6 +927,17 @@ function taskChat() {
                     this.messages = this.messages.filter(m => !data.deleted.includes(m.id));
                 }
 
+                // Общие закрепы синхронизируются между участниками, личные — только для текущего пользователя.
+                if (data.pin_states && data.pin_states.length > 0) {
+                    data.pin_states.forEach(pinState => {
+                        const idx = this.messages.findIndex(m => m.id === pinState.id);
+                        if (idx !== -1) {
+                            this.messages[idx].is_pinned = Number(pinState.is_pinned || 0);
+                            this.messages[idx].is_personal_pinned = Number(pinState.is_personal_pinned || 0);
+                        }
+                    });
+                }
+
                 // Обновлённые сообщения (отредактированные или с замененными файлами)
                 if (data.updated && data.updated.length > 0) {
                     data.updated.forEach(upd => {
@@ -1056,6 +1078,7 @@ function taskChat() {
                         updated_at: null,
                         parent_comment_id: this.replyTo ? this.replyTo.id : null,
                         is_pinned: 0,
+                        is_personal_pinned: 0,
                         read_by_others: false,
                         files: data.comment.files || [],
                         links: data.comment.links || [],
@@ -1097,17 +1120,21 @@ function taskChat() {
         /**
          * Закрепить/открепить сообщение
          */
-        async togglePin(msg) {
+        async togglePin(msg, pinType = 'personal') {
             try {
+                const formData = new FormData();
+                formData.append('pin_type', pinType);
                 const response = await fetch(BASE_URL + `/comments/${msg.id}/pin`, {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData,
                 });
                 const data = await response.json();
                 if (data.success) {
                     const idx = this.messages.findIndex(m => m.id === msg.id);
                     if (idx !== -1) {
-                        this.messages[idx].is_pinned = data.is_pinned;
+                        this.messages[idx].is_pinned = Number(data.is_pinned || 0);
+                        this.messages[idx].is_personal_pinned = Number(data.is_personal_pinned || 0);
                     }
                 }
             } catch(e) {}
