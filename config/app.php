@@ -15,7 +15,10 @@ return [
     'base_path' => '/traking',
 
     // Режим отладки (true — показывать ошибки, false — скрывать)
-    'debug' => true,
+    // На продакшене автоматически выключается; локально можно включить через переменную окружения
+    'debug' => (getenv('APP_DEBUG') === 'true' || getenv('APP_DEBUG') === '1')
+        ? true
+        : (PHP_SAPI === 'cli' || in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'])),
 
     // Часовой пояс
     'timezone' => 'Europe/Moscow',

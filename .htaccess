@@ -9,7 +9,10 @@
     RewriteRule ^ https://unique-style.ru%{REQUEST_URI} [R=301,L,NE]
 
     # Запрет прямого доступа к служебным папкам
-    RewriteRule ^(app|config|database|storage|views)(/|$) - [F,L]
+    RewriteRule ^(app|config|database|storage|views|\.osp|\.git|\.github|\.kiro|\.agents)(/|$) - [F,L]
+
+    # Запрет доступа к скрытым файлам (.*) в корне проекта
+    RewriteRule (^|/)\. - [F,L]
 
     # Публичная статика хранится в public/, но доступна без /public в URL.
     # Явные правила не зависят от DOCUMENT_ROOT хостинга.
@@ -23,3 +26,14 @@
     # Всё остальное — на public/index.php (включая корень и все маршруты)
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 </IfModule>
+
+# Запрет доступа к файлам конфигурации, миграций и документации в корне
+<FilesMatch "\.(ini|sql|md|yml|yaml|log|env|bak|dist)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>

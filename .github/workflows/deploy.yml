@@ -27,5 +27,9 @@ jobs:
             .gitignore
             .github/**
             .kiro/**
+            .agents/**
+            .osp/**
+            .continue/**
             storage/logs/*
             storage/uploads/**
+            public/generate-icons.php
