@@ -22,13 +22,16 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
     <template x-if="messages.filter(m => m.is_pinned).length > 0">
         <div class="border-b border-gray-200 bg-white px-3 py-2 flex-shrink-0" x-data="{ pinsOpen: false }">
             <!-- Одна строка: иконка + счётчик/текст + стрелка (фиксированная справа) -->
-            <div class="flex items-center gap-2 cursor-pointer" @click="pinsOpen = !pinsOpen">
+            <div class="flex cursor-pointer items-center gap-2"
+                 @click="if (!pinsOpen) scrollToMessage(messages.filter(m => m.is_pinned)[0]?.id)">
                 <span class="text-blue-500 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></span>
                 <span class="text-xs font-medium text-blue-700 flex-shrink-0"
                       x-text="messages.filter(m => m.is_pinned).length"></span>
-                <span class="text-xs text-blue-600 truncate flex-1"
-                      x-show="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.comment_text !== '📎 Файл'"
-                      x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></span>
+                <button type="button"
+                        @click.stop="scrollToMessage(messages.filter(m => m.is_pinned)[0]?.id); pinsOpen = false"
+                        class="min-w-0 flex-1 truncate text-left text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                        x-show="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.comment_text !== '📎 Файл'"
+                        x-text="messages.filter(m => m.is_pinned)[0]?.comment_text || ''"></button>
                 <template x-if="!pinsOpen && messages.filter(m => m.is_pinned)[0]?.files?.length">
                     <button type="button" @click.stop="openModal(messages.filter(m => m.is_pinned)[0].files[0], messages.filter(m => m.is_pinned)[0].user_id)"
                             class="flex min-w-0 flex-1 items-center gap-1 text-left text-xs font-medium text-blue-600 hover:text-blue-800">
@@ -36,16 +39,21 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                         <span class="truncate" x-text="messages.filter(m => m.is_pinned)[0].files[0].file_name"></span>
                     </button>
                 </template>
-                <svg class="w-4 h-4 text-blue-400 transition-transform flex-shrink-0 ml-auto" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
+                <button type="button" @click.stop="pinsOpen = !pinsOpen" class="ml-auto flex h-6 w-6 flex-shrink-0 items-center justify-center text-blue-400 hover:text-blue-700" aria-label="Показать закреплённые сообщения">
+                    <svg class="w-4 h-4 transition-transform" :class="pinsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
             </div>
             <!-- Развёрнутый список -->
             <div x-show="pinsOpen" x-transition class="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
                 <template x-for="pin in messages.filter(m => m.is_pinned)" :key="'pin-' + pin.id">
-                    <div class="flex items-center gap-2 text-xs bg-white rounded px-2 py-1.5 border border-blue-100">
+                    <div @click="pinsOpen = false; $nextTick(() => scrollToMessage(pin.id))"
+                         @keydown.enter="pinsOpen = false; $nextTick(() => scrollToMessage(pin.id))"
+                         role="link" tabindex="0" :aria-label="'Перейти к сообщению пользователя ' + pin.user_name"
+                         class="group flex cursor-pointer items-center gap-2 rounded border border-blue-100 bg-white px-2 py-1.5 text-xs hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                         <span class="font-medium text-blue-700 flex-shrink-0" x-text="pin.user_name"></span>
-                        <span x-show="pin.comment_text !== '📎 Файл'" class="text-gray-700 truncate min-w-0 flex-1" x-text="pin.comment_text"></span>
+                        <span x-show="pin.comment_text !== '📎 Файл'" class="min-w-0 flex-1 truncate text-blue-600 group-hover:underline" x-text="pin.comment_text"></span>
                         <div x-show="pin.files?.length" class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
                             <template x-for="file in pin.files" :key="'pinned-file-' + file.id">
                                 <button type="button" @click.stop="openModal(file, pin.user_id)"
@@ -78,6 +86,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <!-- Своё сообщение (справа) -->
                 <div x-show="msg.user_id == currentUserId" class="flex justify-end">
                     <div class="max-w-[80%]"
+                         :data-message-id="msg.id"
                          @contextmenu.prevent="showContext($event, msg)"
                          @touchstart="startLongPress($event, msg)"
                          @touchend="cancelLongPress()"
@@ -179,6 +188,7 @@ $roleId = (int) ($currentUser['role_id'] ?? 0);
                 <!-- Чужое сообщение (слева) -->
                 <div x-show="msg.user_id != currentUserId" class="flex justify-start">
                     <div class="max-w-[80%]"
+                         :data-message-id="msg.id"
                          @contextmenu.prevent="showContext($event, msg)"
                          @touchstart="startLongPress($event, msg)"
                          @touchend="cancelLongPress()"
@@ -1190,6 +1200,28 @@ function taskChat() {
             if (container) {
                 container.scrollTop = container.scrollHeight;
             }
+        },
+
+        /**
+         * Перейти от закрепа к исходному сообщению и ненадолго выделить его.
+         */
+        scrollToMessage(messageId) {
+            const container = this.$refs.chatMessages;
+            if (!container || !messageId) return;
+
+            const targets = container.querySelectorAll(`[data-message-id="${Number(messageId)}"]`);
+            const target = Array.from(targets).find(element => element.offsetParent !== null);
+            if (!target) return;
+
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const previousShadow = target.style.boxShadow;
+            const previousTransition = target.style.transition;
+            target.style.transition = 'box-shadow 180ms ease';
+            target.style.boxShadow = '0 0 0 3px rgba(79, 107, 237, 0.3)';
+            window.setTimeout(() => {
+                target.style.boxShadow = previousShadow;
+                target.style.transition = previousTransition;
+            }, 1400);
         },
 
         /**
