@@ -15,7 +15,7 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
         </div>
         <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2">
             <?php if (!empty($recoverableTasks)): ?>
-                <button type="button" class="ui-btn ui-btn-primary" @click="manualOpen = !manualOpen" :aria-expanded="manualOpen.toString()" aria-controls="manual-time-entry">
+                <button type="button" class="ui-btn ui-btn-primary" x-show="selectedEntries.length === 0" @click="manualOpen = !manualOpen" :aria-expanded="manualOpen.toString()" aria-controls="manual-time-entry">
                     Перенести время
                 </button>
             <?php endif; ?>
@@ -29,7 +29,7 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
     </div>
 
     <?php if (!empty($recoverableTasks)): ?>
-        <form id="manual-time-entry" x-show="manualOpen" x-cloak method="POST" action="<?= url('/calendar/manual-entry') ?>"
+        <form id="manual-time-entry" x-show="manualOpen && selectedEntries.length === 0" x-cloak method="POST" action="<?= url('/calendar/manual-entry') ?>"
               class="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <?= csrf_field() ?>
             <div class="mb-3 flex items-start justify-between gap-4">
@@ -149,7 +149,7 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                             <?php if ($canQuickEntry): ?>
                                 <div class="group/entry flex min-w-0 items-stretch gap-1.5 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>">
                                     <!-- Левый столбец действий: чекбокс + иконки, отделён тонкой линией -->
-                                    <div class="flex flex-shrink-0 flex-col items-center gap-1 border-r border-black/15 pr-1.5">
+                                    <div class="flex flex-shrink-0 flex-col items-center gap-1 border-r border-gray-400/50 pr-1.5">
                                         <input type="checkbox" value="<?= e($entryKey) ?>" x-model="selectedEntries"
                                                @click.stop
                                                class="cal-entry-checkbox rounded border-gray-400 text-blue-600 focus:ring-blue-500"
