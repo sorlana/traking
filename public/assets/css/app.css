@@ -1077,3 +1077,36 @@ nav[class*="fixed"] {
 .task-time-add-button {
     margin-left: 0.25rem;
 }
+
+/* ============================================================ */
+/* Иконки действий в карточках календаря                        */
+/* Переопределяем глобальные min-height/min-width для кнопок,   */
+/* чтобы иконки были компактными и стояли плотным рядом.        */
+/* ============================================================ */
+.app-shell button.cal-entry-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem !important;      /* 18px */
+    height: 1.125rem !important;
+    min-width: 1.125rem !important;  /* сбрасываем навязанные 2.75rem/2.375rem */
+    min-height: 1.125rem !important;
+    padding: 0 !important;
+    border-radius: 0.25rem;
+    color: inherit;
+    background: transparent;
+    line-height: 1;
+}
+
+.app-shell button.cal-entry-icon:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Чекбокс записи календаря — компактный, выровнен по центру ряда */
+.app-shell input.cal-entry-checkbox {
+    width: 0.875rem !important;   /* 14px */
+    height: 0.875rem !important;
+    min-width: 0.875rem !important;
+    min-height: 0.875rem !important;
+    margin: 0 !important;
+}
