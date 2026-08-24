@@ -147,12 +147,12 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                             $entryKey = $entry['task_id'] . '|' . $entry['time_type'] . '|' . $day['date'];
                             ?>
                             <?php if ($canQuickEntry): ?>
-                                <div class="group/entry rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>">
-                                    <!-- Верхний ряд: чекбокс и иконки действий, плотно слева -->
-                                    <div class="flex items-center gap-1.5">
+                                <div class="group/entry flex min-w-0 items-stretch gap-1.5 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>">
+                                    <!-- Левый столбец действий: чекбокс + иконки, отделён тонкой линией -->
+                                    <div class="flex flex-shrink-0 flex-col items-center gap-1 border-r border-black/15 pr-1.5">
                                         <input type="checkbox" value="<?= e($entryKey) ?>" x-model="selectedEntries"
                                                @click.stop
-                                               class="cal-entry-checkbox flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                                               class="cal-entry-checkbox rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                                                aria-label="Выбрать запись <?= e($entry['task_title']) ?>">
                                         <button type="button"
                                                 @click.stop='openEditEntry(<?= $entryPayload ?>)'
@@ -169,7 +169,7 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                                     </div>
                                     <!-- Содержимое записи (ссылка на задачу) -->
                                     <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
-                                       class="mt-1 block min-w-0"
+                                       class="block min-w-0 flex-1 self-center"
                                        title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
                                         <span class="font-semibold"><?= e($entryHours) ?>ч</span>
                                         <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
