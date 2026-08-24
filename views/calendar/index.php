@@ -115,13 +115,43 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                             // Цвет записи определяется проектом; если проект вдруг не в карте — нейтральный серый
                             $entryClass = $projectColors[$entry['project_id']]['bg']
                                 ?? 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+                            $entryHours = rtrim(rtrim(number_format($entry['hours'], 2, '.', ''), '0'), '.');
                             ?>
-                            <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
-                               class="block min-w-0 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
-                               title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
-                                <span class="font-semibold"><?= e(rtrim(rtrim(number_format($entry['hours'], 2, '.', ''), '0'), '.')) ?>ч</span>
-                                <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
-                            </a>
+                            <div class="group/entry flex min-w-0 items-stretch gap-0.5">
+                                <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
+                                   class="block min-w-0 flex-1 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
+                                   title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
+                                    <span class="font-semibold"><?= e($entryHours) ?>ч</span>
+                                    <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
+                                </a>
+                                <?php if ($canQuickEntry): ?>
+                                    <?php
+                                    // Данные записи для JS: идентификация по задаче+типу+дате
+                                    $entryPayload = json_encode([
+                                        'task_id' => $entry['task_id'],
+                                        'time_type' => $entry['time_type'],
+                                        'entry_date' => $day['date'],
+                                        'hours' => (float) $entry['hours'],
+                                        'task_title' => $entry['task_title'],
+                                        'project_title' => $entry['project_title'],
+                                    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+                                    ?>
+                                    <div class="flex flex-col justify-center gap-0.5 opacity-60 transition group-hover/entry:opacity-100">
+                                        <button type="button"
+                                                @click='openEditEntry(<?= $entryPayload ?>)'
+                                                class="flex h-4 w-4 items-center justify-center rounded text-gray-500 hover:bg-gray-200 hover:text-black"
+                                                aria-label="Редактировать запись" title="Редактировать">
+                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                        <button type="button"
+                                                @click='openDeleteEntry(<?= $entryPayload ?>)'
+                                                class="flex h-4 w-4 items-center justify-center rounded text-gray-500 hover:bg-red-100 hover:text-red-600"
+                                                aria-label="Удалить запись" title="Удалить">
+                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -233,6 +263,68 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
             </div>
         </section>
     </div>
+
+    <!-- Модальное окно редактирования записи времени -->
+    <div x-show="editOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none">
+        <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" @click="editOpen = false" aria-hidden="true"></div>
+        <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
+                 role="dialog" aria-modal="true" aria-labelledby="edit-entry-title">
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="edit-entry-title" class="text-base font-semibold text-gray-900">Изменить время</h2>
+                    <p class="mt-1 text-xs text-gray-500" x-text="editEntry.project_title + ' · ' + editEntry.task_title"></p>
+                    <p class="text-xs text-gray-400" x-text="'Дата: ' + formatDate(editEntry.entry_date)"></p>
+                </div>
+                <button type="button" @click="editOpen = false" class="p-1 text-gray-500 transition hover:text-black" aria-label="Закрыть">×</button>
+            </div>
+
+            <p x-show="editError" x-cloak class="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700" x-text="editError"></p>
+
+            <div>
+                <label class="mb-1 block text-xs font-medium text-gray-600">Часы</label>
+                <input x-model="editHours" type="number" min="0.5" max="999.5" step="0.5"
+                       class="w-full rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" @click="editOpen = false" class="ui-btn ui-btn-secondary justify-center">Отмена</button>
+                <button type="button" @click="submitEditEntry()" :disabled="editSaving"
+                        class="ui-btn ui-btn-primary justify-center"
+                        x-text="editSaving ? 'Сохранение…' : 'Сохранить'"></button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления записи -->
+    <div x-show="deleteOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none">
+        <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" @click="deleteOpen = false" aria-hidden="true"></div>
+        <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
+                 role="alertdialog" aria-modal="true" aria-labelledby="delete-entry-title">
+            <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600" aria-hidden="true">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h2 id="delete-entry-title" class="text-lg font-semibold text-gray-900">Удалить запись?</h2>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">
+                        Запись «<span class="font-medium" x-text="deleteEntry.task_title"></span>»
+                        (<span x-text="formatHours(deleteEntry.hours)"></span> ч)
+                        за <span x-text="formatDate(deleteEntry.entry_date)"></span> будет удалена.
+                        Общее время задачи уменьшится на это значение.
+                    </p>
+                    <p x-show="deleteError" x-cloak class="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700" x-text="deleteError"></p>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" @click="deleteOpen = false" class="ui-btn ui-btn-secondary justify-center">Нет</button>
+                <button type="button" @click="confirmDeleteEntry()" :disabled="deleteSaving"
+                        class="ui-btn justify-center border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 focus-visible:ring-red-500"
+                        x-text="deleteSaving ? 'Удаление…' : 'Да, удалить'"></button>
+            </div>
+        </section>
+    </div>
     <?php endif; ?>
 </div>
 
@@ -262,6 +354,19 @@ function calendarQuickEntry(config) {
         // Записи, добавленные за выбранную дату в текущем сеансе
         savedEntries: [],
 
+        // --- Состояние редактирования записи ---
+        editOpen: false,
+        editEntry: {},
+        editHours: '',
+        editSaving: false,
+        editError: '',
+
+        // --- Состояние удаления записи ---
+        deleteOpen: false,
+        deleteEntry: {},
+        deleteSaving: false,
+        deleteError: '',
+
         /** Открыть модалку для конкретной даты (Y-m-d). */
         openModal(date) {
             if (!this.enabled) return;
@@ -276,6 +381,9 @@ function calendarQuickEntry(config) {
         },
 
         closeModal() {
+            // Escape закрывает любое открытое окно
+            if (this.editOpen) { this.editOpen = false; return; }
+            if (this.deleteOpen) { this.deleteOpen = false; return; }
             if (!this.modalOpen) return;
             this.modalOpen = false;
             // Если что-то записали — перезагружаем страницу, чтобы обновить календарь
@@ -356,6 +464,99 @@ function calendarQuickEntry(config) {
                 })
                 .catch(() => { this.error = 'Ошибка сети. Попробуйте ещё раз'; })
                 .finally(() => { this.saving = false; });
+        },
+
+        /** Отформатировать число часов без лишних нулей. */
+        formatHours(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return value;
+            return String(parseFloat(num.toFixed(2)));
+        },
+
+        /** Открыть модалку редактирования конкретной записи. */
+        openEditEntry(entry) {
+            this.editEntry = entry;
+            this.editHours = this.formatHours(entry.hours);
+            this.editError = '';
+            this.editOpen = true;
+        },
+
+        /** Сохранить изменённые часы записи. */
+        submitEditEntry() {
+            this.editError = '';
+            if (!this.editHours) {
+                this.editError = 'Укажите количество часов';
+                return;
+            }
+            this.editSaving = true;
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(BASE_URL + '/calendar/entry/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({
+                    task_id: this.editEntry.task_id,
+                    time_type: this.editEntry.time_type,
+                    entry_date: this.editEntry.entry_date,
+                    hours: this.editHours,
+                    _token: csrf
+                })
+            })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok || data.error) {
+                        this.editError = data.error || 'Не удалось изменить запись';
+                        return;
+                    }
+                    // Успех — обновляем календарь
+                    window.location.reload();
+                })
+                .catch(() => { this.editError = 'Ошибка сети. Попробуйте ещё раз'; })
+                .finally(() => { this.editSaving = false; });
+        },
+
+        /** Открыть модалку подтверждения удаления записи. */
+        openDeleteEntry(entry) {
+            this.deleteEntry = entry;
+            this.deleteError = '';
+            this.deleteOpen = true;
+        },
+
+        /** Подтвердить удаление записи. */
+        confirmDeleteEntry() {
+            this.deleteError = '';
+            this.deleteSaving = true;
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(BASE_URL + '/calendar/entry/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({
+                    task_id: this.deleteEntry.task_id,
+                    time_type: this.deleteEntry.time_type,
+                    entry_date: this.deleteEntry.entry_date,
+                    _token: csrf
+                })
+            })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok || data.error) {
+                        this.deleteError = data.error || 'Не удалось удалить запись';
+                        return;
+                    }
+                    // Успех — обновляем календарь
+                    window.location.reload();
+                })
+                .catch(() => { this.deleteError = 'Ошибка сети. Попробуйте ещё раз'; })
+                .finally(() => { this.deleteSaving = false; });
         }
     };
 }

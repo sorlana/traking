@@ -241,6 +241,115 @@ class CalendarController extends Controller
         ]);
     }
 
+    /**
+     * AJAX: изменить количество часов дневной записи календаря.
+     * POST /calendar/entry/update
+     *
+     * Принимает: task_id, time_type, entry_date, hours.
+     */
+    public function updateEntry(): void
+    {
+        $userId = (int) Auth::id();
+        [$type, $error] = $this->resolveEntryContext();
+        if ($error !== null) {
+            $this->json(['error' => $error], 403);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $taskId = (int) ($input['task_id'] ?? 0);
+        $entryDate = trim((string) ($input['entry_date'] ?? ''));
+        $rawHours = $input['hours'] ?? null;
+
+        if ($taskId <= 0 || $entryDate === '' || !is_numeric($rawHours)) {
+            $this->json(['error' => 'Укажите задачу, дату и часы'], 422);
+            return;
+        }
+        if (!TaskAccessMiddleware::check($taskId)) {
+            $this->json(['error' => 'Нет доступа к выбранной задаче'], 403);
+            return;
+        }
+
+        try {
+            $service = new TimeTrackingService();
+            $result = $service->updateCalendarEntry($taskId, $userId, $type, $entryDate, (float) $rawHours);
+        } catch (\Throwable $e) {
+            $this->json(['error' => 'Не удалось изменить запись. Попробуйте ещё раз'], 500);
+            return;
+        }
+
+        if (!$result['success']) {
+            $this->json(['error' => $result['error']], 422);
+            return;
+        }
+
+        $this->json(['success' => true]);
+    }
+
+    /**
+     * AJAX: удалить дневную запись календаря.
+     * POST /calendar/entry/delete
+     *
+     * Принимает: task_id, time_type, entry_date.
+     */
+    public function deleteEntry(): void
+    {
+        $userId = (int) Auth::id();
+        [$type, $error] = $this->resolveEntryContext();
+        if ($error !== null) {
+            $this->json(['error' => $error], 403);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $taskId = (int) ($input['task_id'] ?? 0);
+        $entryDate = trim((string) ($input['entry_date'] ?? ''));
+
+        if ($taskId <= 0 || $entryDate === '') {
+            $this->json(['error' => 'Некорректные данные записи'], 422);
+            return;
+        }
+        if (!TaskAccessMiddleware::check($taskId)) {
+            $this->json(['error' => 'Нет доступа к выбранной задаче'], 403);
+            return;
+        }
+
+        try {
+            $service = new TimeTrackingService();
+            $result = $service->deleteCalendarEntry($taskId, $userId, $type, $entryDate);
+        } catch (\Throwable $e) {
+            $this->json(['error' => 'Не удалось удалить запись. Попробуйте ещё раз'], 500);
+            return;
+        }
+
+        if (!$result['success']) {
+            $this->json(['error' => $result['error']], 422);
+            return;
+        }
+
+        $this->json(['success' => true]);
+    }
+
+    /**
+     * Определить тип времени текущего пользователя для операций с записями.
+     *
+     * @return array{0: string, 1: string|null} [тип ('manager'|'executor'), ошибка|null]
+     */
+    private function resolveEntryContext(): array
+    {
+        $user = Auth::user();
+        $roleId = (int) ($user['role_id'] ?? 0);
+        $type = $roleId === Auth::ROLE_MANAGER
+            ? 'manager'
+            : ($roleId === Auth::ROLE_EXECUTOR ? 'executor' : null);
+
+        if ($type === null) {
+            return ['', 'Учёт времени доступен руководителям и исполнителям'];
+        }
+
+        return [$type, null];
+    }
+
     /** Перенести ранее учтённое время в календарь, не меняя итог задачи. */
     public function storeManualEntry(): void
     {

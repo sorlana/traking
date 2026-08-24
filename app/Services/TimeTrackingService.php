@@ -251,6 +251,155 @@ class TimeTrackingService
     }
 
     /**
+     * Удалить дневную запись календаря (группу записей за задачу+тип+дату) пользователя.
+     *
+     * Удаляет все строки time_entries, попадающие в группу, и уменьшает итог
+     * задачи (time_spent / manager_time_spent) на суммарное количество удалённых часов.
+     *
+     * @param int    $taskId    ID задачи
+     * @param int    $userId    ID текущего пользователя
+     * @param string $type      Тип времени: 'manager' или 'executor'
+     * @param string $entryDate Дата записи (Y-m-d)
+     * @return array ['success' => bool, 'error' => string|null]
+     */
+    public function deleteCalendarEntry(int $taskId, int $userId, string $type, string $entryDate): array
+    {
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+
+        $this->ensureTimeEntriesTable();
+        $db = Database::getInstance();
+        $pdo = $db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            // Суммарные часы удаляемой группы (только записи текущего пользователя)
+            $sum = $db->fetch(
+                'SELECT COALESCE(SUM(hours), 0) AS total
+                 FROM time_entries
+                 WHERE task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$taskId, $userId, $type, $entryDate]
+            );
+            $removedHours = (float) ($sum['total'] ?? 0);
+            if ($removedHours <= 0) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Запись не найдена'];
+            }
+
+            // Удаляем записи
+            $db->delete(
+                'time_entries',
+                'task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$taskId, $userId, $type, $entryDate]
+            );
+
+            // Корректируем итог задачи, не опускаясь ниже нуля
+            $task = $db->fetch(
+                "SELECT COALESCE({$field}, 0) AS total FROM tasks WHERE id = ? FOR UPDATE",
+                [$taskId]
+            );
+            if ($task) {
+                $newTotal = round(max(0, (float) $task['total'] - $removedHours), 2);
+                $db->update('tasks', [$field => $newTotal], 'id = ?', [$taskId]);
+            }
+
+            $pdo->commit();
+            return ['success' => true, 'error' => null];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Изменить количество часов дневной записи календаря (группы задача+тип+дата).
+     *
+     * Старые строки группы удаляются и заменяются одной новой с новым значением,
+     * итог задачи корректируется на разницу между старым и новым количеством часов.
+     *
+     * @param int    $taskId    ID задачи
+     * @param int    $userId    ID текущего пользователя
+     * @param string $type      Тип времени: 'manager' или 'executor'
+     * @param string $entryDate Дата записи (Y-m-d)
+     * @param float  $newHours  Новое количество часов
+     * @return array ['success' => bool, 'error' => string|null]
+     */
+    public function updateCalendarEntry(
+        int $taskId,
+        int $userId,
+        string $type,
+        string $entryDate,
+        float $newHours
+    ): array {
+        $errors = $this->validateTimeValue($newHours);
+        if (!empty($errors)) {
+            return ['success' => false, 'error' => $errors[0]];
+        }
+
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+
+        $this->ensureTimeEntriesTable();
+        $db = Database::getInstance();
+        $pdo = $db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            $sum = $db->fetch(
+                'SELECT COALESCE(SUM(hours), 0) AS total
+                 FROM time_entries
+                 WHERE task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$taskId, $userId, $type, $entryDate]
+            );
+            $oldHours = (float) ($sum['total'] ?? 0);
+            if ($oldHours <= 0) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Запись не найдена'];
+            }
+
+            // Проверяем, что новый итог задачи не превысит лимит
+            $task = $db->fetch(
+                "SELECT COALESCE({$field}, 0) AS total FROM tasks WHERE id = ? FOR UPDATE",
+                [$taskId]
+            );
+            $currentTotal = (float) ($task['total'] ?? 0);
+            $newTotal = round(max(0, $currentTotal - $oldHours + $newHours), 2);
+            if ($newTotal > 999.5) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Общее время не может превышать 999.5 часов'];
+            }
+
+            // Заменяем группу одной новой записью
+            $db->delete(
+                'time_entries',
+                'task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$taskId, $userId, $type, $entryDate]
+            );
+            $db->insert('time_entries', [
+                'task_id' => $taskId,
+                'user_id' => $userId,
+                'time_type' => $type,
+                'hours' => $newHours,
+                'entry_date' => $entryDate,
+            ]);
+
+            $db->update('tasks', [$field => $newTotal], 'id = ?', [$taskId]);
+
+            $pdo->commit();
+            return ['success' => true, 'error' => null];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Перенести ранее учтённое время в дневной журнал без изменения итога задачи.
      */
     public function addHistoricalTimeEntry(

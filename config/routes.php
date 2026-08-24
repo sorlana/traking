@@ -89,6 +89,9 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // Контекстное меню календаря: список задач и быстрая запись времени
     $router->get('/calendar/entry-options', [\Controllers\CalendarController::class, 'ajaxEntryOptions']);
     $router->post('/calendar/quick-entry', [\Controllers\CalendarController::class, 'storeQuickEntry'], ['csrf']);
+    // Редактирование и удаление дневных записей календаря
+    $router->post('/calendar/entry/update', [\Controllers\CalendarController::class, 'updateEntry'], ['csrf']);
+    $router->post('/calendar/entry/delete', [\Controllers\CalendarController::class, 'deleteEntry'], ['csrf']);
 
     // Уведомления
     $router->get('/notifications', [\Controllers\NotificationController::class, 'index']);
