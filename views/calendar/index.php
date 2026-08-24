@@ -148,30 +148,28 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                             ?>
                             <?php if ($canQuickEntry): ?>
                                 <div class="group/entry rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>">
-                                    <!-- Верхний ряд: чекбокс слева, иконки действий справа -->
-                                    <div class="flex items-center justify-between gap-1">
+                                    <!-- Верхний ряд: чекбокс и иконки действий, плотно слева -->
+                                    <div class="flex items-center gap-1">
                                         <input type="checkbox" value="<?= e($entryKey) ?>" x-model="selectedEntries"
                                                @click.stop
-                                               class="h-3 w-3 flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                                               class="h-3.5 w-3.5 flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                                                aria-label="Выбрать запись <?= e($entry['task_title']) ?>">
-                                        <div class="flex flex-shrink-0 items-center gap-0.5">
-                                            <button type="button"
-                                                    @click.stop='openEditEntry(<?= $entryPayload ?>)'
-                                                    class="flex h-4 w-4 items-center justify-center rounded hover:bg-black/10"
-                                                    aria-label="Редактировать запись" title="Редактировать">
-                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                            </button>
-                                            <button type="button"
-                                                    @click.stop='openDeleteEntry(<?= $entryPayload ?>)'
-                                                    class="flex h-4 w-4 items-center justify-center rounded hover:bg-black/10"
-                                                    aria-label="Удалить запись" title="Удалить">
-                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                        </div>
+                                        <button type="button"
+                                                @click.stop='openEditEntry(<?= $entryPayload ?>)'
+                                                class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded hover:bg-black/10"
+                                                aria-label="Редактировать запись" title="Редактировать">
+                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                        <button type="button"
+                                                @click.stop='openDeleteEntry(<?= $entryPayload ?>)'
+                                                class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded hover:bg-black/10"
+                                                aria-label="Удалить запись" title="Удалить">
+                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
                                     </div>
                                     <!-- Содержимое записи (ссылка на задачу) -->
                                     <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
-                                       class="mt-0.5 block min-w-0"
+                                       class="mt-1 block min-w-0"
                                        title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
                                         <span class="font-semibold"><?= e($entryHours) ?>ч</span>
                                         <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
