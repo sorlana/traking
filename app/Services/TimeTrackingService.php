@@ -199,12 +199,12 @@ class TimeTrackingService
 
         return Database::getInstance()->fetchAll(
             "SELECT te.task_id, te.time_type, te.entry_date, SUM(te.hours) AS hours,
-                    t.title AS task_title, t.parent_id, p.title AS project_title
+                    t.title AS task_title, t.parent_id, t.project_id, p.title AS project_title
              FROM time_entries te
              JOIN tasks t ON t.id = te.task_id
              JOIN projects p ON p.id = t.project_id
              WHERE te.user_id = ? AND te.entry_date BETWEEN ? AND ?{$typeFilter}
-             GROUP BY te.task_id, te.time_type, te.entry_date, t.title, t.parent_id, p.title
+             GROUP BY te.task_id, te.time_type, te.entry_date, t.title, t.parent_id, t.project_id, p.title
              ORDER BY p.title, t.title, te.time_type, te.entry_date",
             $params
         );

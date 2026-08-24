@@ -111,7 +111,11 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
 
                     <div class="space-y-1">
                         <?php foreach ($dayEntries as $entry): ?>
-                            <?php $entryClass = $entry['time_type'] === 'manager' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'; ?>
+                            <?php
+                            // Цвет записи определяется проектом; если проект вдруг не в карте — нейтральный серый
+                            $entryClass = $projectColors[$entry['project_id']]['bg']
+                                ?? 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+                            ?>
                             <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
                                class="block min-w-0 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
                                title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
@@ -129,12 +133,22 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
         </div>
     </div>
 
-    <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
-        <div class="flex flex-wrap items-center gap-4">
-            <span class="font-medium">Легенда:</span>
-            <span class="flex items-center gap-1"><i class="w-3 h-3 rounded <?= $visibleTimeType === 'manager' ? 'bg-purple-300' : 'bg-blue-300' ?>"></i> Ваше время</span>
+    <div class="flex flex-wrap items-start justify-between gap-3 text-xs text-gray-500">
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="font-medium">Проекты:</span>
+            <?php if (!empty($projectsMeta)): ?>
+                <?php foreach ($projectsMeta as $project): ?>
+                    <?php $dotClass = $projectColors[$project['id']]['dot'] ?? 'bg-gray-400'; ?>
+                    <span class="flex items-center gap-1">
+                        <i class="w-3 h-3 rounded <?= $dotClass ?>"></i>
+                        <?= e($project['title']) ?>
+                    </span>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <span class="text-gray-400">нет записей за месяц</span>
+            <?php endif; ?>
         </div>
-        <span class="font-semibold text-gray-700">За месяц: <?= e(rtrim(rtrim(number_format($grandTotal, 2, '.', ''), '0'), '.')) ?>ч</span>
+        <span class="font-semibold text-gray-700 whitespace-nowrap">За месяц: <?= e(rtrim(rtrim(number_format($grandTotal, 2, '.', ''), '0'), '.')) ?>ч</span>
     </div>
 
     <?php if ($canQuickEntry): ?>

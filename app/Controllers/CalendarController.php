@@ -54,20 +54,34 @@ class CalendarController extends Controller
         $entriesByDate = [];
         $dayTotals = [];
         $grandTotal = 0.0;
+        $projectsMeta = [];
         foreach ($entries as $entry) {
             $hours = (float) $entry['hours'];
             $date = $entry['entry_date'];
+            $projectId = (int) $entry['project_id'];
             $entriesByDate[$date][] = [
                 'task_id' => (int) $entry['task_id'],
                 'task_title' => $entry['task_title'],
+                'project_id' => $projectId,
                 'project_title' => $entry['project_title'],
                 'is_subtask' => !empty($entry['parent_id']),
                 'time_type' => $entry['time_type'],
                 'hours' => $hours,
             ];
+            // Копим уникальные проекты для назначения цветов и легенды
+            if (!isset($projectsMeta[$projectId])) {
+                $projectsMeta[$projectId] = [
+                    'id' => $projectId,
+                    'title' => $entry['project_title'],
+                ];
+            }
             $dayTotals[$date] = ($dayTotals[$date] ?? 0) + $hours;
             $grandTotal += $hours;
         }
+
+        // Назначаем каждому проекту цвет из палитры по порядку появления,
+        // чтобы соседние проекты визуально различались, а цвет был стабилен в рамках месяца.
+        $projectColors = $this->buildProjectColorMap(array_keys($projectsMeta));
 
         $leadingBlankDays = (int) $monthStart->format('N') - 1;
         $trailingBlankDays = (7 - (($leadingBlankDays + count($days)) % 7)) % 7;
@@ -93,7 +107,45 @@ class CalendarController extends Controller
             'visibleTimeType' => $visibleTimeType,
             'recoverableTasks' => $recoverableTasks,
             'manualOld' => $manualOld,
+            'projectsMeta' => array_values($projectsMeta),
+            'projectColors' => $projectColors,
         ]);
+    }
+
+    /**
+     * Построить карту цветов проектов: project_id => набор CSS-классов Tailwind.
+     *
+     * Цвета берутся из фиксированной палитры по кругу. Порядок соответствует
+     * порядку появления проектов, поэтому соседние проекты различаются,
+     * а раскраска стабильна в пределах отображаемого месяца.
+     *
+     * @param int[] $projectIds Идентификаторы проектов
+     * @return array<int, array{bg:string, dot:string}>
+     */
+    private function buildProjectColorMap(array $projectIds): array
+    {
+        // Палитра: фон+текст для записей и цвет кружка для легенды
+        $palette = [
+            ['bg' => 'bg-blue-100 text-blue-800 hover:bg-blue-200', 'dot' => 'bg-blue-400'],
+            ['bg' => 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200', 'dot' => 'bg-emerald-400'],
+            ['bg' => 'bg-amber-100 text-amber-800 hover:bg-amber-200', 'dot' => 'bg-amber-400'],
+            ['bg' => 'bg-purple-100 text-purple-800 hover:bg-purple-200', 'dot' => 'bg-purple-400'],
+            ['bg' => 'bg-rose-100 text-rose-800 hover:bg-rose-200', 'dot' => 'bg-rose-400'],
+            ['bg' => 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200', 'dot' => 'bg-cyan-400'],
+            ['bg' => 'bg-lime-100 text-lime-800 hover:bg-lime-200', 'dot' => 'bg-lime-400'],
+            ['bg' => 'bg-orange-100 text-orange-800 hover:bg-orange-200', 'dot' => 'bg-orange-400'],
+            ['bg' => 'bg-teal-100 text-teal-800 hover:bg-teal-200', 'dot' => 'bg-teal-400'],
+            ['bg' => 'bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-200', 'dot' => 'bg-fuchsia-400'],
+        ];
+
+        $map = [];
+        $index = 0;
+        foreach ($projectIds as $projectId) {
+            $map[(int) $projectId] = $palette[$index % count($palette)];
+            $index++;
+        }
+
+        return $map;
     }
 
     /**
