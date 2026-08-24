@@ -86,6 +86,9 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // Календарь дневных затрат текущего пользователя
     $router->get('/calendar', [\Controllers\CalendarController::class, 'index']);
     $router->post('/calendar/manual-entry', [\Controllers\CalendarController::class, 'storeManualEntry'], ['csrf']);
+    // Контекстное меню календаря: список задач и быстрая запись времени
+    $router->get('/calendar/entry-options', [\Controllers\CalendarController::class, 'ajaxEntryOptions']);
+    $router->post('/calendar/quick-entry', [\Controllers\CalendarController::class, 'storeQuickEntry'], ['csrf']);
 
     // Уведомления
     $router->get('/notifications', [\Controllers\NotificationController::class, 'index']);

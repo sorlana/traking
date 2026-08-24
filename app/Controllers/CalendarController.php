@@ -96,6 +96,99 @@ class CalendarController extends Controller
         ]);
     }
 
+    /**
+     * AJAX: список проектов и задач, доступных текущему пользователю для внесения времени.
+     * GET /calendar/entry-options
+     *
+     * Используется контекстным меню календаря (правый клик по ячейке),
+     * чтобы наполнить выпадающие списки «Проект» и «Задача».
+     */
+    public function ajaxEntryOptions(): void
+    {
+        $user = Auth::user();
+        $roleId = (int) ($user['role_id'] ?? 0);
+        $type = $roleId === Auth::ROLE_MANAGER
+            ? 'manager'
+            : ($roleId === Auth::ROLE_EXECUTOR ? 'executor' : null);
+
+        if ($type === null) {
+            $this->json(['error' => 'Учёт времени доступен руководителям и исполнителям'], 403);
+            return;
+        }
+
+        $service = new TimeTrackingService();
+        // Дополнительно фильтруем через middleware для полного совпадения прав доступа
+        $projects = array_values(array_filter(
+            array_map(static function (array $project): array {
+                $project['tasks'] = array_values(array_filter(
+                    $project['tasks'],
+                    static fn(array $task): bool => TaskAccessMiddleware::check((int) $task['id'])
+                ));
+                return $project;
+            }, $service->getEntryOptions((int) Auth::id(), $type)),
+            static fn(array $project): bool => !empty($project['tasks'])
+        ));
+
+        $this->json(['projects' => $projects]);
+    }
+
+    /**
+     * AJAX: быстрая запись времени за выбранную дату из контекстного меню календаря.
+     * POST /calendar/quick-entry
+     *
+     * Принимает: task_id, hours, entry_date.
+     * Прибавляет время к итогу задачи и создаёт дневную запись (как обычное внесение времени).
+     * Возвращает JSON с данными созданной записи для обновления интерфейса.
+     */
+    public function storeQuickEntry(): void
+    {
+        $user = Auth::user();
+        $userId = (int) Auth::id();
+        $roleId = (int) ($user['role_id'] ?? 0);
+        $type = $roleId === Auth::ROLE_MANAGER
+            ? 'manager'
+            : ($roleId === Auth::ROLE_EXECUTOR ? 'executor' : null);
+
+        if ($type === null) {
+            $this->json(['error' => 'Учёт времени доступен руководителям и исполнителям'], 403);
+            return;
+        }
+
+        // Данные приходят JSON-ом от fetch()
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $taskId = (int) ($input['task_id'] ?? 0);
+        $rawHours = $input['hours'] ?? null;
+        $entryDate = trim((string) ($input['entry_date'] ?? ''));
+
+        if ($taskId <= 0 || !is_numeric($rawHours) || $entryDate === '') {
+            $this->json(['error' => 'Выберите задачу, укажите часы и дату'], 422);
+            return;
+        }
+        if (!TaskAccessMiddleware::check($taskId)) {
+            $this->json(['error' => 'Нет доступа к выбранной задаче'], 403);
+            return;
+        }
+
+        try {
+            $service = new TimeTrackingService();
+            $result = $service->addTime($taskId, $userId, (float) $rawHours, $type, $entryDate);
+        } catch (\Throwable $e) {
+            $this->json(['error' => 'Не удалось записать время. Попробуйте ещё раз'], 500);
+            return;
+        }
+
+        if (!$result['success']) {
+            $this->json(['error' => $result['error']], 422);
+            return;
+        }
+
+        $this->json([
+            'success' => true,
+            'entry_date' => $result['entry_date'],
+            'added' => $result['added'],
+        ]);
+    }
+
     /** Перенести ранее учтённое время в календарь, не меняя итог задачи. */
     public function storeManualEntry(): void
     {

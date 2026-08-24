@@ -129,6 +129,62 @@ class TimeTrackingService
         }
     }
 
+    /**
+     * Получить проекты пользователя с задачами, доступными для внесения времени.
+     *
+     * Используется контекстным меню календаря: пользователь выбирает проект,
+     * затем задачу и вносит время за конкретную дату.
+     *
+     * Логика доступа зависит от роли:
+     *   - Руководитель ($type = 'manager') видит задачи проектов, где он участник;
+     *   - Исполнитель ($type = 'executor') видит только назначенные ему задачи.
+     * Закрытые задачи исключаются, так как вносить в них время нельзя.
+     *
+     * @param int    $userId ID текущего пользователя
+     * @param string $type   Тип времени: 'manager' или 'executor'
+     * @return array Массив проектов вида [['id', 'title', 'tasks' => [['id','title','parent_id'], ...]], ...]
+     */
+    public function getEntryOptions(int $userId, string $type): array
+    {
+        $type = $type === 'manager' ? 'manager' : 'executor';
+
+        // Условие доступа к задаче в зависимости от роли пользователя
+        $accessSql = $type === 'manager'
+            ? 'EXISTS (SELECT 1 FROM project_users pu WHERE pu.project_id = t.project_id AND pu.user_id = ?)'
+            : 't.assigned_to = ?';
+
+        $rows = Database::getInstance()->fetchAll(
+            "SELECT t.id, t.title, t.parent_id, t.project_id,
+                    p.title AS project_title
+             FROM tasks t
+             JOIN projects p ON p.id = t.project_id
+             JOIN task_statuses ts ON ts.id = t.status_id
+             WHERE ts.code <> 'closed' AND {$accessSql}
+             ORDER BY p.title, t.parent_id IS NOT NULL, t.title",
+            [$userId]
+        );
+
+        // Группируем задачи по проектам
+        $projects = [];
+        foreach ($rows as $row) {
+            $projectId = (int) $row['project_id'];
+            if (!isset($projects[$projectId])) {
+                $projects[$projectId] = [
+                    'id' => $projectId,
+                    'title' => $row['project_title'],
+                    'tasks' => [],
+                ];
+            }
+            $projects[$projectId]['tasks'][] = [
+                'id' => (int) $row['id'],
+                'title' => $row['title'],
+                'is_subtask' => !empty($row['parent_id']),
+            ];
+        }
+
+        return array_values($projects);
+    }
+
     /** Дневные затраты текущего пользователя за выбранный период. */
     public function getCalendarEntries(int $userId, string $dateFrom, string $dateTo, ?string $timeType = null): array
     {
