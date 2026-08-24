@@ -74,6 +74,24 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
         <p class="text-xs text-gray-500">Всё ранее учтённое время уже распределено по календарю.</p>
     <?php endif; ?>
 
+    <?php if ($canQuickEntry): ?>
+    <!-- Панель массовых действий: появляется при выборе записей -->
+    <div x-show="selectedEntries.length > 0" x-cloak
+         class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
+         style="display:none">
+        <span class="text-sm text-blue-800">
+            Выбрано записей: <span class="font-semibold" x-text="selectedEntries.length"></span>
+        </span>
+        <div class="flex items-center gap-2">
+            <button type="button" @click="selectedEntries = []" class="ui-btn ui-btn-secondary">Снять выбор</button>
+            <button type="button" @click="openBulkDelete()"
+                    class="ui-btn justify-center border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 focus-visible:ring-red-500">
+                Удалить выбранные
+            </button>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
             <?php foreach (['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as $index => $weekday): ?>
@@ -116,42 +134,55 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
                             $entryClass = $projectColors[$entry['project_id']]['bg']
                                 ?? 'bg-gray-100 text-gray-800 hover:bg-gray-200';
                             $entryHours = rtrim(rtrim(number_format($entry['hours'], 2, '.', ''), '0'), '.');
+                            // Данные записи для JS: идентификация по задаче+типу+дате
+                            $entryPayload = json_encode([
+                                'task_id' => $entry['task_id'],
+                                'time_type' => $entry['time_type'],
+                                'entry_date' => $day['date'],
+                                'hours' => (float) $entry['hours'],
+                                'task_title' => $entry['task_title'],
+                                'project_title' => $entry['project_title'],
+                            ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+                            // Уникальный ключ записи для массового выбора
+                            $entryKey = $entry['task_id'] . '|' . $entry['time_type'] . '|' . $day['date'];
                             ?>
-                            <div class="group/entry flex min-w-0 items-stretch gap-0.5">
-                                <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
-                                   class="block min-w-0 flex-1 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
-                                   title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
-                                    <span class="font-semibold"><?= e($entryHours) ?>ч</span>
-                                    <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
-                                </a>
-                                <?php if ($canQuickEntry): ?>
-                                    <?php
-                                    // Данные записи для JS: идентификация по задаче+типу+дате
-                                    $entryPayload = json_encode([
-                                        'task_id' => $entry['task_id'],
-                                        'time_type' => $entry['time_type'],
-                                        'entry_date' => $day['date'],
-                                        'hours' => (float) $entry['hours'],
-                                        'task_title' => $entry['task_title'],
-                                        'project_title' => $entry['project_title'],
-                                    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
-                                    ?>
-                                    <div class="flex flex-col justify-center gap-0.5 opacity-60 transition group-hover/entry:opacity-100">
+                            <?php if ($canQuickEntry): ?>
+                                <div class="group/entry flex min-w-0 items-stretch gap-1 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>">
+                                    <!-- Левый столбец: чекбокс сверху, под ним иконки действий -->
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <input type="checkbox" value="<?= e($entryKey) ?>" x-model="selectedEntries"
+                                               @click.stop
+                                               class="h-3 w-3 flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                                               aria-label="Выбрать запись <?= e($entry['task_title']) ?>">
                                         <button type="button"
-                                                @click='openEditEntry(<?= $entryPayload ?>)'
-                                                class="flex h-4 w-4 items-center justify-center rounded text-gray-500 hover:bg-gray-200 hover:text-black"
+                                                @click.stop='openEditEntry(<?= $entryPayload ?>)'
+                                                class="flex h-3.5 w-3.5 items-center justify-center rounded hover:bg-black/10"
                                                 aria-label="Редактировать запись" title="Редактировать">
                                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                         </button>
                                         <button type="button"
-                                                @click='openDeleteEntry(<?= $entryPayload ?>)'
-                                                class="flex h-4 w-4 items-center justify-center rounded text-gray-500 hover:bg-red-100 hover:text-red-600"
+                                                @click.stop='openDeleteEntry(<?= $entryPayload ?>)'
+                                                class="flex h-3.5 w-3.5 items-center justify-center rounded hover:bg-black/10"
                                                 aria-label="Удалить запись" title="Удалить">
                                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
                                     </div>
-                                <?php endif; ?>
-                            </div>
+                                    <!-- Содержимое записи (ссылка на задачу) -->
+                                    <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
+                                       class="block min-w-0 flex-1"
+                                       title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
+                                        <span class="font-semibold"><?= e($entryHours) ?>ч</span>
+                                        <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
+                                    </a>
+                                </div>
+                            <?php else: ?>
+                                <a href="<?= url('/tasks/' . $entry['task_id']) ?>"
+                                   class="block min-w-0 rounded px-1 py-1 text-[10px] sm:text-xs leading-tight <?= $entryClass ?>"
+                                   title="<?= e($entry['project_title'] . ' · ' . $entry['task_title'] . ' · ' . $entry['hours'] . ' ч') ?>">
+                                    <span class="font-semibold"><?= e($entryHours) ?>ч</span>
+                                    <span class="hidden sm:inline"> · <?= $entry['is_subtask'] ? '↳ ' : '' ?><?= e($entry['task_title']) ?></span>
+                                </a>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -325,6 +356,35 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
             </div>
         </section>
     </div>
+
+    <!-- Модальное окно подтверждения массового удаления -->
+    <div x-show="bulkDeleteOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none">
+        <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" @click="bulkDeleteOpen = false" aria-hidden="true"></div>
+        <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
+                 role="alertdialog" aria-modal="true" aria-labelledby="bulk-delete-title">
+            <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600" aria-hidden="true">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h2 id="bulk-delete-title" class="text-lg font-semibold text-gray-900">Удалить выбранные записи?</h2>
+                    <p class="mt-2 text-sm leading-6 text-gray-600">
+                        Будет удалено записей: <span class="font-semibold" x-text="selectedEntries.length"></span>.
+                        Общее время соответствующих задач уменьшится. Действие нельзя отменить.
+                    </p>
+                    <p x-show="bulkError" x-cloak class="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700" x-text="bulkError"></p>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" @click="bulkDeleteOpen = false" class="ui-btn ui-btn-secondary justify-center">Нет</button>
+                <button type="button" @click="confirmBulkDelete()" :disabled="bulkSaving"
+                        class="ui-btn justify-center border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 focus-visible:ring-red-500"
+                        x-text="bulkSaving ? 'Удаление…' : 'Да, удалить все'"></button>
+            </div>
+        </section>
+    </div>
     <?php endif; ?>
 </div>
 
@@ -367,6 +427,12 @@ function calendarQuickEntry(config) {
         deleteSaving: false,
         deleteError: '',
 
+        // --- Массовый выбор и удаление ---
+        selectedEntries: [],   // массив ключей вида "task_id|time_type|entry_date"
+        bulkDeleteOpen: false,
+        bulkSaving: false,
+        bulkError: '',
+
         /** Открыть модалку для конкретной даты (Y-m-d). */
         openModal(date) {
             if (!this.enabled) return;
@@ -382,6 +448,7 @@ function calendarQuickEntry(config) {
 
         closeModal() {
             // Escape закрывает любое открытое окно
+            if (this.bulkDeleteOpen) { this.bulkDeleteOpen = false; return; }
             if (this.editOpen) { this.editOpen = false; return; }
             if (this.deleteOpen) { this.deleteOpen = false; return; }
             if (!this.modalOpen) return;
@@ -557,6 +624,54 @@ function calendarQuickEntry(config) {
                 })
                 .catch(() => { this.deleteError = 'Ошибка сети. Попробуйте ещё раз'; })
                 .finally(() => { this.deleteSaving = false; });
+        },
+
+        /** Открыть модалку подтверждения массового удаления. */
+        openBulkDelete() {
+            if (this.selectedEntries.length === 0) return;
+            this.bulkError = '';
+            this.bulkDeleteOpen = true;
+        },
+
+        /** Удалить все выбранные записи последовательными запросами. */
+        confirmBulkDelete() {
+            if (this.selectedEntries.length === 0) return;
+            this.bulkError = '';
+            this.bulkSaving = true;
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            // Каждый ключ имеет формат "task_id|time_type|entry_date"
+            const requests = this.selectedEntries.map(key => {
+                const [taskId, timeType, entryDate] = key.split('|');
+                return fetch(BASE_URL + '/calendar/entry/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify({
+                        task_id: taskId,
+                        time_type: timeType,
+                        entry_date: entryDate,
+                        _token: csrf
+                    })
+                }).then(r => r.json().then(data => ({ ok: r.ok, data })));
+            });
+
+            Promise.all(requests)
+                .then(results => {
+                    const failed = results.filter(r => !r.ok || r.data.error);
+                    if (failed.length > 0) {
+                        this.bulkError = 'Не удалось удалить часть записей (' + failed.length + '). Обновите страницу.';
+                        // Всё равно перезагружаем, чтобы показать актуальное состояние
+                        setTimeout(() => window.location.reload(), 1500);
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(() => { this.bulkError = 'Ошибка сети. Попробуйте ещё раз'; })
+                .finally(() => { this.bulkSaving = false; });
         }
     };
 }
