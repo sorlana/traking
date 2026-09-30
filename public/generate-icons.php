@@ -3,7 +3,7 @@
  * Генерация PNG-иконок для PWA из фавиконки
  * Дизайн: синий квадрат с закруглёнными углами + белая стилизованная "A"
  *
- * Запустите один раз: https://unique-style.ru/traking/generate-icons.php
+ * Запустите один раз: https://projects.alteriq.ru/traking/generate-icons.php
  * После генерации файл можно удалить.
  */
 

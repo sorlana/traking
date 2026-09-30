@@ -400,6 +400,100 @@ class TimeTrackingService
     }
 
     /**
+     * Перенести дневную запись календаря на другую задачу.
+     *
+     * Все строки time_entries группы (задача+тип+дата) переназначаются на
+     * целевую задачу. Итог исходной задачи уменьшается на сумму перенесённых
+     * часов, итог целевой задачи увеличивается на ту же сумму.
+     *
+     * @param int    $fromTaskId Исходная задача
+     * @param int    $toTaskId   Целевая задача
+     * @param int    $userId     ID текущего пользователя
+     * @param string $type       Тип времени: 'manager' или 'executor'
+     * @param string $entryDate  Дата записи (Y-m-d)
+     * @return array ['success' => bool, 'error' => string|null]
+     */
+    public function moveCalendarEntry(
+        int $fromTaskId,
+        int $toTaskId,
+        int $userId,
+        string $type,
+        string $entryDate
+    ): array {
+        $type = $type === 'manager' ? 'manager' : 'executor';
+        $field = $type === 'manager' ? 'manager_time_spent' : 'time_spent';
+
+        if ($fromTaskId === $toTaskId) {
+            return ['success' => false, 'error' => 'Запись уже относится к этой задаче'];
+        }
+
+        $this->ensureTimeEntriesTable();
+        $db = Database::getInstance();
+        $pdo = $db->getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            // Сумма часов переносимой группы
+            $sum = $db->fetch(
+                'SELECT COALESCE(SUM(hours), 0) AS total
+                 FROM time_entries
+                 WHERE task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$fromTaskId, $userId, $type, $entryDate]
+            );
+            $movedHours = (float) ($sum['total'] ?? 0);
+            if ($movedHours <= 0) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Запись не найдена'];
+            }
+
+            // Целевая задача должна существовать
+            $target = $db->fetch(
+                "SELECT COALESCE({$field}, 0) AS total FROM tasks WHERE id = ? FOR UPDATE",
+                [$toTaskId]
+            );
+            if (!$target) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Целевая задача не найдена'];
+            }
+            $newTargetTotal = round((float) $target['total'] + $movedHours, 2);
+            if ($newTargetTotal > 999.5) {
+                $pdo->rollBack();
+                return ['success' => false, 'error' => 'Общее время целевой задачи не может превышать 999.5 часов'];
+            }
+
+            // Переназначаем записи на новую задачу
+            $db->update(
+                'time_entries',
+                ['task_id' => $toTaskId],
+                'task_id = ? AND user_id = ? AND time_type = ? AND entry_date = ?',
+                [$fromTaskId, $userId, $type, $entryDate]
+            );
+
+            // Уменьшаем итог исходной задачи
+            $source = $db->fetch(
+                "SELECT COALESCE({$field}, 0) AS total FROM tasks WHERE id = ? FOR UPDATE",
+                [$fromTaskId]
+            );
+            if ($source) {
+                $newSourceTotal = round(max(0, (float) $source['total'] - $movedHours), 2);
+                $db->update('tasks', [$field => $newSourceTotal], 'id = ?', [$fromTaskId]);
+            }
+
+            // Увеличиваем итог целевой задачи
+            $db->update('tasks', [$field => $newTargetTotal], 'id = ?', [$toTaskId]);
+
+            $pdo->commit();
+            return ['success' => true, 'error' => null];
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Перенести ранее учтённое время в дневной журнал без изменения итога задачи.
      */
     public function addHistoricalTimeEntry(

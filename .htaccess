@@ -6,7 +6,7 @@
     # Канонизируем весь проект на HTTPS до внутренних rewrite-правил.
     RewriteCond %{HTTPS} !=on
     RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
-    RewriteRule ^ https://unique-style.ru%{REQUEST_URI} [R=301,L,NE]
+    RewriteRule ^ https://projects.alteriq.ru%{REQUEST_URI} [R=301,L,NE]
 
     # Запрет прямого доступа к служебным папкам
     RewriteRule ^(app|config|database|storage|views|\.osp|\.git|\.github|\.kiro|\.agents)(/|$) - [F,L]

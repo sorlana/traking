@@ -92,6 +92,7 @@ $router->group(['middleware' => ['auth']], function (Router $router) {
     // Редактирование и удаление дневных записей календаря
     $router->post('/calendar/entry/update', [\Controllers\CalendarController::class, 'updateEntry'], ['csrf']);
     $router->post('/calendar/entry/delete', [\Controllers\CalendarController::class, 'deleteEntry'], ['csrf']);
+    $router->post('/calendar/entry/move', [\Controllers\CalendarController::class, 'moveEntry'], ['csrf']);
 
     // Уведомления
     $router->get('/notifications', [\Controllers\NotificationController::class, 'index']);

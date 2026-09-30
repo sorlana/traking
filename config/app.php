@@ -9,7 +9,7 @@ return [
     'name' => 'Traking',
 
     // URL приложения (без trailing slash)
-    'url' => 'https://unique-style.ru/traking',
+    'url' => 'https://projects.alteriq.ru/traking',
 
     // Базовый путь (подпапка) — используется роутером для обрезки URI
     'base_path' => '/traking',

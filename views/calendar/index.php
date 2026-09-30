@@ -77,12 +77,33 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
     <?php if ($canQuickEntry): ?>
     <!-- Панель массовых действий: появляется при выборе записей -->
     <div x-show="selectedEntries.length > 0" x-cloak
+         x-effect="selectedEntries.length > 0 && loadOptions()"
          class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2"
          style="display:none">
         <span class="text-sm text-blue-800">
             Выбрано записей: <span class="font-semibold" x-text="selectedEntries.length"></span>
         </span>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Перенос выбранных записей на другую задачу -->
+            <select x-model="moveProjectId" @change="moveTaskId = ''"
+                    class="rounded-md border-gray-300 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Проект…</option>
+                <template x-for="project in projects" :key="project.id">
+                    <option :value="project.id" x-text="project.title"></option>
+                </template>
+            </select>
+            <select x-model="moveTaskId" :disabled="!moveProjectId"
+                    class="rounded-md border-gray-300 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100">
+                <option value="">Задача…</option>
+                <template x-for="task in moveTasks()" :key="task.id">
+                    <option :value="task.id" x-text="(task.is_subtask ? '↳ ' : '') + task.title"></option>
+                </template>
+            </select>
+            <button type="button" @click="openBulkMove()" :disabled="!moveTaskId"
+                    class="ui-btn ui-btn-primary justify-center disabled:opacity-50">
+                Перенести в проект
+            </button>
+            <span class="hidden h-6 w-px bg-blue-200 sm:inline-block" aria-hidden="true"></span>
             <button type="button" @click="selectedEntries = []" class="ui-btn ui-btn-secondary">Снять выбор</button>
             <button type="button" @click="openBulkDelete()"
                     class="ui-btn justify-center border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 focus-visible:ring-red-500">
@@ -385,6 +406,34 @@ $canQuickEntry = ($visibleTimeType ?? null) !== null;
             </div>
         </section>
     </div>
+
+    <!-- Модальное окно подтверждения массового переноса -->
+    <div x-show="bulkMoveOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none">
+        <div class="absolute inset-0 bg-gray-950/45 backdrop-blur-[1px]" @click="bulkMoveOpen = false" aria-hidden="true"></div>
+        <section class="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
+                 role="alertdialog" aria-modal="true" aria-labelledby="bulk-move-title">
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="bulk-move-title" class="text-base font-semibold text-gray-900">Перенести записи в проект?</h2>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Будет перенесено записей: <span class="font-semibold" x-text="selectedEntries.length"></span>.
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        Целевая задача: <span class="font-medium text-gray-700" x-text="moveTargetLabel()"></span>
+                    </p>
+                    <p class="mt-1 text-xs text-gray-400">Время перенесётся вместе с записями, итоги задач пересчитаются.</p>
+                    <p x-show="bulkMoveError" x-cloak class="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700" x-text="bulkMoveError"></p>
+                </div>
+                <button type="button" @click="bulkMoveOpen = false" class="p-1 text-gray-500 transition hover:text-black" aria-label="Закрыть">×</button>
+            </div>
+            <div class="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" @click="bulkMoveOpen = false" class="ui-btn ui-btn-secondary justify-center">Отмена</button>
+                <button type="button" @click="confirmBulkMove()" :disabled="bulkMoveSaving"
+                        class="ui-btn ui-btn-primary justify-center"
+                        x-text="bulkMoveSaving ? 'Перенос…' : 'Перенести'"></button>
+            </div>
+        </section>
+    </div>
     <?php endif; ?>
 </div>
 
@@ -433,6 +482,13 @@ function calendarQuickEntry(config) {
         bulkSaving: false,
         bulkError: '',
 
+        // --- Массовый перенос на другую задачу ---
+        moveProjectId: '',
+        moveTaskId: '',
+        bulkMoveOpen: false,
+        bulkMoveSaving: false,
+        bulkMoveError: '',
+
         /** Открыть модалку для конкретной даты (Y-m-d). */
         openModal(date) {
             if (!this.enabled) return;
@@ -448,6 +504,7 @@ function calendarQuickEntry(config) {
 
         closeModal() {
             // Escape закрывает любое открытое окно
+            if (this.bulkMoveOpen) { this.bulkMoveOpen = false; return; }
             if (this.bulkDeleteOpen) { this.bulkDeleteOpen = false; return; }
             if (this.editOpen) { this.editOpen = false; return; }
             if (this.deleteOpen) { this.deleteOpen = false; return; }

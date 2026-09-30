@@ -32,6 +32,7 @@
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Traking</h1>
             <p class="text-gray-500 mt-1">Управление проектами и задачами</p>
+            <p class="text-red-600 font-bold mt-2">ТЕСТ</p>
         </div>
 
         <!-- Карточка формы -->

@@ -331,6 +331,52 @@ class CalendarController extends Controller
     }
 
     /**
+     * AJAX: перенести дневную запись календаря на другую задачу.
+     * POST /calendar/entry/move
+     *
+     * Принимает: task_id (исходная), target_task_id (целевая), time_type, entry_date.
+     */
+    public function moveEntry(): void
+    {
+        $userId = (int) Auth::id();
+        [$type, $error] = $this->resolveEntryContext();
+        if ($error !== null) {
+            $this->json(['error' => $error], 403);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $fromTaskId = (int) ($input['task_id'] ?? 0);
+        $toTaskId = (int) ($input['target_task_id'] ?? 0);
+        $entryDate = trim((string) ($input['entry_date'] ?? ''));
+
+        if ($fromTaskId <= 0 || $toTaskId <= 0 || $entryDate === '') {
+            $this->json(['error' => 'Выберите задачу для переноса'], 422);
+            return;
+        }
+        // Доступ к обеим задачам
+        if (!TaskAccessMiddleware::check($fromTaskId) || !TaskAccessMiddleware::check($toTaskId)) {
+            $this->json(['error' => 'Нет доступа к задаче'], 403);
+            return;
+        }
+
+        try {
+            $service = new TimeTrackingService();
+            $result = $service->moveCalendarEntry($fromTaskId, $toTaskId, $userId, $type, $entryDate);
+        } catch (\Throwable $e) {
+            $this->json(['error' => 'Не удалось перенести запись. Попробуйте ещё раз'], 500);
+            return;
+        }
+
+        if (!$result['success']) {
+            $this->json(['error' => $result['error']], 422);
+            return;
+        }
+
+        $this->json(['success' => true]);
+    }
+
+    /**
      * Определить тип времени текущего пользователя для операций с записями.
      *
      * @return array{0: string, 1: string|null} [тип ('manager'|'executor'), ошибка|null]

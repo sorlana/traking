@@ -7,6 +7,9 @@ storage/uploads/*
 storage/logs/*
 !storage/logs/.gitkeep
 
+# Резервные копии базы данных
+storage/backups/
+
 # IDE
 .idea/
 .vscode/
